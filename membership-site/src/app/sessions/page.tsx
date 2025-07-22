@@ -3,59 +3,91 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { hasSubscription } from '@/lib/revenuecat';
 
-interface SleepSession {
+
+interface Session {
   id: string;
-  date: string;
-  duration: string;
-  quality: 'excellent' | 'good' | 'fair' | 'poor';
-  notes?: string;
+  title: string;
+  length: string; // format: "minute:second"
+  reader: string;
+  created: string; // date string
+}
+
+interface Draft {
+  id: string;
+  title: string;
+  description: string;
 }
 
 export default function SessionsPage() {
   const { currentUser, loading } = useAuth();
   const router = useRouter();
-  const [sessions, setSessions] = useState<SleepSession[]>([]);
-  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingDraft, setEditingDraft] = useState<Draft | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    reader: '',
+    description: ''
+  });
 
-  // Mock data for demonstration
-  const mockSessions: SleepSession[] = [
-    {
-      id: '1',
-      date: '2024-01-15',
-      duration: '7h 32m',
-      quality: 'excellent',
-      notes: 'Deep sleep, felt refreshed'
-    },
-    {
-      id: '2',
-      date: '2024-01-14',
-      duration: '6h 45m',
-      quality: 'good',
-      notes: 'Slept well, minor interruptions'
-    },
-    {
-      id: '3',
-      date: '2024-01-13',
-      duration: '8h 15m',
-      quality: 'excellent',
-      notes: 'Perfect sleep cycle'
-    },
-    {
-      id: '4',
-      date: '2024-01-12',
-      duration: '5h 20m',
-      quality: 'fair',
-      notes: 'Stressful day, restless sleep'
-    },
-    {
-      id: '5',
-      date: '2024-01-11',
-      duration: '7h 8m',
-      quality: 'good'
+  // Reader names for dropdown
+  const readerNames = ['Sarah', 'Michael', 'Emma', 'David', 'Lisa'];
+
+  // Form handlers
+  const handleNewSession = () => {
+    setEditingDraft(null);
+    setFormData({ title: '', reader: '', description: '' });
+    setShowForm(true);
+  };
+
+  const handleEditDraft = (draft: Draft) => {
+    setEditingDraft(draft);
+    setFormData({
+      title: draft.title,
+      reader: '', // Drafts don't have reader yet
+      description: draft.description
+    });
+    setShowForm(true);
+  };
+
+  const handleSaveDraft = () => {
+    if (editingDraft) {
+      // Update existing draft
+      setDrafts(drafts.map(draft => 
+        draft.id === editingDraft.id 
+          ? { ...draft, title: formData.title, description: formData.description }
+          : draft
+      ));
+    } else {
+      // Create new draft
+      const newDraft: Draft = {
+        id: Date.now().toString(),
+        title: formData.title,
+        description: formData.description
+      };
+      setDrafts([...drafts, newDraft]);
     }
-  ];
+    setShowForm(false);
+    setEditingDraft(null);
+    setFormData({ title: '', reader: '', description: '' });
+  };
+
+  const handleCancelEdit = () => {
+    setShowForm(false);
+    setEditingDraft(null);
+    setFormData({ title: '', reader: '', description: '' });
+  };
+
+  const handleRemoveDraft = () => {
+    if (editingDraft) {
+      setDrafts(drafts.filter(draft => draft.id !== editingDraft.id));
+    }
+    setShowForm(false);
+    setEditingDraft(null);
+    setFormData({ title: '', reader: '', description: '' });
+  };
 
   useEffect(() => {
     if (!loading && !currentUser) {
@@ -64,33 +96,80 @@ export default function SessionsPage() {
   }, [currentUser, loading, router]);
 
   useEffect(() => {
-    // Simulate loading sessions
-    const loadSessions = async () => {
-      setSessionsLoading(true);
+    // Simulate loading sessions and drafts
+    const loadData = async () => {
+      // Mock data for sessions
+      const mockSessions: Session[] = [
+        {
+          id: '1',
+          title: 'Introduction to Sleep Science',
+          length: '15:30',
+          reader: 'Sarah',
+          created: '2024-01-15'
+        },
+        {
+          id: '2',
+          title: 'Deep Breathing Techniques',
+          length: '12:45',
+          reader: 'Michael',
+          created: '2024-01-14'
+        },
+        {
+          id: '3',
+          title: 'Progressive Muscle Relaxation',
+          length: '18:20',
+          reader: 'Emma',
+          created: '2024-01-13'
+        },
+        {
+          id: '4',
+          title: 'Mindfulness Meditation',
+          length: '10:15',
+          reader: 'David',
+          created: '2024-01-12'
+        },
+        {
+          id: '5',
+          title: 'Sleep Hygiene Basics',
+          length: '14:30',
+          reader: 'Lisa',
+          created: '2024-01-11'
+        }
+      ];
+
+      // Mock data for drafts
+      const mockDrafts: Draft[] = [
+        {
+          id: '1',
+          title: 'Advanced Sleep Techniques',
+          description: 'A comprehensive guide to advanced sleep optimization methods including biofeedback and cognitive behavioral therapy techniques.'
+        },
+        {
+          id: '2',
+          title: 'Stress Management for Better Sleep',
+          description: 'Practical strategies for managing stress and anxiety that interfere with sleep quality and duration.'
+        },
+        {
+          id: '3',
+          title: 'Nutrition and Sleep Connection',
+          description: 'Exploring the relationship between diet, nutrition timing, and sleep quality with actionable recommendations.'
+        }
+      ];
+
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       setSessions(mockSessions);
-      setSessionsLoading(false);
+      setDrafts(mockDrafts);
     };
 
     if (currentUser) {
-      loadSessions();
+      loadData();
     }
   }, [currentUser]);
 
-  const getQualityColor = (quality: SleepSession['quality']) => {
-    switch (quality) {
-      case 'excellent': return 'text-green-600 bg-green-100';
-      case 'good': return 'text-blue-600 bg-blue-100';
-      case 'fair': return 'text-yellow-600 bg-yellow-100';
-      case 'poor': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
 
-  const getQualityLabel = (quality: SleepSession['quality']) => {
-    return quality.charAt(0).toUpperCase() + quality.slice(1);
-  };
+
+
 
   if (loading) {
     return (
@@ -111,121 +190,291 @@ export default function SessionsPage() {
           <div className="bg-white shadow-sm">
             <div className="px-4 py-5 sm:p-6">
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Sleep Sessions</h1>
-                <p className="mt-2 text-gray-600">Track and analyze your sleep patterns</p>
+                <h1 className="text-2xl font-bold text-gray-900">Sessions</h1>
               </div>
 
-              {/* Stats Overview */}
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="text-sm font-medium text-blue-600">Total Sessions</div>
-                  <div className="text-2xl font-bold text-blue-900">{sessions.length}</div>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="text-sm font-medium text-green-600">Average Duration</div>
-                  <div className="text-2xl font-bold text-green-900">7h 2m</div>
-                </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="text-sm font-medium text-purple-600">Best Quality</div>
-                  <div className="text-2xl font-bold text-purple-900">Excellent</div>
-                </div>
-              </div>
-
-              {/* Subscription Status Banner */}
-              {!hasSubscription() && (
-                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <span className="text-yellow-600">⚠️</span>
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium text-yellow-800">
-                        Free Plan - Limited Sessions
-                      </h3>
-                      <p className="text-sm text-yellow-700 mt-1">
-                        You&apos;re currently on the free plan. Upgrade to premium for unlimited sessions and advanced analytics.
-                      </p>
-                    </div>
-                    <div className="ml-auto">
-                      <a
-                        href="/pricing"
-                        className="btn-primary text-sm"
-                      >
-                        Upgrade
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Sessions List */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-medium text-gray-900">Recent Sessions</h2>
-                  <button className="btn-primary text-sm">
-                    Add New Session
-                  </button>
-                </div>
-
-                {sessionsLoading ? (
-                  <div className="text-center py-8">
-                    <div className="text-gray-500">Loading sessions...</div>
-                  </div>
-                ) : sessions.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="text-gray-500">No sleep sessions recorded yet.</div>
-                    <button className="btn-primary mt-4">Record Your First Session</button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
+              {/* Sessions Table - Desktop */}
+              <div className="hidden md:block overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+                <table className="min-w-full divide-y divide-gray-300">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Title
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Length
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Reader
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        View
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
                     {sessions.map((session) => (
-                      <div key={session.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-4">
-                              <div className="text-lg font-medium text-gray-900">
-                                {new Date(session.date).toLocaleDateString('en-US', { 
-                                  weekday: 'long', 
-                                  year: 'numeric', 
-                                  month: 'long', 
-                                  day: 'numeric' 
-                                })}
-                              </div>
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getQualityColor(session.quality)}`}>
-                                {getQualityLabel(session.quality)}
-                              </span>
+                      <tr key={session.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {session.title}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {session.length}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {session.reader}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(session.created).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <button className="text-blue-600 hover:text-blue-900 font-medium">
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Sessions Cards - Mobile */}
+              <div className="md:hidden space-y-4">
+                {sessions.map((session) => (
+                  <div key={session.id} className="bg-white shadow-sm rounded-lg p-4 border border-gray-200">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-sm font-medium text-gray-900 flex-1 pr-4">
+                        {session.title}
+                      </h3>
+                      <button className="text-blue-600 hover:text-blue-900 font-medium text-sm">
+                        View
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Length:</span>
+                        <span className="ml-1 text-gray-900">{session.length}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Reader:</span>
+                        <span className="ml-1 text-gray-900">{session.reader}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-gray-500">Created:</span>
+                        <span className="ml-1 text-gray-900">{new Date(session.created).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Blank Sessions Available */}
+              <div className="mt-6 flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Blank sessions available: <span className="font-medium">3</span>
+                </div>
+              </div>
+
+              {/* Light Gray Line */}
+              <div className="mt-4 border-t border-gray-200"></div>
+
+              {/* Drafts Section */}
+              <div className="mt-8">
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">Drafts</h2>
+                </div>
+
+                {/* Drafts Table - Desktop */}
+                <div className="hidden md:block overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-300">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Title
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Description
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {drafts.map((draft) => (
+                        <tr key={draft.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {draft.title}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            <div className="max-w-xs">
+                              {draft.description.length > 40 
+                                ? `${draft.description.substring(0, 40)}...` 
+                                : draft.description
+                              }
                             </div>
-                            <div className="mt-2 text-sm text-gray-600">
-                              Duration: <span className="font-medium">{session.duration}</span>
-                            </div>
-                            {session.notes && (
-                              <div className="mt-2 text-sm text-gray-600">
-                                Notes: {session.notes}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex space-x-2">
-                            <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button 
+                              onClick={() => handleEditDraft(draft)}
+                              className="text-blue-600 hover:text-blue-900 font-medium"
+                            >
                               Edit
                             </button>
-                            <button className="text-red-600 hover:text-red-800 text-sm font-medium">
-                              Delete
-                            </button>
-                          </div>
-                        </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Drafts Cards - Mobile */}
+                <div className="md:hidden space-y-4">
+                  {drafts.map((draft) => (
+                    <div key={draft.id} className="bg-white shadow-sm rounded-lg p-4 border border-gray-200">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-sm font-medium text-gray-900 flex-1 pr-4">
+                          {draft.title}
+                        </h3>
+                        <button 
+                          onClick={() => handleEditDraft(draft)}
+                          className="text-blue-600 hover:text-blue-900 font-medium text-sm"
+                        >
+                          Edit
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <div className="text-sm text-gray-500">
+                        {draft.description.length > 40 
+                          ? `${draft.description.substring(0, 40)}...` 
+                          : draft.description
+                        }
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Phase 2 Note */}
-              <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-                <h3 className="text-sm font-medium text-blue-900 mb-2">Phase 2 Features</h3>
-                <p className="text-sm text-blue-700">
-                  In the next phase, this page will integrate with your actual sleep tracking data from the SleepCoding app, 
-                  providing detailed analytics, trends, and insights about your sleep patterns.
-                </p>
+              {/* New Session Form Section */}
+              <div className="mt-8">
+                <button
+                  onClick={showForm ? handleCancelEdit : handleNewSession}
+                  className="flex items-center text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                >
+                  <span className={`mr-2 transition-transform ${showForm ? 'rotate-90' : ''}`}>
+                    ▶
+                  </span>
+                  {showForm ? 'Cancel' : 'New Session'}
+                </button>
+
+                {showForm && (
+                  <div className="mt-4 bg-white shadow-sm rounded-lg p-6 border border-gray-200">
+                    <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}>
+                      <div className="space-y-6">
+                        {/* Title Input */}
+                        <div>
+                          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                            Title
+                          </label>
+                          <input
+                            type="text"
+                            id="title"
+                            value={formData.title}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter session title"
+                          />
+                        </div>
+
+                        {/* Reader Dropdown */}
+                        <div>
+                          <label htmlFor="reader" className="block text-sm font-medium text-gray-700 mb-2">
+                            Reader
+                          </label>
+                          <select
+                            id="reader"
+                            value={formData.reader}
+                            onChange={(e) => setFormData({ ...formData, reader: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="">Select a reader</option>
+                            {readerNames.map((name) => (
+                              <option key={name} value={name}>
+                                {name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Description Textarea */}
+                        <div>
+                          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                            Description
+                          </label>
+                          <div className="relative">
+                            <textarea
+                              id="description"
+                              value={formData.description}
+                              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                              rows={4}
+                              maxLength={300}
+                              className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none ${
+                                formData.description.length > 300 ? 'border-red-500' :
+                                formData.description.length > 280 ? 'border-orange-500' : ''
+                              }`}
+                              placeholder="Enter session description (max 300 characters)"
+                            />
+                            <div className={`text-xs mt-1 text-right ${
+                              formData.description.length > 300 ? 'text-red-600' :
+                              formData.description.length > 280 ? 'text-orange-600' : 'text-gray-500'
+                            }`}>
+                              {formData.description.length}/300
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            type="submit"
+                            className="btn-primary"
+                          >
+                            Save Draft
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCancelEdit}
+                            className="btn-secondary"
+                          >
+                            Cancel Edit
+                          </button>
+                          {editingDraft && (
+                            <button
+                              type="button"
+                              onClick={handleRemoveDraft}
+                              className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            >
+                              Remove Draft
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Render Button (disabled for now) */}
+                        <div className="pt-4 border-t border-gray-200">
+                          <button
+                            type="button"
+                            disabled
+                            className="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-md cursor-not-allowed"
+                          >
+                            Render (Requirements not met)
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </div>
             </div>
           </div>
