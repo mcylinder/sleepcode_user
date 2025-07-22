@@ -2,8 +2,116 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
+// Sortable Item Component
+function SortableItem({ 
+  instruction, 
+  index, 
+  onInstructionChange, 
+  onClearInstruction,
+  textareaRef
+}: { 
+  instruction: string; 
+  index: number; 
+  onInstructionChange: (index: number, value: string) => void;
+  onClearInstruction: (index: number) => void;
+  textareaRef: (el: HTMLTextAreaElement | null) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `instruction-${index}` });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style}
+      className={`flex items-center space-x-2 p-2 rounded-md transition-colors ${
+        isDragging ? 'bg-blue-50 border-2 border-blue-200 opacity-50' : ''
+      }`}
+    >
+      {/* Drag Handle */}
+      <div 
+        {...attributes} 
+        {...listeners}
+        className="flex-shrink-0 cursor-move text-gray-400 hover:text-gray-600"
+      >
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M7 2a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 2zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 8zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 14zm6-8a2 2 0 1 1-.001-4.001A2 2 0 0 1 13 6zm0 2a2 2 0 1 1 .001 4.001A2 2 0 0 1 13 8zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 13 14z" />
+        </svg>
+      </div>
+      
+      {/* Input Field */}
+      <div className="flex-1 relative">
+        <textarea
+          ref={textareaRef}
+          value={instruction}
+          onChange={(e) => onInstructionChange(index, e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-12 text-sm placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif instruction-textarea"
+          placeholder="instruction"
+          rows={1}
+          style={{
+            height: 'auto',
+            minHeight: '40px'
+          }}
+          onInput={(e) => {
+            const target = e.target as HTMLTextAreaElement;
+            target.style.height = 'auto';
+            target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+          }}
+        />
+        
+        {/* Character Count */}
+        {instruction.length > 120 && (
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-red-600 font-medium">
+            {instruction.length}:120
+          </div>
+        )}
+      </div>
+      
+      {/* Clear Button */}
+      <button
+        type="button"
+        onClick={() => onClearInstruction(index)}
+        className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+        title="Clear field"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  );
+}
 
 interface Session {
   id: string;
@@ -31,6 +139,8 @@ export default function SessionsPage() {
     reader: '',
     description: ''
   });
+  const [instructions, setInstructions] = useState<string[]>(Array(15).fill(''));
+  const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
   // Reader names for dropdown
   const readerNames = ['Sarah', 'Michael', 'Emma', 'David', 'Lisa'];
@@ -39,6 +149,7 @@ export default function SessionsPage() {
   const handleNewSession = () => {
     setEditingDraft(null);
     setFormData({ title: '', reader: '', description: '' });
+    setInstructions(Array(15).fill(''));
     setShowForm(true);
   };
 
@@ -49,6 +160,7 @@ export default function SessionsPage() {
       reader: '', // Drafts don't have reader yet
       description: draft.description
     });
+    setInstructions(Array(15).fill('')); // For now, start with empty instructions
     setShowForm(true);
   };
 
@@ -78,6 +190,7 @@ export default function SessionsPage() {
     setShowForm(false);
     setEditingDraft(null);
     setFormData({ title: '', reader: '', description: '' });
+    setInstructions(Array(15).fill(''));
   };
 
   const handleRemoveDraft = () => {
@@ -87,7 +200,56 @@ export default function SessionsPage() {
     setShowForm(false);
     setEditingDraft(null);
     setFormData({ title: '', reader: '', description: '' });
+    setInstructions(Array(15).fill(''));
   };
+
+  // Instruction handlers
+  const handleInstructionChange = (index: number, value: string) => {
+    const newInstructions = [...instructions];
+    newInstructions[index] = value;
+    setInstructions(newInstructions);
+  };
+
+  const handleClearInstruction = (index: number) => {
+    const newInstructions = [...instructions];
+    newInstructions[index] = '';
+    setInstructions(newInstructions);
+  };
+
+  // DnD Kit setup
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setInstructions((items) => {
+        const oldIndex = items.findIndex((_, index) => `instruction-${index}` === active.id);
+        const newIndex = items.findIndex((_, index) => `instruction-${index}` === over?.id);
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  // Reset textarea heights when instructions change (after reordering)
+  useEffect(() => {
+    textareaRefs.current.forEach((textarea) => {
+      if (textarea) {
+        textarea.style.height = 'auto';
+        if (textarea.value.trim()) {
+          textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        } else {
+          textarea.style.height = '40px';
+        }
+      }
+    });
+  }, [instructions]);
 
   useEffect(() => {
     if (!loading && !currentUser) {
@@ -383,7 +545,7 @@ export default function SessionsPage() {
                             id="title"
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif"
                             placeholder="Enter session title"
                           />
                         </div>
@@ -420,7 +582,7 @@ export default function SessionsPage() {
                               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                               rows={4}
                               maxLength={300}
-                              className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none ${
+                              className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif ${
                                 formData.description.length > 300 ? 'border-red-500' :
                                 formData.description.length > 280 ? 'border-orange-500' : ''
                               }`}
@@ -433,6 +595,38 @@ export default function SessionsPage() {
                               {formData.description.length}/300
                             </div>
                           </div>
+                        </div>
+
+                        {/* Instructions */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-3">
+                            Instructions
+                          </label>
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                          >
+                            <SortableContext
+                              items={instructions.map((_, index) => `instruction-${index}`)}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              <div className="space-y-2">
+                                {instructions.map((instruction, index) => (
+                                  <SortableItem
+                                    key={`instruction-${index}`}
+                                    instruction={instruction}
+                                    index={index}
+                                    onInstructionChange={handleInstructionChange}
+                                    onClearInstruction={handleClearInstruction}
+                                    textareaRef={(el) => {
+                                      textareaRefs.current[index] = el;
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            </SortableContext>
+                          </DndContext>
                         </div>
 
                         {/* Action Buttons */}

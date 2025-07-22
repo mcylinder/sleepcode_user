@@ -36,4 +36,28 @@ body {
   .input-field {
     @apply w-full px-4 py-3 border border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-200;
   }
+  
+  /* Auto-resize textarea for instruction fields */
+  .instruction-textarea {
+    @apply resize-none overflow-hidden;
+    min-height: 40px;
+    max-height: 120px;
+  }
+  
+  /* Desktop: Force single line */
+  @media (min-width: 768px) {
+    .instruction-textarea {
+      max-height: 40px;
+      overflow: hidden;
+    }
+  }
+  
+  /* Mobile: Allow natural wrapping */
+  @media (max-width: 767px) {
+    .instruction-textarea {
+      min-height: 40px;
+      max-height: none;
+      overflow: visible;
+    }
+  }
 }
