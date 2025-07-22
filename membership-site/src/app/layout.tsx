@@ -7,8 +7,8 @@ import Navigation from '@/components/Navigation'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'SleepCode - Membership Support',
-  description: 'Your membership support website for SleepCode application',
+  title: 'SleepCoding - Membership Support',
+  description: 'Your membership support website for SleepCoding application',
 }
 
 export default function RootLayout({

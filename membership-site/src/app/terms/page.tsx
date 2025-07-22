@@ -17,7 +17,7 @@ export default function TermsPage() {
                 1. Acceptance of Terms
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                By accessing and using SleepCode (&quot;the Service&quot;), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service. These Terms of Service govern your use of the SleepCode application, website, and related services provided by SleepCode Inc. (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;).
+                By accessing and using SleepCoding (&quot;the Service&quot;), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service. These Terms of Service govern your use of the SleepCoding application, website, and related services provided by SleepCoding Inc. (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;).
               </p>
               <p className="text-gray-700 leading-relaxed">
                 We reserve the right to modify these terms at any time. We will notify users of any material changes by posting the new Terms of Service on this page and updating the &quot;Last updated&quot; date. Your continued use of the Service after such modifications constitutes your acceptance of the updated terms.
@@ -29,7 +29,7 @@ export default function TermsPage() {
                 2. Description of Service
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                SleepCode is a sleep tracking and optimization platform that provides users with tools to monitor, analyze, and improve their sleep patterns. The Service includes sleep tracking functionality, data analytics, personalized recommendations, and related features accessible through our mobile applications and web platform.
+                SleepCoding is a sleep tracking and optimization platform that provides users with tools to monitor, analyze, and improve their sleep patterns. The Service includes sleep tracking functionality, data analytics, personalized recommendations, and related features accessible through our mobile applications and web platform.
               </p>
               <p className="text-gray-700 leading-relaxed">
                 We offer both free and premium subscription tiers. Free users have access to basic sleep tracking features, while premium subscribers receive advanced analytics, AI-powered recommendations, and priority customer support. The specific features available to each tier may be modified at our discretion with appropriate notice to users.
@@ -101,7 +101,7 @@ export default function TermsPage() {
                 8. Limitation of Liability
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                IN NO EVENT SHALL SLEEPCODE INC., ITS OFFICERS, DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE FOR ANY INDIRECT, PUNITIVE, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES, INCLUDING WITHOUT LIMITATION DAMAGES FOR LOSS OF PROFITS, GOODWILL, USE, DATA, OR OTHER INTANGIBLE LOSSES, THAT RESULT FROM THE USE OF, OR INABILITY TO USE, THE SERVICE.
+                IN NO EVENT SHALL SLEEPCODING LLC., ITS OFFICERS, DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE FOR ANY INDIRECT, PUNITIVE, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES, INCLUDING WITHOUT LIMITATION DAMAGES FOR LOSS OF PROFITS, GOODWILL, USE, DATA, OR OTHER INTANGIBLE LOSSES, THAT RESULT FROM THE USE OF, OR INABILITY TO USE, THE SERVICE.
               </p>
               <p className="text-gray-700 leading-relaxed">
                 Our total liability to you for any claims arising from or relating to these Terms of Service or the Service shall not exceed the amount you paid us for the Service in the twelve (12) months preceding the claim. This limitation applies to all causes of action, whether based in contract, tort, or any other legal theory.
@@ -113,7 +113,7 @@ export default function TermsPage() {
                 9. Contact Information
               </h2>
               <p className="text-gray-700 leading-relaxed">
-                If you have any questions about these Terms of Service, please contact us at legal@sleepcode.com or by mail at SleepCode Inc., 123 Sleep Street, Rest City, RC 12345, United States.
+                If you have any questions about these Terms of Service, please contact us at contact@sleepcoding.me or by mail at SleepCoding Inc., 123 Sleep Street, Rest City, RC 12345, United States.
               </p>
             </section>
           </div>

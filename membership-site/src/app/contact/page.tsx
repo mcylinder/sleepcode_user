@@ -59,7 +59,7 @@ export default function ContactPage() {
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Customer Support</h3>
                 <p className="text-gray-600">
-                  Our support team is available to help you with any questions or issues you may have with SleepCode.
+                  Our support team is available to help you with any questions or issues you may have with SleepCoding.
                 </p>
               </div>
               
@@ -82,9 +82,7 @@ export default function ContactPage() {
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Email Support</h3>
                 <p className="text-gray-600">
-                  For general inquiries: support@sleepcode.com<br />
-                  For technical issues: tech@sleepcode.com<br />
-                  For billing questions: billing@sleepcode.com
+                  For general inquiries, technical issues, or billing questions: contact@sleepcoding.me
                 </p>
               </div>
             </div>

@@ -1,12 +1,12 @@
 export default function FAQPage() {
   const faqs = [
     {
-      question: "How does SleepCode track my sleep?",
-      answer: "SleepCode uses advanced algorithms and your device's sensors to monitor your sleep patterns. The app tracks sleep duration, quality, and provides insights based on your movement and sleep cycles. You can also manually log your sleep data for more accurate tracking."
+      question: "How does SleepCoding track my sleep?",
+      answer: "SleepCoding uses advanced algorithms and your device's sensors to monitor your sleep patterns. The app tracks sleep duration, quality, and provides insights based on your movement and sleep cycles. You can also manually log your sleep data for more accurate tracking."
     },
     {
       question: "What devices are supported?",
-      answer: "SleepCode is available on iOS and Android devices. The app works with most smartphones and tablets, and we're constantly expanding our device compatibility. You can also access your data through our web dashboard for a comprehensive view of your sleep patterns."
+      answer: "SleepCoding is available on iOS and Android devices. The app works with most smartphones and tablets, and we're constantly expanding our device compatibility. You can also access your data through our web account page for a comprehensive view of your sleep patterns."
     },
     {
       question: "Is my sleep data private and secure?",
@@ -29,12 +29,12 @@ export default function FAQPage() {
       answer: "Yes, we provide customer support through multiple channels. Free users can access our help center and community forums. Premium members receive priority support with faster response times and direct access to our support team via email and chat."
     },
     {
-      question: "Can I use SleepCode without an internet connection?",
+      question: "Can I use SleepCoding without an internet connection?",
       answer: "Yes, the app works offline for basic sleep tracking. Your data will sync automatically when you reconnect to the internet. However, some features like AI recommendations and cloud backup require an internet connection."
     },
     {
       question: "What if I have trouble sleeping?",
-      answer: "SleepCode provides personalized recommendations based on your sleep patterns. Premium users get access to sleep coaching and advanced insights that can help identify potential sleep issues. However, if you're experiencing persistent sleep problems, we recommend consulting with a healthcare professional."
+      answer: "SleepCoding provides personalized recommendations based on your sleep patterns. Premium users get access to sleep coaching and advanced insights that can help identify potential sleep issues. However, if you're experiencing persistent sleep problems, we recommend consulting with a healthcare professional."
     },
     {
       question: "How do I cancel my subscription?",

@@ -3,9 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { getSubscriptionStatus, getSubscriptionStatusText, SubscriptionStatus } from '@/lib/revenuecat';
+import { getSubscriptionStatus, getSubscriptionStatusText, SubscriptionStatus, hasSubscription } from '@/lib/revenuecat';
 
-export default function DashboardPage() {
+export default function AccountPage() {
   const { currentUser, loading } = useAuth();
   const router = useRouter();
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
@@ -145,6 +145,51 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
+
+              {/* Subscription-based content */}
+              {hasSubscription() ? (
+                <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-lg">
+                  <h3 className="text-lg font-medium text-green-900 mb-2">🎉 Premium Features Active</h3>
+                  <p className="text-green-700 mb-4">
+                    You have access to all premium features including advanced analytics, unlimited sessions, and priority support.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">∞</div>
+                      <div className="text-sm text-green-700">Unlimited Sessions</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">📊</div>
+                      <div className="text-sm text-green-700">Advanced Analytics</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">⭐</div>
+                      <div className="text-sm text-green-700">Priority Support</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h3 className="text-lg font-medium text-blue-900 mb-2">🚀 Upgrade to Premium</h3>
+                  <p className="text-blue-700 mb-4">
+                    Unlock unlimited sessions, advanced analytics, and priority support with our premium subscription.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <a
+                      href="/pricing"
+                      className="btn-primary text-center"
+                    >
+                      View Pricing
+                    </a>
+                    <a
+                      href="/sessions"
+                      className="btn-secondary text-center"
+                    >
+                      Try Free Features
+                    </a>
+                  </div>
+                </div>
+              )}
 
               {/* Future Phase 2 Placeholder */}
               <div className="mt-8 card">

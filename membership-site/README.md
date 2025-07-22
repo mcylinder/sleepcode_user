@@ -1,4 +1,4 @@
-# SleepCode Membership Support Website
+# SleepCoding Membership Support Website
 
 A modern, responsive membership support website built with Next.js, Firebase Authentication, and RevenueCat integration for subscription management.
 
@@ -6,7 +6,7 @@ A modern, responsive membership support website built with Next.js, Firebase Aut
 
 - **Authentication**: Firebase Auth with social logins (Google, Facebook, Apple) and email/password
 - **Subscription Management**: RevenueCat REST API integration for subscription status
-- **Protected Routes**: Dashboard with user authentication required
+- **Protected Routes**: Account with user authentication required
 - **Responsive Design**: Mobile-first design with TailwindCSS
 - **Clean UI**: Minimal design with square corners (no rounded borders)
 - **Public Pages**: Homepage, Pricing, FAQ, Contact, Terms, Privacy
@@ -57,6 +57,9 @@ NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-6J693D0VCT
 
 # RevenueCat Configuration
 REVENUECAT_API_KEY=your_revenuecat_api_key_here
+
+# Development Override (for testing subscription features)
+NEXT_PUBLIC_HAS_SUBSCRIPTION=false
 ```
 
 **⚠️ IMPORTANT:** The `.env.local` file is already in `.gitignore` and will not be committed to your repository. This keeps your API keys secure.
@@ -92,7 +95,8 @@ npm run dev
 src/
 ├── app/                    # Next.js App Router pages
 │   ├── api/               # API routes
-│   ├── dashboard/         # Protected dashboard page
+│   ├── account/           # Protected account page
+│   ├── sessions/          # Protected sessions page
 │   ├── login/            # Authentication page
 │   ├── pricing/          # Pricing page
 │   ├── faq/              # FAQ page
@@ -118,7 +122,8 @@ src/
 - **Terms** (`/terms`): Terms of Service
 - **Privacy** (`/privacy`): Privacy Policy
 - **Login** (`/login`): Authentication page
-- **Dashboard** (`/dashboard`): Protected user dashboard
+- **Account** (`/account`): Protected user account page
+- **Sessions** (`/sessions`): Protected sleep sessions page
 
 ## Authentication Flow
 
@@ -127,15 +132,15 @@ src/
    - Google OAuth
    - Facebook OAuth
    - Apple OAuth
-2. Successful authentication redirects to dashboard
-3. Unauthenticated users trying to access dashboard are redirected to login
+2. Successful authentication redirects to account page
+3. Unauthenticated users trying to access account page are redirected to login
 4. Logout redirects to homepage
 
 ## Subscription Integration
 
 - Uses RevenueCat REST API to fetch subscription status
 - Firebase UID is used as the `app_user_id` for RevenueCat
-- Dashboard displays subscription status (Active, Expired, No Subscription)
+- Account page displays subscription status (Active, Expired, No Subscription)
 - "Manage Subscription" link redirects to RevenueCat management page
 
 ## Customization
@@ -197,7 +202,7 @@ The app can be deployed to any platform that supports Next.js:
 The project is structured to easily expand for Phase 2 features:
 - User-created text-based data (journal entries)
 - Firestore integration for data storage
-- Enhanced dashboard with data management
+- Enhanced account page with data management
 - Additional user features
 
 ## Contributing
@@ -214,4 +219,4 @@ This project is licensed under the MIT License.
 
 ## Support
 
-For support, email support@sleepcode.com or create an issue in the repository.
+For support, email contact@sleepcoding.me or create an issue in the repository.

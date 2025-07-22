@@ -17,7 +17,7 @@ export default function PrivacyPage() {
                 1. Introduction
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                SleepCode Inc. (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our SleepCode application, website, and related services (collectively, the &quot;Service&quot;).
+                SleepCoding Inc. (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our SleepCoding application, website, and related services (collectively, the &quot;Service&quot;).
               </p>
               <p className="text-gray-700 leading-relaxed">
                 By using our Service, you consent to the data practices described in this Privacy Policy. If you do not agree with the practices described in this policy, please do not use our Service. We may update this Privacy Policy from time to time, and we will notify you of any changes by posting the new Privacy Policy on this page and updating the &quot;Last updated&quot; date.
@@ -146,7 +146,7 @@ export default function PrivacyPage() {
                 10. Contact Us
               </h2>
               <p className="text-gray-700 leading-relaxed">
-                If you have any questions about this Privacy Policy or our data practices, please contact us at privacy@sleepcode.com or by mail at SleepCode Inc., 123 Sleep Street, Rest City, RC 12345, United States. We will respond to your inquiry within 30 days.
+                If you have any questions about this Privacy Policy or our data practices, please contact us at contact@sleepcoding.me or by mail at SleepCoding Inc., 123 Sleep Street, Rest City, RC 12345, United States. We will respond to your inquiry within 30 days.
               </p>
             </section>
           </div>

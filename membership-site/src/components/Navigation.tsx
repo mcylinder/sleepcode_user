@@ -24,7 +24,7 @@ export default function Navigation() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="text-xl font-bold text-gray-900">
-              SleepCode
+              SleepCoding
             </Link>
           </div>
           
@@ -67,12 +67,20 @@ export default function Navigation() {
             {currentUser ? (
               <>
                 <Link 
-                  href="/dashboard" 
+                  href="/account" 
                   className={`px-3 py-2 text-sm font-medium ${
-                    isActive('/dashboard') ? 'text-cyan-950' : 'text-gray-700 hover:text-gray-900'
+                    isActive('/account') ? 'text-cyan-950' : 'text-gray-700 hover:text-gray-900'
                   }`}
                 >
-                  Dashboard
+                  Account
+                </Link>
+                <Link 
+                  href="/sessions" 
+                  className={`px-3 py-2 text-sm font-medium ${
+                    isActive('/sessions') ? 'text-cyan-950' : 'text-gray-700 hover:text-gray-900'
+                  }`}
+                >
+                  Sessions
                 </Link>
                 <button
                   onClick={handleLogout}
