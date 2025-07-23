@@ -180,6 +180,9 @@ export default function SessionsPage() {
   });
   const [instructions, setInstructions] = useState<string[]>(Array(15).fill(''));
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   // Reader names for dropdown
   const readerNames = ['Sarah', 'Michael', 'Emma', 'David', 'Lisa'];
@@ -289,6 +292,66 @@ export default function SessionsPage() {
       }
     });
   }, [instructions]);
+
+  // Suggestions functions
+  const getSuggestions = async () => {
+    if (formData.description.length < DESCRIPTION_MIN_CHARS) {
+      alert("A description about your goal is required.");
+      return;
+    }
+
+    // Check localStorage first
+    const storedSuggestions = localStorage.getItem(`suggestions_${formData.description}`);
+    if (storedSuggestions) {
+      setSuggestions(JSON.parse(storedSuggestions));
+      setShowSuggestions(true);
+      return;
+    }
+
+    setLoadingSuggestions(true);
+    try {
+      const response = await fetch('/api/suggestions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description: formData.description }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get suggestions');
+      }
+
+      setSuggestions(data.suggestions);
+      localStorage.setItem(`suggestions_${formData.description}`, JSON.stringify(data.suggestions));
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      alert('Having trouble with suggestions. Try again later.');
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const addSuggestionToInstructions = (suggestion: string) => {
+    const newInstructions = [...instructions];
+    const emptyIndex = newInstructions.findIndex(instruction => !instruction.trim());
+    
+    if (emptyIndex !== -1) {
+      newInstructions[emptyIndex] = suggestion;
+      setInstructions(newInstructions);
+    }
+  };
+
+  const isSuggestionUsed = (suggestion: string) => {
+    return instructions.some(instruction => instruction.trim() === suggestion.trim());
+  };
+
+  const hasEmptyInstructions = () => {
+    return instructions.some(instruction => !instruction.trim());
+  };
 
   useEffect(() => {
     if (!loading && !currentUser) {
@@ -589,6 +652,18 @@ export default function SessionsPage() {
                           />
                         </div>
 
+                        {/* Instructions Explanation */}
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                          <p className="text-sm text-gray-700 mb-3">
+                            Write clear, specific instructions that guide the session toward your goal.
+                          </p>
+                          <ul className="text-sm text-gray-600 space-y-1">
+                            <li>• Be specific about what you want to achieve or experience</li>
+                            <li>• Include any preferences for tone, pace, or style</li>
+                            <li>• Consider the order - earlier instructions set the foundation</li>
+                          </ul>
+                        </div>
+
                         {/* Reader Dropdown */}
                         <div>
                           <label htmlFor="reader" className="block text-sm font-medium text-gray-700 mb-2">
@@ -644,29 +719,16 @@ export default function SessionsPage() {
                             </label>
                             <button
                               type="button"
-                              onClick={() => {
-                                if (formData.description.length < DESCRIPTION_MIN_CHARS) {
-                                  alert("A description about your goal is required.");
-                                  return;
-                                }
-                                // TODO: Implement suggestions logic
-                                alert("Suggestions feature coming soon!");
-                              }}
-                              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                              onClick={getSuggestions}
+                              disabled={loadingSuggestions}
+                              className={`text-sm font-medium ${
+                                loadingSuggestions 
+                                  ? 'text-gray-400 cursor-not-allowed' 
+                                  : 'text-blue-600 hover:text-blue-800'
+                              }`}
                             >
-                              Suggestions
+                              {loadingSuggestions ? 'Getting suggestions...' : 'Suggestions'}
                             </button>
-                          </div>
-                          
-                          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                            <p className="text-sm text-gray-700 mb-3">
-                              Write clear, specific instructions that guide the session toward your goal.
-                            </p>
-                            <ul className="text-sm text-gray-600 space-y-1">
-                              <li>• Be specific about what you want to achieve or experience</li>
-                              <li>• Include any preferences for tone, pace, or style</li>
-                              <li>• Consider the order - earlier instructions set the foundation</li>
-                            </ul>
                           </div>
                           
                           {formData.description.length < DESCRIPTION_MIN_CHARS && (
@@ -749,6 +811,69 @@ export default function SessionsPage() {
           </div>
         </div>
       </div>
+
+      {/* Suggestions Slide-out Panel */}
+      {showSuggestions && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+            onClick={() => setShowSuggestions(false)}
+          />
+          
+          {/* Panel */}
+          <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">AI Suggestions</h3>
+                <button
+                  onClick={() => setShowSuggestions(false)}
+                  className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <div className="space-y-2">
+                  {suggestions.map((suggestion, index) => {
+                    const isUsed = isSuggestionUsed(suggestion);
+                    const canAdd = !isUsed && hasEmptyInstructions();
+                    
+                    return (
+                      <div 
+                        key={index}
+                        className={`flex items-center py-2 px-3 rounded-md ${
+                          isUsed 
+                            ? 'bg-gray-50 text-gray-500' 
+                            : 'bg-white hover:bg-gray-50'
+                        }`}
+                      >
+                        <button
+                          onClick={() => addSuggestionToInstructions(suggestion)}
+                          disabled={!canAdd}
+                          className={`text-xs px-3 py-1 rounded-md flex-shrink-0 mr-3 ${
+                            canAdd
+                              ? 'bg-blue-600 text-white hover:bg-blue-700'
+                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
+                        >
+                          {isUsed ? 'Used' : 'Add'}
+                        </button>
+                        <span className="text-sm text-gray-700 flex-1">{suggestion}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
