@@ -8,6 +8,11 @@ export default function HomePage() {
     hasProjectId: !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
   });
 
+  // Simple test to see if the page loads at all
+  if (typeof window !== 'undefined') {
+    console.log('Page is loading in browser');
+  }
+
   return (
     <div className="bg-white">
       {/* Hero Section */}
