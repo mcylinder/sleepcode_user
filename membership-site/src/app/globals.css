@@ -41,7 +41,7 @@ body {
   .instruction-textarea {
     @apply resize-none overflow-hidden;
     min-height: 40px;
-    max-height: 120px;
+    max-height: 120px; /* This will be overridden by JavaScript for dynamic content */
   }
   
   /* Desktop: Force single line */

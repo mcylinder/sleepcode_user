@@ -23,19 +23,26 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+// Constants
+const DESCRIPTION_MIN_CHARS = 60;
+const DESCRIPTION_MAX_CHARS = 300;
+const INSTRUCTION_MAX_CHARS = 120;
+
 // Sortable Item Component
 function SortableItem({ 
   instruction, 
   index, 
   onInstructionChange, 
   onClearInstruction,
-  textareaRef
+  textareaRef,
+  isDisabled
 }: { 
   instruction: string; 
   index: number; 
   onInstructionChange: (index: number, value: string) => void;
   onClearInstruction: (index: number) => void;
   textareaRef: (el: HTMLTextAreaElement | null) => void;
+  isDisabled: boolean;
 }) {
   const {
     attributes,
@@ -61,9 +68,18 @@ function SortableItem({
     >
       {/* Drag Handle */}
       <div 
-        {...attributes} 
-        {...listeners}
-        className="flex-shrink-0 cursor-move text-gray-400 hover:text-gray-600"
+        {...(isDisabled ? {} : attributes)} 
+        {...(isDisabled ? {} : listeners)}
+        className={`flex-shrink-0 ${
+          isDisabled 
+            ? 'text-gray-300 cursor-not-allowed' 
+            : 'cursor-move text-gray-400 hover:text-gray-600'
+        }`}
+        onClick={() => {
+          if (isDisabled) {
+            alert("A description about your goal is required.");
+          }
+        }}
       >
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
           <path d="M7 2a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 2zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 8zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 14zm6-8a2 2 0 1 1-.001-4.001A2 2 0 0 1 13 6zm0 2a2 2 0 1 1 .001 4.001A2 2 0 0 1 13 8zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 13 14z" />
@@ -76,24 +92,36 @@ function SortableItem({
           ref={textareaRef}
           value={instruction}
           onChange={(e) => onInstructionChange(index, e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-12 text-sm placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif instruction-textarea"
-          placeholder="instruction"
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-12 text-sm placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif instruction-textarea ${
+            isDisabled 
+              ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed' 
+              : 'border-gray-300'
+          }`}
+          placeholder={isDisabled ? "Add description first" : "instruction"}
           rows={1}
+          disabled={isDisabled}
           style={{
             height: 'auto',
             minHeight: '40px'
           }}
           onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            target.style.height = 'auto';
-            target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+            if (!isDisabled) {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              target.style.height = Math.min(target.scrollHeight, INSTRUCTION_MAX_CHARS) + 'px';
+            }
+          }}
+          onClick={() => {
+            if (isDisabled) {
+              alert("A description about your goal is required.");
+            }
           }}
         />
         
         {/* Character Count */}
-        {instruction.length > 120 && (
+        {instruction.length > INSTRUCTION_MAX_CHARS && (
           <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-red-600 font-medium">
-            {instruction.length}:120
+            {instruction.length}:{INSTRUCTION_MAX_CHARS}
           </div>
         )}
       </div>
@@ -101,9 +129,20 @@ function SortableItem({
       {/* Clear Button */}
       <button
         type="button"
-        onClick={() => onClearInstruction(index)}
-        className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
-        title="Clear field"
+        onClick={() => {
+          if (isDisabled) {
+            alert("A description about your goal is required.");
+            return;
+          }
+          onClearInstruction(index);
+        }}
+        className={`flex-shrink-0 p-1 focus:outline-none ${
+          isDisabled 
+            ? 'text-gray-300 cursor-not-allowed' 
+            : 'text-gray-400 hover:text-gray-600'
+        }`}
+        title={isDisabled ? "Add description first" : "Clear field"}
+        disabled={isDisabled}
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -243,7 +282,7 @@ export default function SessionsPage() {
       if (textarea) {
         textarea.style.height = 'auto';
         if (textarea.value.trim()) {
-          textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+          textarea.style.height = Math.min(textarea.scrollHeight, INSTRUCTION_MAX_CHARS) + 'px';
         } else {
           textarea.style.height = '40px';
         }
@@ -581,27 +620,62 @@ export default function SessionsPage() {
                               value={formData.description}
                               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                               rows={4}
-                              maxLength={300}
+                              maxLength={DESCRIPTION_MAX_CHARS}
                               className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif ${
-                                formData.description.length > 300 ? 'border-red-500' :
-                                formData.description.length > 280 ? 'border-orange-500' : ''
+                                formData.description.length > DESCRIPTION_MAX_CHARS ? 'border-red-500' :
+                                formData.description.length > (DESCRIPTION_MAX_CHARS - 20) ? 'border-orange-500' : ''
                               }`}
-                              placeholder="Enter session description (max 300 characters)"
+                              placeholder={`Enter session description (max ${DESCRIPTION_MAX_CHARS} characters)`}
                             />
                             <div className={`text-xs mt-1 text-right ${
-                              formData.description.length > 300 ? 'text-red-600' :
-                              formData.description.length > 280 ? 'text-orange-600' : 'text-gray-500'
+                              formData.description.length > DESCRIPTION_MAX_CHARS ? 'text-red-600' :
+                              formData.description.length > (DESCRIPTION_MAX_CHARS - 20) ? 'text-orange-600' : 'text-gray-500'
                             }`}>
-                              {formData.description.length}/300
+                              {formData.description.length}/{DESCRIPTION_MAX_CHARS}
                             </div>
                           </div>
                         </div>
 
                         {/* Instructions */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-3">
-                            Instructions
-                          </label>
+                          <div className="flex items-center justify-between mb-3">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Instructions
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (formData.description.length < DESCRIPTION_MIN_CHARS) {
+                                  alert("A description about your goal is required.");
+                                  return;
+                                }
+                                // TODO: Implement suggestions logic
+                                alert("Suggestions feature coming soon!");
+                              }}
+                              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                            >
+                              Suggestions
+                            </button>
+                          </div>
+                          
+                          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-700 mb-3">
+                              Write clear, specific instructions that guide the session toward your goal.
+                            </p>
+                            <ul className="text-sm text-gray-600 space-y-1">
+                              <li>• Be specific about what you want to achieve or experience</li>
+                              <li>• Include any preferences for tone, pace, or style</li>
+                              <li>• Consider the order - earlier instructions set the foundation</li>
+                            </ul>
+                          </div>
+                          
+                          {formData.description.length < DESCRIPTION_MIN_CHARS && (
+                            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                              <p className="text-sm text-yellow-800">
+                                Please add a description (at least {DESCRIPTION_MIN_CHARS} characters) before writing instructions.
+                              </p>
+                            </div>
+                          )}
                           <DndContext
                             sensors={sensors}
                             collisionDetection={closestCenter}
@@ -622,6 +696,7 @@ export default function SessionsPage() {
                                     textareaRef={(el) => {
                                       textareaRefs.current[index] = el;
                                     }}
+                                    isDisabled={formData.description.length < DESCRIPTION_MIN_CHARS}
                                   />
                                 ))}
                               </div>
