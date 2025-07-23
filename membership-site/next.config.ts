@@ -2,17 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Ensure proper static generation
-  output: 'standalone',
+  // Remove output: 'standalone' as it might cause issues with Vercel
   // Handle trailing slashes
   trailingSlash: false,
   // Ensure proper image optimization
   images: {
     unoptimized: false,
-  },
-  // Force Vercel to use correct configuration
-  experimental: {
-    // This will help Vercel detect the correct configuration
   },
 };
 
