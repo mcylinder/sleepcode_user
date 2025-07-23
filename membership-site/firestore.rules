@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can only access their own drafts
+    match /drafts/{userId}/sessions/{draftId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Users can only access their own session count
+    match /users/{userId}/sessionCount/{document} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+} 

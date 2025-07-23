@@ -32,7 +32,7 @@ export default function Navigation() {
             <Link 
               href="/" 
               className={`px-3 py-2 text-sm font-medium ${
-                isActive('/') ? 'text-cyan-950' : 'text-gray-700 hover:text-gray-900'
+                isActive('/') ? 'text-cyan-700' : 'text-gray-700 hover:text-gray-900'
               }`}
             >
               Home
@@ -40,7 +40,7 @@ export default function Navigation() {
             <Link 
               href="/pricing" 
               className={`px-3 py-2 text-sm font-medium ${
-                isActive('/pricing') ? 'text-cyan-950' : 'text-gray-700 hover:text-gray-900'
+                isActive('/pricing') ? 'text-cyan-700' : 'text-gray-700 hover:text-gray-900'
               }`}
             >
               Pricing
@@ -48,7 +48,7 @@ export default function Navigation() {
             <Link 
               href="/faq" 
               className={`px-3 py-2 text-sm font-medium ${
-                isActive('/faq') ? 'text-cyan-950' : 'text-gray-700 hover:text-gray-900'
+                isActive('/faq') ? 'text-cyan-700' : 'text-gray-700 hover:text-gray-900'
               }`}
             >
               FAQ
@@ -56,7 +56,7 @@ export default function Navigation() {
             <Link 
               href="/contact" 
               className={`px-3 py-2 text-sm font-medium ${
-                isActive('/contact') ? 'text-cyan-950' : 'text-gray-700 hover:text-gray-900'
+                isActive('/contact') ? 'text-cyan-700' : 'text-gray-700 hover:text-gray-900'
               }`}
             >
               Contact
@@ -69,7 +69,7 @@ export default function Navigation() {
                 <Link 
                   href="/account" 
                   className={`px-3 py-2 text-sm font-medium ${
-                    isActive('/account') ? 'text-cyan-950' : 'text-gray-700 hover:text-gray-900'
+                    isActive('/account') ? 'text-cyan-700' : 'text-gray-700 hover:text-gray-900'
                   }`}
                 >
                   Account
@@ -77,7 +77,7 @@ export default function Navigation() {
                 <Link 
                   href="/sessions" 
                   className={`px-3 py-2 text-sm font-medium ${
-                    isActive('/sessions') ? 'text-cyan-950' : 'text-gray-700 hover:text-gray-900'
+                    isActive('/sessions') ? 'text-cyan-700' : 'text-gray-700 hover:text-gray-900'
                   }`}
                 >
                   Sessions

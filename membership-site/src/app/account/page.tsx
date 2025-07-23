@@ -169,9 +169,9 @@ export default function AccountPage() {
                   </div>
                 </div>
               ) : (
-                <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h3 className="text-lg font-medium text-blue-900 mb-2">🚀 Upgrade to Premium</h3>
-                  <p className="text-blue-700 mb-4">
+                        <div className="mt-8 p-6 bg-cyan-50 border border-cyan-200 rounded-lg">
+          <h3 className="text-lg font-medium text-cyan-900 mb-2">🚀 Upgrade to Premium</h3>
+          <p className="text-cyan-700 mb-4">
                     Unlock unlimited sessions, advanced analytics, and priority support with our premium subscription.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4">

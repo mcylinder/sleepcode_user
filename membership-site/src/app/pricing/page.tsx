@@ -79,9 +79,9 @@ export default function PricingPage() {
           </div>
 
           {/* Premium Plan */}
-          <div className="bg-white border-2 border-blue-500 shadow-sm relative overflow-hidden">
+          <div className="bg-white border-2 border-cyan-500 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <span className="bg-blue-500 text-white px-3 py-1 text-sm font-medium">
+              <span className="bg-cyan-500 text-white px-3 py-1 text-sm font-medium">
                 Most Popular
               </span>
             </div>
@@ -162,7 +162,7 @@ export default function PricingPage() {
               <div className="mt-8">
                 <Link
                   href="/login"
-                  className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium text-white bg-cyan-950 hover:bg-blue-700"
+                  className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium text-white bg-cyan-700 hover:bg-cyan-900"
                 >
                   Start Premium Trial
                 </Link>

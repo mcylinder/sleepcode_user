@@ -20,7 +20,7 @@ export default function HomePage() {
                   <div className="rounded-md shadow">
                     <Link
                       href="/pricing"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-white bg-cyan-950 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
+                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-white bg-cyan-700 hover:bg-cyan-900 md:py-4 md:text-lg md:px-10"
                     >
                       Get Started
                     </Link>
@@ -28,7 +28,7 @@ export default function HomePage() {
                   <div className="mt-3 sm:mt-0 sm:ml-3">
                     <Link
                       href="/faq"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-cyan-950 bg-blue-100 hover:bg-blue-200 md:py-4 md:text-lg md:px-10"
+                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-cyan-700 bg-cyan-100 hover:bg-cyan-200 md:py-4 md:text-lg md:px-10"
                     >
                       Learn More
                     </Link>
@@ -44,7 +44,7 @@ export default function HomePage() {
       <div className="py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
-            <h2 className="text-base text-cyan-950 font-semibold tracking-wide uppercase">Features</h2>
+            <h2 className="text-base text-cyan-700 font-semibold tracking-wide uppercase">Features</h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
               Everything you need for better sleep
             </p>
@@ -57,7 +57,7 @@ export default function HomePage() {
             <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 bg-blue-500 text-white">
+                  <div className="flex items-center justify-center h-12 w-12 bg-cyan-500 text-white">
                     📊
                   </div>
                 </div>
@@ -71,7 +71,7 @@ export default function HomePage() {
 
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 bg-blue-500 text-white">
+                  <div className="flex items-center justify-center h-12 w-12 bg-cyan-500 text-white">
                     🎯
                   </div>
                 </div>
@@ -85,7 +85,7 @@ export default function HomePage() {
 
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 bg-blue-500 text-white">
+                  <div className="flex items-center justify-center h-12 w-12 bg-cyan-500 text-white">
                     📱
                   </div>
                 </div>
@@ -99,7 +99,7 @@ export default function HomePage() {
 
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 bg-blue-500 text-white">
+                  <div className="flex items-center justify-center h-12 w-12 bg-cyan-500 text-white">
                     🔒
                   </div>
                 </div>
@@ -116,18 +116,18 @@ export default function HomePage() {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-cyan-950">
+      <div className="bg-cyan-700">
         <div className="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
             <span className="block">Ready to improve your sleep?</span>
             <span className="block">Start your free trial today.</span>
           </h2>
-          <p className="mt-4 text-lg leading-6 text-blue-200">
+          <p className="mt-4 text-lg leading-6 text-cyan-200">
             Join thousands of users who have already transformed their sleep experience with our platform.
           </p>
           <Link
             href="/pricing"
-            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-cyan-950 bg-white hover:bg-blue-50 sm:w-auto"
+            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-cyan-700 bg-white hover:bg-cyan-50 sm:w-auto"
           >
             View Pricing
           </Link>

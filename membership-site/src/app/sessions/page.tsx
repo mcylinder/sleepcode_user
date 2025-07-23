@@ -2,7 +2,20 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { 
+  Draft, 
+  UserSessionCount,
+  createDraft, 
+  updateDraft, 
+  deleteDraft, 
+  getDraft, 
+  getUserDrafts, 
+  duplicateDraft,
+  getUserSessionCount,
+  decrementAvailableSessions,
+  hasContentChanged
+} from '@/lib/draftService';
 import {
   DndContext,
   closestCenter,
@@ -63,7 +76,7 @@ function SortableItem({
       ref={setNodeRef} 
       style={style}
       className={`flex items-center space-x-2 p-2 rounded-md transition-colors ${
-        isDragging ? 'bg-blue-50 border-2 border-blue-200 opacity-50' : ''
+        isDragging ? 'bg-cyan-50 border-2 border-cyan-200 opacity-50' : ''
       }`}
     >
       {/* Drag Handle */}
@@ -92,7 +105,7 @@ function SortableItem({
           ref={textareaRef}
           value={instruction}
           onChange={(e) => onInstructionChange(index, e.target.value)}
-          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-12 text-sm placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif instruction-textarea ${
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 pr-12 text-sm placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif instruction-textarea ${
             isDisabled 
               ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed' 
               : 'border-gray-300'
@@ -145,7 +158,7 @@ function SortableItem({
         disabled={isDisabled}
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
       </button>
     </div>
@@ -160,11 +173,7 @@ interface Session {
   created: string; // date string
 }
 
-interface Draft {
-  id: string;
-  title: string;
-  description: string;
-}
+
 
 export default function SessionsPage() {
   const { currentUser, loading } = useAuth();
@@ -173,6 +182,8 @@ export default function SessionsPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingDraft, setEditingDraft] = useState<Draft | null>(null);
+  const [currentDraft, setCurrentDraft] = useState<Draft | null>(null);
+  const [userSessionCount, setUserSessionCount] = useState<UserSessionCount | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     reader: '',
@@ -183,6 +194,9 @@ export default function SessionsPage() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [lastSavedContent, setLastSavedContent] = useState<string>('');
+  const [formSaved, setFormSaved] = useState(false);
 
   // Reader names for dropdown
   const readerNames = ['Sarah', 'Michael', 'Emma', 'David', 'Lisa'];
@@ -190,6 +204,7 @@ export default function SessionsPage() {
   // Form handlers
   const handleNewSession = () => {
     setEditingDraft(null);
+    setFormSaved(false);
     setFormData({ title: '', reader: '', description: '' });
     setInstructions(Array(15).fill(''));
     setShowForm(true);
@@ -197,65 +212,88 @@ export default function SessionsPage() {
 
   const handleEditDraft = (draft: Draft) => {
     setEditingDraft(draft);
+    setCurrentDraft(draft);
+    setFormSaved(false);
     setFormData({
       title: draft.title,
-      reader: '', // Drafts don't have reader yet
+      reader: draft.reader || '',
       description: draft.description
     });
-    setInstructions(Array(15).fill('')); // For now, start with empty instructions
+    setInstructions(draft.instructions || Array(15).fill(''));
+    setSuggestions(draft.suggestions || []);
     setShowForm(true);
   };
 
-  const handleSaveDraft = () => {
-    if (editingDraft) {
-      // Update existing draft
-      setDrafts(drafts.map(draft => 
-        draft.id === editingDraft.id 
-          ? { ...draft, title: formData.title, description: formData.description }
-          : draft
-      ));
-    } else {
-      // Create new draft
-      const newDraft: Draft = {
-        id: Date.now().toString(),
-        title: formData.title,
-        description: formData.description
-      };
-      setDrafts([...drafts, newDraft]);
+  const handleSaveDraft = async () => {
+    if (!currentUser) return;
+
+    try {
+      if (editingDraft) {
+        // Update existing draft
+        await updateDraft(currentUser.uid, editingDraft.id!, {
+          title: formData.title,
+          description: formData.description,
+          reader: formData.reader,
+          instructions: instructions,
+          suggestions: suggestions
+        });
+        
+        // Update local state
+        setDrafts(drafts.map(draft => 
+          draft.id === editingDraft.id 
+            ? { ...draft, title: formData.title, description: formData.description, reader: formData.reader, instructions: instructions, suggestions: suggestions }
+            : draft
+        ));
+      } else {
+        // Create new draft
+        const newDraft: Omit<Draft, 'id' | 'createdAt' | 'updatedAt'> = {
+          title: formData.title,
+          description: formData.description,
+          reader: formData.reader,
+          instructions: instructions,
+          suggestions: suggestions,
+          userId: currentUser.uid
+        };
+        
+        const draftId = await createDraft(newDraft);
+        const createdDraft = await getDraft(currentUser.uid, draftId);
+        
+        if (createdDraft) {
+          setDrafts([createdDraft, ...drafts]);
+        }
+      }
+      
+      setFormSaved(true);
+      setEditingDraft(null);
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      alert('Error saving draft. Please try again.');
     }
-    setShowForm(false);
-    setEditingDraft(null);
-    setFormData({ title: '', reader: '', description: '' });
   };
 
   const handleCancelEdit = () => {
     setShowForm(false);
     setEditingDraft(null);
+    setFormSaved(false);
     setFormData({ title: '', reader: '', description: '' });
     setInstructions(Array(15).fill(''));
   };
 
-  const handleRemoveDraft = () => {
-    if (editingDraft) {
-      setDrafts(drafts.filter(draft => draft.id !== editingDraft.id));
-    }
-    setShowForm(false);
-    setEditingDraft(null);
-    setFormData({ title: '', reader: '', description: '' });
-    setInstructions(Array(15).fill(''));
-  };
+
 
   // Instruction handlers
   const handleInstructionChange = (index: number, value: string) => {
     const newInstructions = [...instructions];
     newInstructions[index] = value;
     setInstructions(newInstructions);
+    setFormSaved(false);
   };
 
   const handleClearInstruction = (index: number) => {
     const newInstructions = [...instructions];
     newInstructions[index] = '';
     setInstructions(newInstructions);
+    setFormSaved(false);
   };
 
   // DnD Kit setup
@@ -293,17 +331,66 @@ export default function SessionsPage() {
     });
   }, [instructions]);
 
+  // Auto-save functionality
+  const autoSave = useCallback(async () => {
+    if (!currentUser || !currentDraft) return;
+
+    const currentContent = JSON.stringify({
+      title: formData.title,
+      description: formData.description,
+      reader: formData.reader,
+      instructions: instructions,
+      suggestions: suggestions
+    });
+
+    if (currentContent !== lastSavedContent && hasContentChanged(currentDraft, currentDraft)) {
+      try {
+        await updateDraft(currentUser.uid, currentDraft.id!, {
+          title: formData.title,
+          description: formData.description,
+          reader: formData.reader,
+          instructions: instructions,
+          suggestions: suggestions
+        });
+        setLastSavedContent(currentContent);
+      } catch (error) {
+        console.error('Auto-save error:', error);
+      }
+    }
+  }, [currentUser, currentDraft, formData, instructions, suggestions, lastSavedContent]);
+
+  // Set up auto-save timer
+  useEffect(() => {
+    if (autoSaveTimerRef.current) {
+      clearInterval(autoSaveTimerRef.current);
+    }
+
+    if (currentDraft && currentUser) {
+      const timer = setInterval(autoSave, 10000); // 10 seconds
+      autoSaveTimerRef.current = timer;
+    }
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearInterval(autoSaveTimerRef.current);
+      }
+    };
+  }, [currentDraft, currentUser, autoSave]);
+
   // Suggestions functions
   const getSuggestions = async () => {
+    if (!formData.title.trim()) {
+      alert("A title is required before getting suggestions.");
+      return;
+    }
+    
     if (formData.description.length < DESCRIPTION_MIN_CHARS) {
       alert("A description about your goal is required.");
       return;
     }
 
-    // Check localStorage first
-    const storedSuggestions = localStorage.getItem(`suggestions_${formData.description}`);
-    if (storedSuggestions) {
-      setSuggestions(JSON.parse(storedSuggestions));
+    // Check if we already have suggestions for this content
+    if (suggestions.length > 0) {
       setShowSuggestions(true);
       return;
     }
@@ -325,7 +412,18 @@ export default function SessionsPage() {
       }
 
       setSuggestions(data.suggestions);
-      localStorage.setItem(`suggestions_${formData.description}`, JSON.stringify(data.suggestions));
+      
+      // Store suggestions in current draft if it exists
+      if (currentDraft && currentUser) {
+        try {
+          await updateDraft(currentUser.uid, currentDraft.id!, {
+            suggestions: data.suggestions
+          });
+        } catch (error) {
+          console.error('Error saving suggestions:', error);
+        }
+      }
+      
       setShowSuggestions(true);
     } catch (error) {
       console.error('Error fetching suggestions:', error);
@@ -401,29 +499,20 @@ export default function SessionsPage() {
         }
       ];
 
-      // Mock data for drafts
-      const mockDrafts: Draft[] = [
-        {
-          id: '1',
-          title: 'Advanced Sleep Techniques',
-          description: 'A comprehensive guide to advanced sleep optimization methods including biofeedback and cognitive behavioral therapy techniques.'
-        },
-        {
-          id: '2',
-          title: 'Stress Management for Better Sleep',
-          description: 'Practical strategies for managing stress and anxiety that interfere with sleep quality and duration.'
-        },
-        {
-          id: '3',
-          title: 'Nutrition and Sleep Connection',
-          description: 'Exploring the relationship between diet, nutrition timing, and sleep quality with actionable recommendations.'
+      // Load user drafts and session count from Firestore
+      if (currentUser) {
+        try {
+          const userDrafts = await getUserDrafts(currentUser.uid);
+          const sessionCount = await getUserSessionCount(currentUser.uid);
+          
+          setDrafts(userDrafts);
+          setUserSessionCount(sessionCount);
+        } catch (error) {
+          console.error('Error loading drafts:', error);
         }
-      ];
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
       setSessions(mockSessions);
-      setDrafts(mockDrafts);
     };
 
     if (currentUser) {
@@ -495,7 +584,7 @@ export default function SessionsPage() {
                           {new Date(session.created).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <button className="text-blue-600 hover:text-blue-900 font-medium">
+                          <button className="text-cyan-700 hover:text-cyan-900 font-medium">
                             View
                           </button>
                         </td>
@@ -513,7 +602,7 @@ export default function SessionsPage() {
                       <h3 className="text-sm font-medium text-gray-900 flex-1 pr-4">
                         {session.title}
                       </h3>
-                      <button className="text-blue-600 hover:text-blue-900 font-medium text-sm">
+                      <button className="text-cyan-700 hover:text-cyan-900 font-medium text-sm">
                         View
                       </button>
                     </div>
@@ -538,7 +627,7 @@ export default function SessionsPage() {
               {/* Blank Sessions Available */}
               <div className="mt-6 flex items-center justify-between">
                 <div className="text-sm text-gray-600">
-                  Blank sessions available: <span className="font-medium">3</span>
+                  Blank sessions available: <span className="font-medium">{userSessionCount?.availableSessions || 3}</span>
                 </div>
               </div>
 
@@ -563,7 +652,10 @@ export default function SessionsPage() {
                           Description
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Action
+                          Last Modified
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
                         </th>
                       </tr>
                     </thead>
@@ -582,12 +674,51 @@ export default function SessionsPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button 
-                              onClick={() => handleEditDraft(draft)}
-                              className="text-blue-600 hover:text-blue-900 font-medium"
-                            >
-                              Edit
-                            </button>
+                            {draft.updatedAt ? new Date(draft.updatedAt.toDate()).toLocaleDateString() : 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditDraft(draft)}
+                                className="text-cyan-700 hover:text-cyan-800 font-medium"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (currentUser && confirm('Duplicate this draft?')) {
+                                    try {
+                                      await duplicateDraft(currentUser.uid, draft.id!);
+                                      // Reload drafts
+                                      const userDrafts = await getUserDrafts(currentUser.uid);
+                                      setDrafts(userDrafts);
+                                    } catch (error) {
+                                      console.error('Error duplicating draft:', error);
+                                      alert('Error duplicating draft. Please try again.');
+                                    }
+                                  }
+                                }}
+                                className="text-green-600 hover:text-green-800 font-medium"
+                              >
+                                Duplicate
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (currentUser && confirm('Delete this draft?')) {
+                                    try {
+                                      await deleteDraft(currentUser.uid, draft.id!);
+                                      setDrafts(drafts.filter(d => d.id !== draft.id));
+                                    } catch (error) {
+                                      console.error('Error deleting draft:', error);
+                                      alert('Error deleting draft. Please try again.');
+                                    }
+                                  }
+                                }}
+                                className="text-red-600 hover:text-red-800 font-medium"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -600,15 +731,53 @@ export default function SessionsPage() {
                   {drafts.map((draft) => (
                     <div key={draft.id} className="bg-white shadow-sm rounded-lg p-4 border border-gray-200">
                       <div className="flex justify-between items-start mb-3">
-                        <h3 className="text-sm font-medium text-gray-900 flex-1 pr-4">
-                          {draft.title}
-                        </h3>
-                        <button 
-                          onClick={() => handleEditDraft(draft)}
-                          className="text-blue-600 hover:text-blue-900 font-medium text-sm"
-                        >
-                          Edit
-                        </button>
+                        <div className="flex-1 pr-4">
+                          <h3 className="text-sm font-medium text-gray-900">{draft.title}</h3>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {draft.updatedAt ? new Date(draft.updatedAt.toDate()).toLocaleDateString() : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="flex flex-col space-y-1">
+                          <button 
+                            onClick={() => handleEditDraft(draft)}
+                            className="text-cyan-700 hover:text-cyan-800 text-sm font-medium"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (currentUser && confirm('Duplicate this draft?')) {
+                                try {
+                                  await duplicateDraft(currentUser.uid, draft.id!);
+                                  const userDrafts = await getUserDrafts(currentUser.uid);
+                                  setDrafts(userDrafts);
+                                } catch (error) {
+                                  console.error('Error duplicating draft:', error);
+                                  alert('Error duplicating draft. Please try again.');
+                                }
+                              }
+                            }}
+                            className="text-green-600 hover:text-green-800 text-sm font-medium"
+                          >
+                            Duplicate
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (currentUser && confirm('Delete this draft?')) {
+                                try {
+                                  await deleteDraft(currentUser.uid, draft.id!);
+                                  setDrafts(drafts.filter(d => d.id !== draft.id));
+                                } catch (error) {
+                                  console.error('Error deleting draft:', error);
+                                  alert('Error deleting draft. Please try again.');
+                                }
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-800 text-sm font-medium"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                       <div className="text-sm text-gray-500">
                         {draft.description.length > 40 
@@ -623,15 +792,15 @@ export default function SessionsPage() {
 
               {/* New Session Form Section */}
               <div className="mt-8">
-                <button
-                  onClick={showForm ? handleCancelEdit : handleNewSession}
-                  className="flex items-center text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors"
-                >
-                  <span className={`mr-2 transition-transform ${showForm ? 'rotate-90' : ''}`}>
-                    ▶
-                  </span>
-                  {showForm ? 'Cancel' : 'New Session'}
-                </button>
+                                  <button
+                    onClick={showForm ? handleCancelEdit : handleNewSession}
+                    className="flex items-center text-lg font-medium text-gray-900 hover:text-cyan-700 transition-colors"
+                  >
+                    <span className={`mr-2 transition-transform ${showForm ? 'rotate-90' : ''}`}>
+                      ▶
+                    </span>
+                    {showForm ? 'Close' : 'New Session'}
+                  </button>
 
                 {showForm && (
                   <div className="mt-4 bg-white shadow-sm rounded-lg p-6 border border-gray-200">
@@ -646,8 +815,11 @@ export default function SessionsPage() {
                             type="text"
                             id="title"
                             value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif"
+                            onChange={(e) => {
+                          setFormData({ ...formData, title: e.target.value });
+                          setFormSaved(false);
+                        }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif"
                             placeholder="Enter session title"
                           />
                         </div>
@@ -672,8 +844,11 @@ export default function SessionsPage() {
                           <select
                             id="reader"
                             value={formData.reader}
-                            onChange={(e) => setFormData({ ...formData, reader: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            onChange={(e) => {
+                          setFormData({ ...formData, reader: e.target.value });
+                          setFormSaved(false);
+                        }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
                           >
                             <option value="">Select a reader</option>
                             {readerNames.map((name) => (
@@ -693,10 +868,13 @@ export default function SessionsPage() {
                             <textarea
                               id="description"
                               value={formData.description}
-                              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                              onChange={(e) => {
+                          setFormData({ ...formData, description: e.target.value });
+                          setFormSaved(false);
+                        }}
                               rows={4}
                               maxLength={DESCRIPTION_MAX_CHARS}
-                              className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif ${
+                              className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 resize-none placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif ${
                                 formData.description.length > DESCRIPTION_MAX_CHARS ? 'border-red-500' :
                                 formData.description.length > (DESCRIPTION_MAX_CHARS - 20) ? 'border-orange-500' : ''
                               }`}
@@ -721,13 +899,13 @@ export default function SessionsPage() {
                               type="button"
                               onClick={getSuggestions}
                               disabled={loadingSuggestions}
-                              className={`text-sm font-medium ${
+                              className={`px-3 py-1 text-sm font-normal rounded-md transition-colors ${
                                 loadingSuggestions 
-                                  ? 'text-gray-400 cursor-not-allowed' 
-                                  : 'text-blue-600 hover:text-blue-800'
+                                  ? 'text-gray-400 bg-gray-100 cursor-not-allowed' 
+                                  : 'bg-cyan-700 text-white hover:bg-cyan-900'
                               }`}
                             >
-                              {loadingSuggestions ? 'Getting suggestions...' : 'Suggestions'}
+                              {loadingSuggestions ? 'Loading...' : 'Suggestions ▶'}
                             </button>
                           </div>
                           
@@ -770,36 +948,76 @@ export default function SessionsPage() {
                         <div className="flex flex-wrap gap-3">
                           <button
                             type="submit"
-                            className="btn-primary"
+                            disabled={formSaved}
+                            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                              formSaved
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-cyan-700 text-white hover:bg-cyan-900'
+                            }`}
                           >
-                            Save Draft
+                            {formSaved ? 'Draft Saved' : 'Save Draft'}
                           </button>
-                          <button
-                            type="button"
-                            onClick={handleCancelEdit}
-                            className="btn-secondary"
-                          >
-                            Cancel Edit
-                          </button>
-                          {editingDraft && (
-                            <button
-                              type="button"
-                              onClick={handleRemoveDraft}
-                              className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
-                            >
-                              Remove Draft
-                            </button>
-                          )}
                         </div>
 
-                        {/* Render Button (disabled for now) */}
+                        {/* Render Button */}
                         <div className="pt-4 border-t border-gray-200">
                           <button
                             type="button"
-                            disabled
-                            className="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-md cursor-not-allowed"
+                            onClick={async () => {
+                              if (!currentUser || !userSessionCount) return;
+                              
+                              if (userSessionCount.availableSessions <= 0) {
+                                alert('No sessions available. Please upgrade your plan.');
+                                return;
+                              }
+                              
+                              if (!formData.title.trim() || !formData.description.trim()) {
+                                alert('Title and description are required to render a session.');
+                                return;
+                              }
+                              
+                              if (confirm('This will use one of your available sessions. Continue?')) {
+                                try {
+                                  // Decrement available sessions
+                                  await decrementAvailableSessions(currentUser.uid);
+                                  
+                                  // Update local state
+                                  setUserSessionCount({
+                                    ...userSessionCount,
+                                    availableSessions: userSessionCount.availableSessions - 1,
+                                    usedSessions: userSessionCount.usedSessions + 1
+                                  });
+                                  
+                                  // Here you would typically create the actual session
+                                  // For now, we'll just show a success message
+                                  alert('Session rendered successfully!');
+                                  
+                                  // Close the form
+                                  setShowForm(false);
+                                  setEditingDraft(null);
+                                  setCurrentDraft(null);
+                                  setFormData({ title: '', reader: '', description: '' });
+                                  setInstructions(Array(15).fill(''));
+                                  setSuggestions([]);
+                                } catch (error) {
+                                  console.error('Error rendering session:', error);
+                                  alert('Error rendering session. Please try again.');
+                                }
+                              }
+                            }}
+                            disabled={!formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
+                            className={`px-4 py-2 text-sm font-medium rounded-md ${
+                              !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
+                                ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
+                                : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
+                            }`}
                           >
-                            Render (Requirements not met)
+                            {!formData.title.trim() || !formData.description.trim() 
+                              ? 'Render (Title & Description Required)' 
+                              : (userSessionCount?.availableSessions || 0) <= 0
+                                ? 'Render (No Sessions Available)'
+                                : 'Render Session'
+                            }
                           </button>
                         </div>
                       </div>
@@ -813,20 +1031,25 @@ export default function SessionsPage() {
       </div>
 
       {/* Suggestions Slide-out Panel */}
-      {showSuggestions && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
-            onClick={() => setShowSuggestions(false)}
-          />
-          
-          {/* Panel */}
-          <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
+      <div className={`fixed inset-0 z-50 overflow-hidden transition-opacity duration-300 ease-out ${
+        showSuggestions ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}>
+        {/* Backdrop */}
+        <div 
+          className={`absolute inset-0 bg-black transition-opacity duration-300 ease-out ${
+            showSuggestions ? 'bg-opacity-50' : 'bg-opacity-0'
+          }`}
+          onClick={() => setShowSuggestions(false)}
+        />
+        
+        {/* Panel */}
+        <div className={`absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transform transition-transform duration-500 ease-out ${
+          showSuggestions ? 'translate-x-0' : 'translate-x-full'
+        }`}>
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">AI Suggestions</h3>
+                <h3 className="text-lg font-medium text-gray-900">Generated Suggestions</h3>
                 <button
                   onClick={() => setShowSuggestions(false)}
                   className="text-gray-400 hover:text-gray-600 focus:outline-none"
@@ -858,7 +1081,7 @@ export default function SessionsPage() {
                           disabled={!canAdd}
                           className={`text-xs px-3 py-1 rounded-md flex-shrink-0 mr-3 ${
                             canAdd
-                              ? 'bg-blue-600 text-white hover:bg-blue-700'
+                              ? 'bg-cyan-700 text-white hover:bg-cyan-900'
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           }`}
                         >
@@ -873,7 +1096,6 @@ export default function SessionsPage() {
             </div>
           </div>
         </div>
-      )}
-    </div>
+      </div>
   );
 } 
