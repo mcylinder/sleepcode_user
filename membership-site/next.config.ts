@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: false,
   },
+  // Force Vercel to use correct configuration
+  experimental: {
+    // This will help Vercel detect the correct configuration
+  },
 };
 
 export default nextConfig;
