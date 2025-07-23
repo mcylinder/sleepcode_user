@@ -1,6 +1,13 @@
 import Link from 'next/link';
 
 export default function HomePage() {
+  // Debug environment variables
+  console.log('Environment check:', {
+    hasFirebaseKey: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    hasAuthDomain: !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    hasProjectId: !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  });
+
   return (
     <div className="bg-white">
       {/* Hero Section */}
