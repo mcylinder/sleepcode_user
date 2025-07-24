@@ -537,9 +537,9 @@ export default function SessionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white sm:bg-gray-50">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        <div className="px-2 py-6 sm:px-0">
           <div className="bg-white shadow-sm">
             <div className="px-4 py-5 sm:p-6">
               <div className="mb-6">
@@ -597,7 +597,7 @@ export default function SessionsPage() {
               {/* Sessions Cards - Mobile */}
               <div className="md:hidden space-y-4">
                 {sessions.map((session) => (
-                  <div key={session.id} className="bg-white shadow-sm rounded-lg p-4 border border-gray-200">
+                  <div key={session.id} className="p-2">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="text-sm font-medium text-gray-900 flex-1 pr-4">
                         {session.title}
@@ -632,7 +632,10 @@ export default function SessionsPage() {
               </div>
 
               {/* Light Gray Line */}
-              <div className="mt-4 border-t border-gray-200"></div>
+              <div className="mt-4 border-t border-gray-200 md:block hidden"></div>
+              
+              {/* Mobile Separator */}
+              <div className="md:hidden border-t border-gray-200 my-6"></div>
 
               {/* Drafts Section */}
               <div className="mt-8">
@@ -729,7 +732,7 @@ export default function SessionsPage() {
                 {/* Drafts Cards - Mobile */}
                 <div className="md:hidden space-y-4">
                   {drafts.map((draft) => (
-                    <div key={draft.id} className="bg-white shadow-sm rounded-lg p-4 border border-gray-200">
+                    <div key={draft.id} className="p-2">
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1 pr-4">
                           <h3 className="text-sm font-medium text-gray-900">{draft.title}</h3>
@@ -790,6 +793,9 @@ export default function SessionsPage() {
                 </div>
               </div>
 
+              {/* Mobile Separator */}
+              <div className="md:hidden border-t border-gray-200 my-6"></div>
+              
               {/* New Session Form Section */}
               <div className="mt-8">
                                   <button
@@ -803,7 +809,7 @@ export default function SessionsPage() {
                   </button>
 
                 {showForm && (
-                  <div className="mt-4 bg-white shadow-sm rounded-lg p-6 border border-gray-200">
+                  <div className="mt-4 bg-white shadow-sm rounded-lg p-6 border border-gray-200 md:block hidden">
                     <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}>
                       <div className="space-y-6">
                         {/* Title Input */}
@@ -953,6 +959,209 @@ export default function SessionsPage() {
                               formSaved
                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 : 'bg-cyan-700 text-white hover:bg-cyan-900'
+                            }`}
+                          >
+                            {formSaved ? 'Draft Saved' : 'Save Draft'}
+                          </button>
+                        </div>
+
+                        {/* Render Button */}
+                        <div className="pt-4 border-t border-gray-200">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!currentUser || !userSessionCount) return;
+                              
+                              if (userSessionCount.availableSessions <= 0) {
+                                alert('No sessions available. Please upgrade your plan.');
+                                return;
+                              }
+                              
+                              if (!formData.title.trim() || !formData.description.trim()) {
+                                alert('Title and description are required to render a session.');
+                                return;
+                              }
+                              
+                              if (confirm('This will use one of your available sessions. Continue?')) {
+                                try {
+                                  // Decrement available sessions
+                                  await decrementAvailableSessions(currentUser.uid);
+                                  
+                                  // Update local state
+                                  setUserSessionCount({
+                                    ...userSessionCount,
+                                    availableSessions: userSessionCount.availableSessions - 1,
+                                    usedSessions: userSessionCount.usedSessions + 1
+                                  });
+                                  
+                                  // Here you would typically create the actual session
+                                  // For now, we'll just show a success message
+                                  alert('Session rendered successfully!');
+                                  
+                                  // Close the form
+                                  setShowForm(false);
+                                  setEditingDraft(null);
+                                  setCurrentDraft(null);
+                                  setFormData({ title: '', reader: '', description: '' });
+                                  setInstructions(Array(15).fill(''));
+                                  setSuggestions([]);
+                                } catch (error) {
+                                  console.error('Error rendering session:', error);
+                                  alert('Error rendering session. Please try again.');
+                                }
+                              }
+                            }}
+                            disabled={!formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
+                            className={`px-4 py-2 text-sm font-medium rounded-md ${
+                              !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
+                                ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
+                                : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
+                            }`}
+                          >
+                            {!formData.title.trim() || !formData.description.trim() 
+                              ? 'Render (Title & Description Required)' 
+                              : (userSessionCount?.availableSessions || 0) <= 0
+                                ? 'Render (No Sessions Available)'
+                                : 'Render Session'
+                            }
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                )}
+                
+                {/* Mobile Form */}
+                {showForm && (
+                  <div className="md:hidden mt-4">
+                    <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}>
+                      <div className="space-y-6">
+                        {/* Title Input */}
+                        <div>
+                          <label htmlFor="title-mobile" className="block text-sm font-medium text-gray-700 mb-2">
+                            Title
+                          </label>
+                          <input
+                            type="text"
+                            id="title-mobile"
+                            value={formData.title}
+                            onChange={(e) => {
+                              setFormData({ ...formData, title: e.target.value });
+                              setFormSaved(false);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif"
+                            placeholder="Enter session title"
+                          />
+                        </div>
+
+                        {/* Reader Dropdown */}
+                        <div>
+                          <label htmlFor="reader-mobile" className="block text-sm font-medium text-gray-700 mb-2">
+                            Reader
+                          </label>
+                          <select
+                            id="reader-mobile"
+                            value={formData.reader}
+                            onChange={(e) => {
+                              setFormData({ ...formData, reader: e.target.value });
+                              setFormSaved(false);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                          >
+                            <option value="Sarah">Sarah</option>
+                            <option value="Michael">Michael</option>
+                            <option value="Emma">Emma</option>
+                            <option value="David">David</option>
+                          </select>
+                        </div>
+
+                        {/* Description Input */}
+                        <div>
+                          <label htmlFor="description-mobile" className="block text-sm font-medium text-gray-700 mb-2">
+                            Description
+                          </label>
+                          <textarea
+                            id="description-mobile"
+                            rows={3}
+                            value={formData.description}
+                            onChange={(e) => {
+                              setFormData({ ...formData, description: e.target.value });
+                              setFormSaved(false);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif"
+                            placeholder="Describe your goal or intention for this session..."
+                          />
+                          <div className="mt-1 text-xs text-gray-500">
+                            {formData.description.length}/300 characters
+                          </div>
+                        </div>
+
+                        {/* Instructions Section */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Instructions
+                            </label>
+                            <button
+                              type="button"
+                              onClick={getSuggestions}
+                              disabled={!formData.description.trim() || formData.description.length < 60}
+                              className={`text-xs px-3 py-1 rounded-md ${
+                                !formData.description.trim() || formData.description.length < 60
+                                  ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
+                                  : 'text-white bg-cyan-700 border border-cyan-700 hover:bg-cyan-900'
+                              }`}
+                            >
+                              Suggestions
+                            </button>
+                          </div>
+                          
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                          >
+                            <SortableContext
+                              items={instructions.map((_, index) => `instruction-${index}`)}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              <div className="space-y-2">
+                                {instructions.map((instruction, index) => (
+                                  <SortableItem
+                                    key={index}
+                                    instruction={instruction}
+                                    index={index}
+                                    onInstructionChange={handleInstructionChange}
+                                    onClearInstruction={handleClearInstruction}
+                                    textareaRef={(el) => {
+                                      if (textareaRefs.current) {
+                                        textareaRefs.current[index] = el;
+                                      }
+                                    }}
+                                    isDisabled={!formData.description.trim() || formData.description.length < 60}
+                                  />
+                                ))}
+                              </div>
+                            </SortableContext>
+                          </DndContext>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex space-x-3">
+                          <button
+                            type="button"
+                            onClick={handleCancelEdit}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={!formData.title.trim() || !formData.description.trim()}
+                            className={`px-4 py-2 text-sm font-medium rounded-md ${
+                              !formData.title.trim() || !formData.description.trim()
+                                ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
+                                : 'text-white bg-cyan-700 border border-cyan-700 hover:bg-cyan-900'
                             }`}
                           >
                             {formSaved ? 'Draft Saved' : 'Save Draft'}

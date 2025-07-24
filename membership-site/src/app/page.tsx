@@ -22,11 +22,11 @@ export default function HomePage() {
             <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
               <div className="sm:text-center lg:text-left">
                 <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                  <span className="block xl:inline">Transform your</span>{' '}
-                  <span className="block text-cyan-900 xl:inline">sleep experience</span>
+                  <span className="block xl:inline">Train your mind</span>{' '}
+                  <span className="block text-cyan-900 xl:inline"> while you sleep</span>
                 </h1>
                 <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                  Join thousands of users who have revolutionized their sleep patterns with our advanced sleep tracking and optimization platform. Get personalized insights and recommendations to improve your sleep quality.
+                Your sleep can support meaningful change. SleepCoding pairs affirming language with calming sound environments to help ease you into sleep while planting the seeds of healthier thinking and behavior.
                 </p>
                 <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                   <div className="rounded-md shadow">
@@ -53,74 +53,48 @@ export default function HomePage() {
       </div>
 
       {/* Features Section */}
-      <div className="py-12 bg-gray-50">
+      <div className="py-6 sm:py-12 bg-white sm:bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
             <h2 className="text-base text-cyan-700 font-semibold tracking-wide uppercase">Features</h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Everything you need for better sleep
+            Change your mindset in your sleep
             </p>
             <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-              Our comprehensive sleep tracking platform provides all the tools you need to understand and improve your sleep patterns.
+            Get started with 15 free sessions designed to support rest and shift your perspective. 
+            Upgrade for <em>custom</em> sessions—your topics, your intention.
+ 
             </p>
           </div>
 
           <div className="mt-10">
             <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 bg-cyan-500 text-white">
-                    📊
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Advanced Analytics</h3>
-                  <p className="mt-2 text-base text-gray-500">
-                    Detailed sleep analytics and insights to help you understand your sleep patterns and identify areas for improvement.
-                  </p>
-                </div>
+              <div>
+                <h3 className="text-xl leading-7 font-bold text-cyan-900 border-l-4 border-cyan-500 pl-4">15 Free Sessions</h3>
+                <p className="mt-2 text-base text-gray-500">
+                Explore themes like wellness, meditation, and mood—each one crafted to help you rest and reset.
+                </p>
               </div>
 
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 bg-cyan-500 text-white">
-                    🎯
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Personalized Recommendations</h3>
-                  <p className="mt-2 text-base text-gray-500">
-                    AI-powered recommendations tailored to your specific sleep patterns and lifestyle to optimize your rest.
-                  </p>
-                </div>
+              <div>
+                <h3 className="text-xl leading-7 font-bold text-cyan-900 border-l-4 border-cyan-500 pl-4">Build Your Own</h3>
+                <p className="mt-2 text-base text-gray-500">
+                Subscribers get 15 custom sessions per year. Mix your own affirmations, voices, and background audio to match your personal goals.
+                </p>
               </div>
 
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 bg-cyan-500 text-white">
-                    📱
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Mobile App</h3>
-                  <p className="mt-2 text-base text-gray-500">
-                    Access your sleep data and insights anywhere with our intuitive mobile application available on all devices.
-                  </p>
-                </div>
+              <div>
+                <h3 className="text-xl leading-7 font-bold text-cyan-900 border-l-4 border-cyan-500 pl-4">Designed for Mobile</h3>
+                <p className="mt-2 text-base text-gray-500">
+                All sessions are available in the mobile app—easy to access, easy to use, and always in your pocket.
+                </p>
               </div>
 
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 bg-cyan-500 text-white">
-                    🔒
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Secure & Private</h3>
-                  <p className="mt-2 text-base text-gray-500">
-                    Your sleep data is encrypted and secure. We prioritize your privacy and never share your personal information.
-                  </p>
-                </div>
+              <div>
+                <h3 className="text-xl leading-7 font-bold text-cyan-900 border-l-4 border-cyan-500 pl-4">Privacy Built In</h3>
+                <p className="mt-2 text-base text-gray-500">
+                Your sessions are private, secure, and ad-free. No tracking, no interruptions—just space to recharge.
+                </p>
               </div>
             </div>
           </div>
@@ -131,7 +105,7 @@ export default function HomePage() {
       <div className="bg-cyan-700">
         <div className="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
-            <span className="block">Ready to improve your sleep?</span>
+            <span className="block mb-2">Ready to shift your mindset?</span>
             <span className="block">Start your free trial today.</span>
           </h2>
           <p className="mt-4 text-lg leading-6 text-cyan-200">
