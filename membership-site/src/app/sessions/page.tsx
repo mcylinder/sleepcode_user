@@ -334,7 +334,7 @@ export default function SessionsPage() {
       const sessionCount = await getUserSessionCount(currentUser.uid);
       setUserSessionCount(sessionCount);
       
-      alert('Session submitted for rendering!');
+      // No alert - just update the status and move to sessions
     } catch (error) {
       console.error('Error rendering session:', error);
       alert('Error submitting session for rendering. Please try again.');
@@ -1176,48 +1176,7 @@ export default function SessionsPage() {
                         <div className="pt-4 border-t border-gray-200">
                           <button
                             type="button"
-                            onClick={async () => {
-                              if (!currentUser || !userSessionCount) return;
-                              
-                              if (userSessionCount.availableSessions <= 0) {
-                                alert('No sessions available. Please upgrade your plan.');
-                                return;
-                              }
-                              
-                              if (!formData.title.trim() || !formData.description.trim()) {
-                                alert('Title and description are required to render a session.');
-                                return;
-                              }
-                              
-                              if (confirm('This will use one of your available sessions. Continue?')) {
-                                try {
-                                  // Decrement available sessions
-                                  await decrementAvailableSessions(currentUser.uid);
-                                  
-                                  // Update local state
-                                  setUserSessionCount({
-                                    ...userSessionCount,
-                                    availableSessions: userSessionCount.availableSessions - 1,
-                                    usedSessions: userSessionCount.usedSessions + 1
-                                  });
-                                  
-                                  // Here you would typically create the actual session
-                                  // For now, we'll just show a success message
-                                  alert('Session rendered successfully!');
-                                  
-                                  // Close the form
-                                  setShowForm(false);
-                                  setEditingDraft(null);
-                                  setCurrentDraft(null);
-                                  setFormData({ title: '', reader: '', description: '' });
-                                  setInstructions(Array(15).fill(''));
-                                  setSuggestions([]);
-                                } catch (error) {
-                                  console.error('Error rendering session:', error);
-                                  alert('Error rendering session. Please try again.');
-                                }
-                              }
-                            }}
+                            onClick={handleRender}
                             disabled={!editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
                               !editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
@@ -1426,49 +1385,7 @@ export default function SessionsPage() {
                         <div className="pt-4 border-t border-gray-200">
                           <button
                             type="button"
-                            onClick={async () => {
-                              if (!currentUser || !userSessionCount) return;
-                              
-                              if (userSessionCount.availableSessions <= 0) {
-                                alert('No sessions available. Please upgrade your plan.');
-                                return;
-                              }
-                              
-                              if (!formData.title.trim() || !formData.description.trim()) {
-                                alert('Title and description are required to render a session.');
-                                return;
-                              }
-                              
-                              if (confirm('This will use one of your available sessions. Continue?')) {
-                                try {
-                                  // Decrement available sessions
-                                  await decrementAvailableSessions(currentUser.uid);
-                                  
-                                  // Update local state
-                                  setUserSessionCount({
-                                    ...userSessionCount,
-                                    availableSessions: userSessionCount.availableSessions - 1,
-                                    usedSessions: userSessionCount.usedSessions + 1
-                                  });
-                                  
-                                  // Here you would typically create the actual session
-                                  // For now, we'll just show a success message
-                                  alert('Session rendered successfully!');
-                                  
-                                  // Close the form
-                                  setShowForm(false);
-                                  setEditingDraft(null);
-                                  setCurrentDraft(null);
-                                  setFormData({ title: '', reader: '', description: '' });
-                                  setInstructions(Array(15).fill(''));
-                                  setSuggestions([]);
-                                } catch (error) {
-                                  console.error('Error rendering session:', error);
-                                  alert('Error rendering session. Please try again.');
-                                }
-                              }
-                            }}
-                            disabled={!editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
+                            onClick={handleRender}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
                               !editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
