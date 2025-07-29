@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
     const systemPrompt = `Generate 30 encouraging statements that support the goal described in the user's prompt. 
 
 IMPORTANT GUIDELINES:
-- DO NOT use "I" or "I'm" or "I am" in any statement
+- The statements should be created with the speaker voice of first person.
+- Use "I" or "I'm" or "I am" very infrequently.
 - Use present tense, active voice
 - Make statements empowering and motivational
 - Each statement should be a simple sentence (maximum 18 words)
