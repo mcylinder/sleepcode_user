@@ -4,14 +4,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { 
-  Draft, 
+  Session, 
   UserSessionCount,
-  createDraft, 
-  updateDraft, 
-  deleteDraft, 
-  getDraft, 
-  getUserDrafts, 
-  duplicateDraft,
+  createSession, 
+  updateSession, 
+  deleteSession, 
+  getSession, 
+  getUserSessions, 
+  duplicateSession,
   getUserSessionCount,
   decrementAvailableSessions,
   hasContentChanged
@@ -175,7 +175,7 @@ function SortableItem({
   );
 }
 
-interface Session {
+interface SessionDisplay {
   id: string;
   title: string;
   length: string; // format: "minute:second"
@@ -188,11 +188,11 @@ interface Session {
 export default function SessionsPage() {
   const { currentUser, loading } = useAuth();
   const router = useRouter();
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [sessions, setSessions] = useState<SessionDisplay[]>([]);
+  const [drafts, setDrafts] = useState<Session[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingDraft, setEditingDraft] = useState<Draft | null>(null);
-  const [currentDraft, setCurrentDraft] = useState<Draft | null>(null);
+  const [editingDraft, setEditingDraft] = useState<Session | null>(null);
+  const [currentDraft, setCurrentDraft] = useState<Session | null>(null);
   const [userSessionCount, setUserSessionCount] = useState<UserSessionCount | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -220,13 +220,15 @@ export default function SessionsPage() {
   // Form handlers
   const handleNewSession = () => {
     setEditingDraft(null);
+    setCurrentDraft(null);
     setFormSaved(false);
     setFormData({ title: '', reader: '', description: '' });
     setInstructions(Array(15).fill(''));
+    setSuggestions([]);
     setShowForm(true);
   };
 
-  const handleEditDraft = (draft: Draft) => {
+  const handleEditDraft = (draft: Session) => {
     setEditingDraft(draft);
     setCurrentDraft(draft);
     setFormSaved(false);
@@ -244,9 +246,10 @@ export default function SessionsPage() {
     if (!currentUser) return;
 
     try {
-      if (editingDraft) {
-        // Update existing draft
-        await updateDraft(currentUser.uid, editingDraft.id!, {
+      if (editingDraft || currentDraft) {
+        // Update existing draft - use either editingDraft or currentDraft
+        const draftToUpdate = editingDraft || currentDraft;
+        await updateSession(currentUser.uid, draftToUpdate!.id!, {
           title: formData.title,
           description: formData.description,
           reader: formData.reader,
@@ -256,13 +259,16 @@ export default function SessionsPage() {
         
         // Update local state
         setDrafts(drafts.map(draft => 
-          draft.id === editingDraft.id 
+          draft.id === draftToUpdate!.id 
             ? { ...draft, title: formData.title, description: formData.description, reader: formData.reader, instructions: instructions, suggestions: suggestions }
             : draft
         ));
+        
+        // Update currentDraft to the updated session
+        setCurrentDraft({ ...draftToUpdate!, title: formData.title, description: formData.description, reader: formData.reader, instructions: instructions, suggestions: suggestions });
       } else {
         // Create new draft
-        const newDraft: Omit<Draft, 'id' | 'createdAt' | 'updatedAt'> = {
+        const newSession: Omit<Session, 'id' | 'createdAt' | 'updatedAt'> = {
           title: formData.title,
           description: formData.description,
           reader: formData.reader,
@@ -272,22 +278,18 @@ export default function SessionsPage() {
           status: 'in_edit'
         };
         
-        const draftId = await createDraft(newDraft);
-        const createdDraft = await getDraft(currentUser.uid, draftId);
+        const sessionId = await createSession(newSession);
+        const createdSession = await getSession(currentUser.uid, sessionId);
         
-        if (createdDraft) {
-          setDrafts([createdDraft, ...drafts]);
-          // Set currentDraft to the created draft so render button works
-          setCurrentDraft(createdDraft);
+        if (createdSession) {
+          setDrafts([createdSession, ...drafts]);
+          // Set currentDraft to the created session so render button works
+          setCurrentDraft(createdSession);
         }
       }
       
       setFormSaved(true);
       setEditingDraft(null);
-      // Set currentDraft to the saved draft so render button works (for existing drafts)
-      if (editingDraft) {
-        setCurrentDraft({ ...editingDraft, title: formData.title, description: formData.description, reader: formData.reader, instructions: instructions, suggestions: suggestions });
-      }
     } catch (error) {
       console.error('Error saving draft:', error);
       alert('Error saving draft. Please try again.');
@@ -323,12 +325,12 @@ export default function SessionsPage() {
     try {
       console.log('Starting render process for draft:', draftToRender.id);
       
-      // Update draft status to 'to_render'
-      console.log('Updating draft status...');
-      await updateDraft(currentUser.uid, draftToRender.id!, {
+      // Update session status to 'to_render'
+      console.log('Updating session status...');
+      await updateSession(currentUser.uid, draftToRender.id!, {
         status: 'to_render'
       });
-      console.log('Draft status updated successfully');
+      console.log('Session status updated successfully');
       
       // Decrement available sessions
       console.log('Decrementing available sessions...');
@@ -430,7 +432,7 @@ export default function SessionsPage() {
 
     if (currentContent !== lastSavedContent && hasContentChanged(currentDraft, currentDraft)) {
       try {
-        await updateDraft(currentUser.uid, currentDraft.id!, {
+        await updateSession(currentUser.uid, currentDraft.id!, {
           title: formData.title,
           description: formData.description,
           reader: formData.reader,
@@ -501,9 +503,9 @@ export default function SessionsPage() {
       // Store suggestions in current draft if it exists
       if (currentDraft && currentUser) {
         try {
-          await updateDraft(currentUser.uid, currentDraft.id!, {
-            suggestions: data.suggestions
-          });
+                  await updateSession(currentUser.uid, currentDraft.id!, {
+          suggestions: data.suggestions
+        });
         } catch (error) {
           console.error('Error saving suggestions:', error);
         }
@@ -538,6 +540,10 @@ export default function SessionsPage() {
 
   const getEmptySlotCount = () => {
     return instructions.filter(instruction => !instruction.trim()).length;
+  };
+
+  const getNonEmptyInstructionCount = () => {
+    return instructions.filter(instruction => instruction.trim() !== '').length;
   };
 
   // Audio playback functions
@@ -633,70 +639,31 @@ export default function SessionsPage() {
 
   // Load data function
   const loadData = async () => {
-    // Mock data for sessions
-    const mockSessions: Session[] = [
-      {
-        id: '1',
-        title: 'Introduction to Sleep Science',
-        length: '15:30',
-        reader: 'Sarah',
-        created: '2024-01-15'
-      },
-      {
-        id: '2',
-        title: 'Deep Breathing Techniques',
-        length: '12:45',
-        reader: 'Michael',
-        created: '2024-01-14'
-      },
-      {
-        id: '3',
-        title: 'Progressive Muscle Relaxation',
-        length: '18:20',
-        reader: 'Emma',
-        created: '2024-01-13'
-      },
-      {
-        id: '4',
-        title: 'Mindfulness Meditation',
-        length: '10:15',
-        reader: 'David',
-        created: '2024-01-12'
-      },
-      {
-        id: '5',
-        title: 'Sleep Hygiene Basics',
-        length: '14:30',
-        reader: 'Lisa',
-        created: '2024-01-11'
-      }
-    ];
-
     // Load user drafts and session count from Firestore
     if (currentUser) {
       try {
-        const userDrafts = await getUserDrafts(currentUser.uid);
+        const userSessions = await getUserSessions(currentUser.uid);
         const sessionCount = await getUserSessionCount(currentUser.uid);
         
-        // Add default status to existing drafts that don't have it
-        const draftsWithStatus = userDrafts.map(draft => ({
-          ...draft,
-          status: draft.status || 'in_edit'
+        // Add default status to existing sessions that don't have it
+        const sessionsWithStatus = userSessions.map(session => ({
+          ...session,
+          status: session.status || 'in_edit'
         }));
         
-        setDrafts(draftsWithStatus);
+        setDrafts(sessionsWithStatus);
         setUserSessionCount(sessionCount);
         
-        // Combine mock sessions with drafts that are being rendered
-        const renderingDrafts = draftsWithStatus.filter(draft => draft.status === 'to_render').map(draft => ({
-          id: draft.id!,
-          title: draft.title,
+        // Only show sessions that are being rendered (not in_edit)
+        const renderingSessions = sessionsWithStatus.filter(session => session.status !== 'in_edit').map(session => ({
+          id: session.id!,
+          title: session.title,
           length: '00:00', // Placeholder until rendered
-          reader: draft.reader,
-          created: draft.createdAt?.toDate().toISOString() || new Date().toISOString()
+          reader: session.reader,
+          created: session.createdAt?.toDate().toISOString() || new Date().toISOString()
         }));
         
-        setSessions([...renderingDrafts, ...mockSessions]);
+        setSessions(renderingSessions);
       } catch (error) {
         console.error('Error loading drafts:', error);
       }
@@ -853,8 +820,10 @@ export default function SessionsPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {drafts.map((draft) => (
-                        <tr key={draft.id} className="hover:bg-gray-50">
+                      {drafts.filter(draft => draft.status === 'in_edit').map((draft) => (
+                        <tr key={draft.id} className={`hover:bg-gray-50 ${
+                          editingDraft?.id === draft.id ? 'bg-cyan-50 border-l-4 border-cyan-500' : ''
+                        }`}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {draft.title}
                           </td>
@@ -881,10 +850,10 @@ export default function SessionsPage() {
                                 onClick={async () => {
                                   if (currentUser && confirm('Duplicate this draft?')) {
                                     try {
-                                      await duplicateDraft(currentUser.uid, draft.id!);
+                                      await duplicateSession(currentUser.uid, draft.id!);
                                       // Reload drafts
-                                      const userDrafts = await getUserDrafts(currentUser.uid);
-                                      setDrafts(userDrafts);
+                                      const userSessions = await getUserSessions(currentUser.uid);
+                                      setDrafts(userSessions);
                                     } catch (error) {
                                       console.error('Error duplicating draft:', error);
                                       alert('Error duplicating draft. Please try again.');
@@ -899,7 +868,7 @@ export default function SessionsPage() {
                                 onClick={async () => {
                                   if (currentUser && confirm('Delete this draft?')) {
                                     try {
-                                      await deleteDraft(currentUser.uid, draft.id!);
+                                      await deleteSession(currentUser.uid, draft.id!);
                                       setDrafts(drafts.filter(d => d.id !== draft.id));
                                     } catch (error) {
                                       console.error('Error deleting draft:', error);
@@ -921,8 +890,10 @@ export default function SessionsPage() {
 
                 {/* Drafts Cards - Mobile */}
                 <div className="md:hidden space-y-4">
-                  {drafts.map((draft) => (
-                    <div key={draft.id} className="p-2">
+                  {drafts.filter(draft => draft.status === 'in_edit').map((draft) => (
+                    <div key={draft.id} className={`p-2 ${
+                      editingDraft?.id === draft.id ? 'bg-cyan-50 border-l-4 border-cyan-500 rounded-r-md' : ''
+                    }`}>
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1 pr-4">
                           <h3 className="text-sm font-medium text-gray-900">{draft.title}</h3>
@@ -941,9 +912,9 @@ export default function SessionsPage() {
                             onClick={async () => {
                               if (currentUser && confirm('Duplicate this draft?')) {
                                 try {
-                                  await duplicateDraft(currentUser.uid, draft.id!);
-                                  const userDrafts = await getUserDrafts(currentUser.uid);
-                                  setDrafts(userDrafts);
+                                  await duplicateSession(currentUser.uid, draft.id!);
+                                  const userSessions = await getUserSessions(currentUser.uid);
+                                  setDrafts(userSessions);
                                 } catch (error) {
                                   console.error('Error duplicating draft:', error);
                                   alert('Error duplicating draft. Please try again.');
@@ -958,7 +929,7 @@ export default function SessionsPage() {
                             onClick={async () => {
                               if (currentUser && confirm('Delete this draft?')) {
                                 try {
-                                  await deleteDraft(currentUser.uid, draft.id!);
+                                  await deleteSession(currentUser.uid, draft.id!);
                                   setDrafts(drafts.filter(d => d.id !== draft.id));
                                 } catch (error) {
                                   console.error('Error deleting draft:', error);
@@ -1180,23 +1151,28 @@ export default function SessionsPage() {
 
                         {/* Action Buttons */}
                         <div className="flex flex-wrap gap-3">
-                          <button
-                            type="submit"
-                            disabled={formSaved}
-                            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                              formSaved
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-cyan-700 text-white hover:bg-cyan-900'
-                            }`}
-                          >
-                            {formSaved ? 'Draft Saved' : 'Save Draft'}
-                          </button>
+                                                      <button
+                              type="submit"
+                              disabled={!formData.title.trim() || !formData.description.trim()}
+                              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center space-x-2 ${
+                                !formData.title.trim() || !formData.description.trim()
+                                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                  : 'bg-cyan-700 text-white hover:bg-cyan-900'
+                              }`}
+                            >
+                              <span className="text-sm">
+                                {formSaved ? '✓' : '☐'}
+                              </span>
+                              <span>
+                                {!formData.title.trim() || !formData.description.trim() ? 'Save Draft (Title & Description Required)' : 'Save Draft'}
+                              </span>
+                            </button>
                           <button
                             type="button"
                             onClick={handleClearDraft}
                             className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
                           >
-                            Clear Draft
+                            Clear Form
                           </button>
                         </div>
 
@@ -1205,9 +1181,9 @@ export default function SessionsPage() {
                           <button
                             type="button"
                             onClick={handleRender}
-                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
+                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0 || getNonEmptyInstructionCount() < 1}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
-                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
+                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0 || getNonEmptyInstructionCount() < 1
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
                                 : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
                             }`}
@@ -1215,6 +1191,8 @@ export default function SessionsPage() {
                             {!formData.title.trim() || !formData.description.trim() 
                               ? 'Render (Title & Description Required)' 
                               : (userSessionCount?.availableSessions || 0) <= 0
+                                ? 'Render (No Sessions Available)'
+                                : getNonEmptyInstructionCount() < 1
                                 ? 'Render (No Sessions Available)'
                                 : 'Render Session'
                             }
@@ -1392,20 +1370,25 @@ export default function SessionsPage() {
                           <button
                             type="submit"
                             disabled={!formData.title.trim() || !formData.description.trim()}
-                            className={`px-4 py-2 text-sm font-medium rounded-md ${
+                            className={`px-4 py-2 text-sm font-medium rounded-md flex items-center space-x-2 ${
                               !formData.title.trim() || !formData.description.trim()
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
                                 : 'text-white bg-cyan-700 border border-cyan-700 hover:bg-cyan-900'
                             }`}
                           >
-                            {formSaved ? 'Draft Saved' : 'Save Draft'}
+                            <span className="text-sm">
+                              {formSaved ? '✓' : '☐'}
+                            </span>
+                            <span>
+                              {!formData.title.trim() || !formData.description.trim() ? 'Save Draft (Title & Description Required)' : 'Save Draft'}
+                            </span>
                           </button>
                           <button
                             type="button"
                             onClick={handleClearDraft}
                             className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
                           >
-                            Clear Draft
+                            Clear Form
                           </button>
                         </div>
 
@@ -1414,9 +1397,9 @@ export default function SessionsPage() {
                           <button
                             type="button"
                             onClick={handleRender}
-                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
+                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0 || getNonEmptyInstructionCount() < 1}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
-                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
+                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0 || getNonEmptyInstructionCount() < 1
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
                                 : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
                             }`}
@@ -1424,6 +1407,8 @@ export default function SessionsPage() {
                             {!formData.title.trim() || !formData.description.trim() 
                               ? 'Render (Title & Description Required)' 
                               : (userSessionCount?.availableSessions || 0) <= 0
+                                ? 'Render (No Sessions Available)'
+                                : getNonEmptyInstructionCount() < 1
                                 ? 'Render (No Sessions Available)'
                                 : 'Render Session'
                             }

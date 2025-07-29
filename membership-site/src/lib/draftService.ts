@@ -23,7 +23,7 @@ const getFirestore = (): Firestore => {
   return db;
 };
 
-export interface Draft {
+export interface Session {
   id?: string;
   title: string;
   description: string;
@@ -42,133 +42,133 @@ export interface UserSessionCount {
   usedSessions: number;
 }
 
-// Constants
-const SESSIONS_AVAILABLE = 3;
 
-// Draft CRUD operations
-export const createDraft = async (draft: Omit<Draft, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
-  const draftData = {
-    ...draft,
+
+// Session CRUD operations
+export const createSession = async (session: Omit<Session, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  const sessionData = {
+    ...session,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };
   
   const docRef = await addDoc(
-    collection(getFirestore(), 'drafts', draft.userId, 'sessions'), 
-    draftData
+    collection(getFirestore(), 'users', session.userId, 'sessions'), 
+    sessionData
   );
   
   return docRef.id;
 };
 
-export const updateDraft = async (userId: string, draftId: string, updates: Partial<Draft>): Promise<void> => {
-  const draftRef = doc(getFirestore(), 'drafts', userId, 'sessions', draftId);
-  await updateDoc(draftRef, {
+export const updateSession = async (userId: string, sessionId: string, updates: Partial<Session>): Promise<void> => {
+  const sessionRef = doc(getFirestore(), 'users', userId, 'sessions', sessionId);
+  await updateDoc(sessionRef, {
     ...updates,
     updatedAt: serverTimestamp()
   });
 };
 
-export const deleteDraft = async (userId: string, draftId: string): Promise<void> => {
-  const draftRef = doc(getFirestore(), 'drafts', userId, 'sessions', draftId);
-  await deleteDoc(draftRef);
+export const deleteSession = async (userId: string, sessionId: string): Promise<void> => {
+  const sessionRef = doc(getFirestore(), 'users', userId, 'sessions', sessionId);
+  await deleteDoc(sessionRef);
 };
 
-export const getDraft = async (userId: string, draftId: string): Promise<Draft | null> => {
-  const draftRef = doc(getFirestore(), 'drafts', userId, 'sessions', draftId);
-  const draftSnap = await getDoc(draftRef);
+export const getSession = async (userId: string, sessionId: string): Promise<Session | null> => {
+  const sessionRef = doc(getFirestore(), 'users', userId, 'sessions', sessionId);
+  const sessionSnap = await getDoc(sessionRef);
   
-  if (draftSnap.exists()) {
-    return { id: draftSnap.id, ...draftSnap.data() } as Draft;
+  if (sessionSnap.exists()) {
+    return { id: sessionSnap.id, ...sessionSnap.data() } as Session;
   }
   
   return null;
 };
 
-export const getUserDrafts = async (userId: string): Promise<Draft[]> => {
-  const draftsRef = collection(getFirestore(), 'drafts', userId, 'sessions');
-  const q = query(draftsRef, orderBy('updatedAt', 'desc'));
+export const getUserSessions = async (userId: string): Promise<Session[]> => {
+  const sessionsRef = collection(getFirestore(), 'users', userId, 'sessions');
+  const q = query(sessionsRef, orderBy('updatedAt', 'desc'));
   const querySnapshot = await getDocs(q);
   
   return querySnapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
-  })) as Draft[];
+  })) as Session[];
 };
 
-export const duplicateDraft = async (userId: string, draftId: string): Promise<string> => {
-  const originalDraft = await getDraft(userId, draftId);
-  if (!originalDraft) {
-    throw new Error('Draft not found');
+export const duplicateSession = async (userId: string, sessionId: string): Promise<string> => {
+  const originalSession = await getSession(userId, sessionId);
+  if (!originalSession) {
+    throw new Error('Session not found');
   }
   
-  const duplicatedDraft: Omit<Draft, 'id' | 'createdAt' | 'updatedAt'> = {
-    title: `${originalDraft.title} (Copy)`,
-    description: originalDraft.description,
-    instructions: [...originalDraft.instructions],
-    reader: originalDraft.reader,
-    suggestions: [...originalDraft.suggestions],
-    userId: originalDraft.userId,
+  const duplicatedSession: Omit<Session, 'id' | 'createdAt' | 'updatedAt'> = {
+    title: `${originalSession.title} (Copy)`,
+    description: originalSession.description,
+    instructions: [...originalSession.instructions],
+    reader: originalSession.reader,
+    suggestions: [...originalSession.suggestions],
+    userId: originalSession.userId,
     status: 'in_edit'
   };
   
-  return await createDraft(duplicatedDraft);
+  return await createSession(duplicatedSession);
 };
 
-// Session count operations
+// Session count operations - using draft_count field from user document
 export const getUserSessionCount = async (userId: string): Promise<UserSessionCount> => {
-  const userRef = doc(getFirestore(), 'users', userId, 'sessionCount', 'default');
+  const userRef = doc(getFirestore(), 'users', userId);
   const userSnap = await getDoc(userRef);
   
   if (userSnap.exists()) {
-    return userSnap.data() as UserSessionCount;
+    const userData = userSnap.data();
+    const availableSessions = Number(userData.draft_count) || 0;
+    
+    return {
+      availableSessions,
+      totalSessions: availableSessions,
+      usedSessions: 0
+    };
   }
   
-  // Initialize with default values
-  const defaultCount: UserSessionCount = {
-    availableSessions: SESSIONS_AVAILABLE,
-    totalSessions: SESSIONS_AVAILABLE,
+  // Return default values if user document doesn't exist
+  return {
+    availableSessions: 0,
+    totalSessions: 0,
     usedSessions: 0
   };
-  
-  return defaultCount;
 };
 
 export const updateUserSessionCount = async (userId: string, updates: Partial<UserSessionCount>): Promise<void> => {
-  const userRef = doc(getFirestore(), 'users', userId, 'sessionCount', 'default');
+  const userRef = doc(getFirestore(), 'users', userId);
   await updateDoc(userRef, updates);
 };
 
 export const decrementAvailableSessions = async (userId: string): Promise<void> => {
-  const userRef = doc(getFirestore(), 'users', userId, 'sessionCount', 'default');
+  const userRef = doc(getFirestore(), 'users', userId);
   const userSnap = await getDoc(userRef);
   
   if (userSnap.exists()) {
-    const currentData = userSnap.data() as UserSessionCount;
+    const userData = userSnap.data();
+    const currentAvailableSessions = Number(userData.draft_count) || 0;
+    const newAvailableSessions = Math.max(0, currentAvailableSessions - 1);
+    
     await updateDoc(userRef, {
-      availableSessions: Math.max(0, currentData.availableSessions - 1),
-      usedSessions: currentData.usedSessions + 1
+      draft_count: newAvailableSessions
     });
-  } else {
-    // Create the document if it doesn't exist
-    const defaultCount: UserSessionCount = {
-      availableSessions: SESSIONS_AVAILABLE - 1, // Decrement from default
-      totalSessions: SESSIONS_AVAILABLE,
-      usedSessions: 1
-    };
-    await setDoc(userRef, defaultCount);
   }
+  // If user document doesn't exist, don't try to create it - just return
+  // The user will have the default session count anyway
 };
 
 // Auto-save helper
-export const hasContentChanged = (currentDraft: Draft, savedDraft: Draft | null): boolean => {
-  if (!savedDraft) return true;
+export const hasContentChanged = (currentSession: Session, savedSession: Session | null): boolean => {
+  if (!savedSession) return true;
   
   return (
-    currentDraft.title !== savedDraft.title ||
-    currentDraft.description !== savedDraft.description ||
-    currentDraft.reader !== savedDraft.reader ||
-    JSON.stringify(currentDraft.instructions) !== JSON.stringify(savedDraft.instructions) ||
-    JSON.stringify(currentDraft.suggestions) !== JSON.stringify(savedDraft.suggestions)
+    currentSession.title !== savedSession.title ||
+    currentSession.description !== savedSession.description ||
+    currentSession.reader !== savedSession.reader ||
+    JSON.stringify(currentSession.instructions) !== JSON.stringify(savedSession.instructions) ||
+    JSON.stringify(currentSession.suggestions) !== JSON.stringify(savedSession.suggestions)
   );
 }; 
