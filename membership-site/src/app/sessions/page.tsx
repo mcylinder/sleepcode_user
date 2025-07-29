@@ -103,7 +103,6 @@ function SortableItem({
             alert("A description about your goal is required.");
           }
         }}
-                            onClick={handleRender}
       >
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
           <path d="M7 2a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 2zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 8zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 14zm6-8a2 2 0 1 1-.001-4.001A2 2 0 0 1 13 6zm0 2a2 2 0 1 1 .001 4.001A2 2 0 0 1 13 8zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 13 14z" />
@@ -128,7 +127,6 @@ function SortableItem({
             height: 'auto',
             minHeight: '40px'
           }}
-                            onClick={handleRender}
           onInput={(e) => {
             if (!isDisabled) {
               const target = e.target as HTMLTextAreaElement;
@@ -136,13 +134,11 @@ function SortableItem({
               target.style.height = Math.min(target.scrollHeight, INSTRUCTION_MAX_CHARS) + 'px';
             }
           }}
-                            onClick={handleRender}
           onClick={() => {
             if (isDisabled) {
               alert("A description about your goal is required.");
             }
           }}
-                            onClick={handleRender}
         />
         
         {/* Character Count */}
@@ -163,7 +159,6 @@ function SortableItem({
           }
           onClearInstruction(index);
         }}
-                            onClick={handleRender}
         className={`flex-shrink-0 p-1 focus:outline-none ${
           isDisabled 
             ? 'text-gray-300 cursor-not-allowed' 
@@ -856,7 +851,6 @@ export default function SessionsPage() {
                                     }
                                   }
                                 }}
-                            onClick={handleRender}
                                 className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-md hover:bg-green-100 hover:border-green-300 transition-colors"
                               >
                                 Duplicate
@@ -873,7 +867,6 @@ export default function SessionsPage() {
                                     }
                                   }
                                 }}
-                            onClick={handleRender}
                                 className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 transition-colors"
                               >
                                 Delete
@@ -917,7 +910,6 @@ export default function SessionsPage() {
                                 }
                               }
                             }}
-                            onClick={handleRender}
                             className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-md hover:bg-green-100 hover:border-green-300 transition-colors"
                           >
                             Duplicate
@@ -934,7 +926,6 @@ export default function SessionsPage() {
                                 }
                               }
                             }}
-                            onClick={handleRender}
                             className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 transition-colors"
                           >
                             Delete
@@ -969,8 +960,7 @@ export default function SessionsPage() {
 
                 {showForm && (
                   <div className="mt-4 bg-white shadow-sm rounded-lg p-6 border border-gray-200 md:block hidden">
-                    <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}
-                            onClick={handleRender}>
+                    <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}>
                       <div className="space-y-6">
                         {/* Title Input */}
                         <div>
@@ -985,7 +975,6 @@ export default function SessionsPage() {
                           setFormData({ ...formData, title: e.target.value });
                           setFormSaved(false);
                         }}
-                            onClick={handleRender}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif"
                             placeholder="Enter session title"
                           />
@@ -1031,7 +1020,6 @@ export default function SessionsPage() {
                                       setFormSaved(false);
                                       setIsDropdownOpen(false);
                                     }}
-                            onClick={handleRender}
                                   >
                                     <span className="text-sm">{reader.name}</span>
                                     <button
@@ -1040,7 +1028,6 @@ export default function SessionsPage() {
                                         e.stopPropagation();
                                         toggleAudio(reader.name, reader.audioFile);
                                       }}
-                            onClick={handleRender}
                                       className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded hover:bg-gray-200 transition-colors"
                                     >
                                       {playingReader === reader.name ? 'Pause' : 'Play'}
@@ -1065,7 +1052,6 @@ export default function SessionsPage() {
                           setFormData({ ...formData, description: e.target.value });
                           setFormSaved(false);
                         }}
-                            onClick={handleRender}
                               rows={4}
                               maxLength={DESCRIPTION_MAX_CHARS}
                               className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 resize-none placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif ${
@@ -1144,7 +1130,6 @@ export default function SessionsPage() {
                                     textareaRef={(el) => {
                                       textareaRefs.current[index] = el;
                                     }}
-                            onClick={handleRender}
                                     isDisabled={formData.description.length < DESCRIPTION_MIN_CHARS}
                                   />
                                 ))}
@@ -1214,7 +1199,6 @@ export default function SessionsPage() {
                                 }
                               }
                             }}
-                            onClick={handleRender}
                             disabled={!editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
                               !editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
@@ -1238,8 +1222,7 @@ export default function SessionsPage() {
                 {/* Mobile Form */}
                 {showForm && (
                   <div className="md:hidden mt-4">
-                    <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}
-                            onClick={handleRender}>
+                    <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}>
                       <div className="space-y-6">
                         {/* Title Input */}
                         <div>
@@ -1254,7 +1237,6 @@ export default function SessionsPage() {
                               setFormData({ ...formData, title: e.target.value });
                               setFormSaved(false);
                             }}
-                            onClick={handleRender}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif"
                             placeholder="Enter session title"
                           />
@@ -1288,7 +1270,6 @@ export default function SessionsPage() {
                                       setFormSaved(false);
                                       setIsDropdownOpen(false);
                                     }}
-                            onClick={handleRender}
                                   >
                                     <span className="text-sm">{reader.name}</span>
                                     <button
@@ -1297,7 +1278,6 @@ export default function SessionsPage() {
                                         e.stopPropagation();
                                         toggleAudio(reader.name, reader.audioFile);
                                       }}
-                            onClick={handleRender}
                                       className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded hover:bg-gray-200 transition-colors"
                                     >
                                       {playingReader === reader.name ? 'Pause' : 'Play'}
@@ -1322,7 +1302,6 @@ export default function SessionsPage() {
                               setFormData({ ...formData, description: e.target.value });
                               setFormSaved(false);
                             }}
-                            onClick={handleRender}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif"
                             placeholder="Describe your goal or intention for this session..."
                           />
@@ -1387,7 +1366,6 @@ export default function SessionsPage() {
                                         textareaRefs.current[index] = el;
                                       }
                                     }}
-                            onClick={handleRender}
                                     isDisabled={!formData.description.trim() || formData.description.length < 60}
                                   />
                                 ))}
@@ -1464,7 +1442,6 @@ export default function SessionsPage() {
                                 }
                               }
                             }}
-                            onClick={handleRender}
                             disabled={!editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
                               !editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
