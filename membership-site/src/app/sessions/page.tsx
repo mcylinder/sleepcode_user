@@ -296,6 +296,18 @@ export default function SessionsPage() {
     setInstructions(Array(15).fill(''));
   };
 
+  const handleClearDraft = () => {
+    if (confirm('Are you sure? This will clear all form data.')) {
+      setFormData({ title: '', reader: '', description: '' });
+      setInstructions(Array(15).fill(''));
+      setSuggestions([]);
+      setFormSaved(false);
+      setEditingDraft(null);
+      setCurrentDraft(null);
+      setShowForm(false);
+    }
+  };
+
   const handleRender = async () => {
     if (!currentUser || !editingDraft) return;
 
@@ -1151,6 +1163,13 @@ export default function SessionsPage() {
                           >
                             {formSaved ? 'Draft Saved' : 'Save Draft'}
                           </button>
+                          <button
+                            type="button"
+                            onClick={handleClearDraft}
+                            className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
+                          >
+                            Clear Draft
+                          </button>
                         </div>
 
                         {/* Render Button */}
@@ -1393,6 +1412,13 @@ export default function SessionsPage() {
                             }`}
                           >
                             {formSaved ? 'Draft Saved' : 'Save Draft'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleClearDraft}
+                            className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
+                          >
+                            Clear Draft
                           </button>
                         </div>
 
