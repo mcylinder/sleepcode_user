@@ -4,6 +4,7 @@ import {
   doc, 
   addDoc, 
   updateDoc, 
+  setDoc,
   deleteDoc, 
   getDocs, 
   getDoc, 
@@ -148,6 +149,14 @@ export const decrementAvailableSessions = async (userId: string): Promise<void> 
       availableSessions: Math.max(0, currentData.availableSessions - 1),
       usedSessions: currentData.usedSessions + 1
     });
+  } else {
+    // Create the document if it doesn't exist
+    const defaultCount: UserSessionCount = {
+      availableSessions: SESSIONS_AVAILABLE - 1, // Decrement from default
+      totalSessions: SESSIONS_AVAILABLE,
+      usedSessions: 1
+    };
+    await setDoc(userRef, defaultCount);
   }
 };
 

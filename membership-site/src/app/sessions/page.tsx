@@ -277,11 +277,17 @@ export default function SessionsPage() {
         
         if (createdDraft) {
           setDrafts([createdDraft, ...drafts]);
+          // Set currentDraft to the created draft so render button works
+          setCurrentDraft(createdDraft);
         }
       }
       
       setFormSaved(true);
       setEditingDraft(null);
+      // Set currentDraft to the saved draft so render button works (for existing drafts)
+      if (editingDraft) {
+        setCurrentDraft({ ...editingDraft, title: formData.title, description: formData.description, reader: formData.reader, instructions: instructions, suggestions: suggestions });
+      }
     } catch (error) {
       console.error('Error saving draft:', error);
       alert('Error saving draft. Please try again.');
@@ -309,30 +315,47 @@ export default function SessionsPage() {
   };
 
   const handleRender = async () => {
-    if (!currentUser || !editingDraft) return;
+    if (!currentUser || (!editingDraft && !currentDraft)) return;
+
+    const draftToRender = editingDraft || currentDraft;
+    if (!draftToRender) return;
 
     try {
+      console.log('Starting render process for draft:', draftToRender.id);
+      
       // Update draft status to 'to_render'
-      await updateDraft(currentUser.uid, editingDraft.id!, {
+      console.log('Updating draft status...');
+      await updateDraft(currentUser.uid, draftToRender.id!, {
         status: 'to_render'
       });
+      console.log('Draft status updated successfully');
       
       // Decrement available sessions
+      console.log('Decrementing available sessions...');
       await decrementAvailableSessions(currentUser.uid);
+      console.log('Available sessions decremented successfully');
       
       // Remove from drafts list and add to sessions
-      setDrafts(drafts.filter(draft => draft.id !== editingDraft.id));
+      setDrafts(drafts.filter(draft => draft.id !== draftToRender.id));
       
       // Reset form and close
       setShowForm(false);
       setEditingDraft(null);
+      setCurrentDraft(null);
       setFormSaved(false);
       setFormData({ title: '', reader: '', description: '' });
       setInstructions(Array(15).fill(''));
       
       // Refresh session count
+      console.log('Refreshing session count...');
       const sessionCount = await getUserSessionCount(currentUser.uid);
       setUserSessionCount(sessionCount);
+      console.log('Session count refreshed:', sessionCount);
+      
+      // Reload data to include the new session in the sessions table
+      console.log('Reloading data...');
+      await loadData();
+      console.log('Data reloaded successfully');
       
       // No alert - just update the status and move to sessions
     } catch (error) {
@@ -513,6 +536,10 @@ export default function SessionsPage() {
     return instructions.some(instruction => !instruction.trim());
   };
 
+  const getEmptySlotCount = () => {
+    return instructions.filter(instruction => !instruction.trim()).length;
+  };
+
   // Audio playback functions
   const playAudio = (readerName: string, audioFile: string) => {
     // Stop any currently playing audio
@@ -604,79 +631,80 @@ export default function SessionsPage() {
     }
   }, [currentUser, loading, router]);
 
-  useEffect(() => {
-    // Simulate loading sessions and drafts
-    const loadData = async () => {
-      // Mock data for sessions
-      const mockSessions: Session[] = [
-        {
-          id: '1',
-          title: 'Introduction to Sleep Science',
-          length: '15:30',
-          reader: 'Sarah',
-          created: '2024-01-15'
-        },
-        {
-          id: '2',
-          title: 'Deep Breathing Techniques',
-          length: '12:45',
-          reader: 'Michael',
-          created: '2024-01-14'
-        },
-        {
-          id: '3',
-          title: 'Progressive Muscle Relaxation',
-          length: '18:20',
-          reader: 'Emma',
-          created: '2024-01-13'
-        },
-        {
-          id: '4',
-          title: 'Mindfulness Meditation',
-          length: '10:15',
-          reader: 'David',
-          created: '2024-01-12'
-        },
-        {
-          id: '5',
-          title: 'Sleep Hygiene Basics',
-          length: '14:30',
-          reader: 'Lisa',
-          created: '2024-01-11'
-        }
-      ];
-
-      // Load user drafts and session count from Firestore
-      if (currentUser) {
-        try {
-          const userDrafts = await getUserDrafts(currentUser.uid);
-          const sessionCount = await getUserSessionCount(currentUser.uid);
-          
-          // Add default status to existing drafts that don't have it
-          const draftsWithStatus = userDrafts.map(draft => ({
-            ...draft,
-            status: draft.status || 'in_edit'
-          }));
-          
-          setDrafts(draftsWithStatus);
-          setUserSessionCount(sessionCount);
-        } catch (error) {
-          console.error('Error loading drafts:', error);
-        }
+  // Load data function
+  const loadData = async () => {
+    // Mock data for sessions
+    const mockSessions: Session[] = [
+      {
+        id: '1',
+        title: 'Introduction to Sleep Science',
+        length: '15:30',
+        reader: 'Sarah',
+        created: '2024-01-15'
+      },
+      {
+        id: '2',
+        title: 'Deep Breathing Techniques',
+        length: '12:45',
+        reader: 'Michael',
+        created: '2024-01-14'
+      },
+      {
+        id: '3',
+        title: 'Progressive Muscle Relaxation',
+        length: '18:20',
+        reader: 'Emma',
+        created: '2024-01-13'
+      },
+      {
+        id: '4',
+        title: 'Mindfulness Meditation',
+        length: '10:15',
+        reader: 'David',
+        created: '2024-01-12'
+      },
+      {
+        id: '5',
+        title: 'Sleep Hygiene Basics',
+        length: '14:30',
+        reader: 'Lisa',
+        created: '2024-01-11'
       }
-      
-      // Combine mock sessions with drafts that are being rendered
-      const renderingDrafts = drafts.filter(draft => draft.status === 'to_render').map(draft => ({
-        id: draft.id!,
-        title: draft.title,
-        length: '00:00', // Placeholder until rendered
-        reader: draft.reader,
-        created: draft.createdAt?.toDate().toISOString() || new Date().toISOString()
-      }));
-      
-      setSessions([...renderingDrafts, ...mockSessions]);
-    };
+    ];
 
+    // Load user drafts and session count from Firestore
+    if (currentUser) {
+      try {
+        const userDrafts = await getUserDrafts(currentUser.uid);
+        const sessionCount = await getUserSessionCount(currentUser.uid);
+        
+        // Add default status to existing drafts that don't have it
+        const draftsWithStatus = userDrafts.map(draft => ({
+          ...draft,
+          status: draft.status || 'in_edit'
+        }));
+        
+        setDrafts(draftsWithStatus);
+        setUserSessionCount(sessionCount);
+        
+        // Combine mock sessions with drafts that are being rendered
+        const renderingDrafts = draftsWithStatus.filter(draft => draft.status === 'to_render').map(draft => ({
+          id: draft.id!,
+          title: draft.title,
+          length: '00:00', // Placeholder until rendered
+          reader: draft.reader,
+          created: draft.createdAt?.toDate().toISOString() || new Date().toISOString()
+        }));
+        
+        setSessions([...renderingDrafts, ...mockSessions]);
+      } catch (error) {
+        console.error('Error loading drafts:', error);
+      }
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
     if (currentUser) {
       loadData();
     }
@@ -1177,9 +1205,9 @@ export default function SessionsPage() {
                           <button
                             type="button"
                             onClick={handleRender}
-                            disabled={!editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
+                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
-                              !editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
+                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
                                 : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
                             }`}
@@ -1386,8 +1414,9 @@ export default function SessionsPage() {
                           <button
                             type="button"
                             onClick={handleRender}
+                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
-                              !editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
+                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
                                 : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
                             }`}
@@ -1500,7 +1529,12 @@ export default function SessionsPage() {
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Generated Suggestions</h3>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Generated Suggestions</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {getEmptySlotCount()} empty slot{getEmptySlotCount() !== 1 ? 's' : ''} available
+                  </p>
+                </div>
                 <button
                   onClick={() => setShowSuggestions(false)}
                   className="text-gray-400 hover:text-gray-600 focus:outline-none"
@@ -1536,7 +1570,7 @@ export default function SessionsPage() {
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           }`}
                         >
-                          {isUsed ? 'Used' : 'Add'}
+                          {isUsed ? 'Used' : getEmptySlotCount() === 0 ? 'No Slots' : 'Add'}
                         </button>
                         <span className="text-sm text-gray-700 flex-1">{suggestion}</span>
                       </div>
