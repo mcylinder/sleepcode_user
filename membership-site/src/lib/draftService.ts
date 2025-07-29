@@ -32,6 +32,7 @@ export interface Draft {
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
   userId: string;
+  status: 'in_edit' | 'to_render' | 'recorded';
 }
 
 export interface UserSessionCount {
@@ -106,7 +107,8 @@ export const duplicateDraft = async (userId: string, draftId: string): Promise<s
     instructions: [...originalDraft.instructions],
     reader: originalDraft.reader,
     suggestions: [...originalDraft.suggestions],
-    userId: originalDraft.userId
+    userId: originalDraft.userId,
+    status: 'in_edit'
   };
   
   return await createDraft(duplicatedDraft);

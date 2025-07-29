@@ -41,6 +41,16 @@ const DESCRIPTION_MIN_CHARS = 60;
 const DESCRIPTION_MAX_CHARS = 300;
 const INSTRUCTION_MAX_CHARS = 120;
 
+// Reader data with audio files
+const READERS = [
+  { id: 'dPah2VEoifKnZT37774q', name: 'Richard', audioFile: 'richard_BLfDBmTGrg0wmQlW1MrB.m4a' },
+  { id: 'aq9iUe9e2C6iTZNQA0Sq', name: 'Noah', audioFile: 'noah2_aq9iUe9e2C6iTZNQA0Sq.m4a' },
+  { id: 'BLfDBmTGrg0wmQlW1MrB', name: 'Grace', audioFile: 'grace2_BLfDBmTGrg0wmQlW1MrB.m4a' },
+  { id: 'hMNJ8tdWG8JbmDXqXdHz', name: 'Oliver', audioFile: 'oliver2_hMNJ8tdWG8JbmDXqXdHz.m4a' },
+  { id: '64FFCb8N3xvQIxVA46HI', name: 'Charlotte', audioFile: 'charlotte2_64FFCb8N3xvQIxVA46HI.m4a' },
+  { id: 'itjA83RExdsQkFbXkihc', name: 'Micah', audioFile: 'micah_itjA83RExdsQkFbXkihc.m4a' }
+];
+
 // Sortable Item Component
 function SortableItem({ 
   instruction, 
@@ -93,6 +103,7 @@ function SortableItem({
             alert("A description about your goal is required.");
           }
         }}
+                            onClick={handleRender}
       >
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
           <path d="M7 2a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 2zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 8zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 14zm6-8a2 2 0 1 1-.001-4.001A2 2 0 0 1 13 6zm0 2a2 2 0 1 1 .001 4.001A2 2 0 0 1 13 8zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 13 14z" />
@@ -117,6 +128,7 @@ function SortableItem({
             height: 'auto',
             minHeight: '40px'
           }}
+                            onClick={handleRender}
           onInput={(e) => {
             if (!isDisabled) {
               const target = e.target as HTMLTextAreaElement;
@@ -124,11 +136,13 @@ function SortableItem({
               target.style.height = Math.min(target.scrollHeight, INSTRUCTION_MAX_CHARS) + 'px';
             }
           }}
+                            onClick={handleRender}
           onClick={() => {
             if (isDisabled) {
               alert("A description about your goal is required.");
             }
           }}
+                            onClick={handleRender}
         />
         
         {/* Character Count */}
@@ -149,6 +163,7 @@ function SortableItem({
           }
           onClearInstruction(index);
         }}
+                            onClick={handleRender}
         className={`flex-shrink-0 p-1 focus:outline-none ${
           isDisabled 
             ? 'text-gray-300 cursor-not-allowed' 
@@ -198,8 +213,14 @@ export default function SessionsPage() {
   const [lastSavedContent, setLastSavedContent] = useState<string>('');
   const [formSaved, setFormSaved] = useState(false);
 
-  // Reader names for dropdown
-  const readerNames = ['Sarah', 'Michael', 'Emma', 'David', 'Lisa'];
+  // Audio playback state
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [playingReader, setPlayingReader] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  // Bulk paste modal state
+  const [showBulkPasteModal, setShowBulkPasteModal] = useState(false);
+  const [bulkPasteText, setBulkPasteText] = useState('');
 
   // Form handlers
   const handleNewSession = () => {
@@ -252,7 +273,8 @@ export default function SessionsPage() {
           reader: formData.reader,
           instructions: instructions,
           suggestions: suggestions,
-          userId: currentUser.uid
+          userId: currentUser.uid,
+          status: 'in_edit'
         };
         
         const draftId = await createDraft(newDraft);
@@ -277,6 +299,39 @@ export default function SessionsPage() {
     setFormSaved(false);
     setFormData({ title: '', reader: '', description: '' });
     setInstructions(Array(15).fill(''));
+  };
+
+  const handleRender = async () => {
+    if (!currentUser || !editingDraft) return;
+
+    try {
+      // Update draft status to 'to_render'
+      await updateDraft(currentUser.uid, editingDraft.id!, {
+        status: 'to_render'
+      });
+      
+      // Decrement available sessions
+      await decrementAvailableSessions(currentUser.uid);
+      
+      // Remove from drafts list and add to sessions
+      setDrafts(drafts.filter(draft => draft.id !== editingDraft.id));
+      
+      // Reset form and close
+      setShowForm(false);
+      setEditingDraft(null);
+      setFormSaved(false);
+      setFormData({ title: '', reader: '', description: '' });
+      setInstructions(Array(15).fill(''));
+      
+      // Refresh session count
+      const sessionCount = await getUserSessionCount(currentUser.uid);
+      setUserSessionCount(sessionCount);
+      
+      alert('Session submitted for rendering!');
+    } catch (error) {
+      console.error('Error rendering session:', error);
+      alert('Error submitting session for rendering. Please try again.');
+    }
   };
 
 
@@ -451,6 +506,91 @@ export default function SessionsPage() {
     return instructions.some(instruction => !instruction.trim());
   };
 
+  // Audio playback functions
+  const playAudio = (readerName: string, audioFile: string) => {
+    // Stop any currently playing audio
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+
+    // Create new audio element
+    const audio = new Audio(`/assets/audio/${audioFile}`);
+    audio.volume = 0.75;
+    audio.loop = true;
+    
+    audio.addEventListener('ended', () => {
+      setPlayingReader(null);
+      setCurrentAudio(null);
+    });
+
+    audio.play().then(() => {
+      setCurrentAudio(audio);
+      setPlayingReader(readerName);
+    }).catch((error) => {
+      console.error('Error playing audio:', error);
+    });
+  };
+
+  const stopAudio = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      setCurrentAudio(null);
+      setPlayingReader(null);
+    }
+  };
+
+  const toggleAudio = (readerName: string, audioFile: string) => {
+    if (playingReader === readerName) {
+      stopAudio();
+    } else {
+      playAudio(readerName, audioFile);
+    }
+  };
+
+  // Bulk paste instructions function
+  const handleBulkPaste = () => {
+    if (!bulkPasteText.trim()) return;
+    
+    const lines = bulkPasteText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    const newInstructions = [...instructions];
+    
+    let lineIndex = 0;
+    for (let i = 0; i < newInstructions.length && lineIndex < lines.length; i++) {
+      if (!newInstructions[i].trim()) {
+        newInstructions[i] = lines[lineIndex];
+        lineIndex++;
+      }
+    }
+    
+    setInstructions(newInstructions);
+    setBulkPasteText('');
+    setShowBulkPasteModal(false);
+    setFormSaved(false);
+  };
+
+  // Stop audio when dropdown closes
+  useEffect(() => {
+    if (!isDropdownOpen && currentAudio) {
+      stopAudio();
+    }
+  }, [isDropdownOpen]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isDropdownOpen && !(event.target as Element).closest('.reader-dropdown')) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   useEffect(() => {
     if (!loading && !currentUser) {
       router.push('/login');
@@ -505,14 +645,29 @@ export default function SessionsPage() {
           const userDrafts = await getUserDrafts(currentUser.uid);
           const sessionCount = await getUserSessionCount(currentUser.uid);
           
-          setDrafts(userDrafts);
+          // Add default status to existing drafts that don't have it
+          const draftsWithStatus = userDrafts.map(draft => ({
+            ...draft,
+            status: draft.status || 'in_edit'
+          }));
+          
+          setDrafts(draftsWithStatus);
           setUserSessionCount(sessionCount);
         } catch (error) {
           console.error('Error loading drafts:', error);
         }
       }
       
-      setSessions(mockSessions);
+      // Combine mock sessions with drafts that are being rendered
+      const renderingDrafts = drafts.filter(draft => draft.status === 'to_render').map(draft => ({
+        id: draft.id!,
+        title: draft.title,
+        length: '00:00', // Placeholder until rendered
+        reader: draft.reader,
+        created: draft.createdAt?.toDate().toISOString() || new Date().toISOString()
+      }));
+      
+      setSessions([...renderingDrafts, ...mockSessions]);
     };
 
     if (currentUser) {
@@ -585,7 +740,7 @@ export default function SessionsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <button className="text-cyan-700 hover:text-cyan-900 font-medium">
-                            View
+                            {session.length === '00:00' ? 'Rendering' : 'View'}
                           </button>
                         </td>
                       </tr>
@@ -603,7 +758,7 @@ export default function SessionsPage() {
                         {session.title}
                       </h3>
                       <button className="text-cyan-700 hover:text-cyan-900 font-medium text-sm">
-                        View
+                        {session.length === '00:00' ? 'Rendering' : 'View'}
                       </button>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
@@ -683,7 +838,7 @@ export default function SessionsPage() {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleEditDraft(draft)}
-                                className="text-cyan-700 hover:text-cyan-800 font-medium"
+                                className="px-3 py-1 text-xs font-medium text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-md hover:bg-cyan-100 hover:border-cyan-300 transition-colors"
                               >
                                 Edit
                               </button>
@@ -701,7 +856,8 @@ export default function SessionsPage() {
                                     }
                                   }
                                 }}
-                                className="text-green-600 hover:text-green-800 font-medium"
+                            onClick={handleRender}
+                                className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-md hover:bg-green-100 hover:border-green-300 transition-colors"
                               >
                                 Duplicate
                               </button>
@@ -717,7 +873,8 @@ export default function SessionsPage() {
                                     }
                                   }
                                 }}
-                                className="text-red-600 hover:text-red-800 font-medium"
+                            onClick={handleRender}
+                                className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 transition-colors"
                               >
                                 Delete
                               </button>
@@ -740,10 +897,10 @@ export default function SessionsPage() {
                             {draft.updatedAt ? new Date(draft.updatedAt.toDate()).toLocaleDateString() : 'N/A'}
                           </p>
                         </div>
-                        <div className="flex flex-col space-y-1">
+                        <div className="flex flex-col space-y-2">
                           <button 
                             onClick={() => handleEditDraft(draft)}
-                            className="text-cyan-700 hover:text-cyan-800 text-sm font-medium"
+                            className="px-3 py-1 text-xs font-medium text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-md hover:bg-cyan-100 hover:border-cyan-300 transition-colors"
                           >
                             Edit
                           </button>
@@ -760,7 +917,8 @@ export default function SessionsPage() {
                                 }
                               }
                             }}
-                            className="text-green-600 hover:text-green-800 text-sm font-medium"
+                            onClick={handleRender}
+                            className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-md hover:bg-green-100 hover:border-green-300 transition-colors"
                           >
                             Duplicate
                           </button>
@@ -776,7 +934,8 @@ export default function SessionsPage() {
                                 }
                               }
                             }}
-                            className="text-red-600 hover:text-red-800 text-sm font-medium"
+                            onClick={handleRender}
+                            className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 transition-colors"
                           >
                             Delete
                           </button>
@@ -810,7 +969,8 @@ export default function SessionsPage() {
 
                 {showForm && (
                   <div className="mt-4 bg-white shadow-sm rounded-lg p-6 border border-gray-200 md:block hidden">
-                    <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}>
+                    <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}
+                            onClick={handleRender}>
                       <div className="space-y-6">
                         {/* Title Input */}
                         <div>
@@ -825,6 +985,7 @@ export default function SessionsPage() {
                           setFormData({ ...formData, title: e.target.value });
                           setFormSaved(false);
                         }}
+                            onClick={handleRender}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif"
                             placeholder="Enter session title"
                           />
@@ -847,22 +1008,48 @@ export default function SessionsPage() {
                           <label htmlFor="reader" className="block text-sm font-medium text-gray-700 mb-2">
                             Reader
                           </label>
-                          <select
-                            id="reader"
-                            value={formData.reader}
-                            onChange={(e) => {
-                          setFormData({ ...formData, reader: e.target.value });
-                          setFormSaved(false);
-                        }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-                          >
-                            <option value="">Select a reader</option>
-                            {readerNames.map((name) => (
-                              <option key={name} value={name}>
-                                {name}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="relative reader-dropdown">
+                            <button
+                              type="button"
+                              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                              className="w-full px-3 py-2 text-left border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 bg-white"
+                            >
+                              {formData.reader || "Select a reader"}
+                              <span className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                ▼
+                              </span>
+                            </button>
+                            
+                            {isDropdownOpen && (
+                              <div className="absolute z-10 w-full max-w-[220px] mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                                {READERS.map((reader) => (
+                                  <div
+                                    key={reader.id}
+                                    className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                                    onClick={() => {
+                                      setFormData({ ...formData, reader: reader.name });
+                                      setFormSaved(false);
+                                      setIsDropdownOpen(false);
+                                    }}
+                            onClick={handleRender}
+                                  >
+                                    <span className="text-sm">{reader.name}</span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleAudio(reader.name, reader.audioFile);
+                                      }}
+                            onClick={handleRender}
+                                      className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded hover:bg-gray-200 transition-colors"
+                                    >
+                                      {playingReader === reader.name ? 'Pause' : 'Play'}
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {/* Description Textarea */}
@@ -878,6 +1065,7 @@ export default function SessionsPage() {
                           setFormData({ ...formData, description: e.target.value });
                           setFormSaved(false);
                         }}
+                            onClick={handleRender}
                               rows={4}
                               maxLength={DESCRIPTION_MAX_CHARS}
                               className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 resize-none placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif ${
@@ -901,18 +1089,32 @@ export default function SessionsPage() {
                             <label className="block text-sm font-medium text-gray-700">
                               Instructions
                             </label>
-                            <button
-                              type="button"
-                              onClick={getSuggestions}
-                              disabled={loadingSuggestions}
-                              className={`px-3 py-1 text-sm font-normal rounded-md transition-colors ${
-                                loadingSuggestions 
-                                  ? 'text-gray-400 bg-gray-100 cursor-not-allowed' 
-                                  : 'bg-cyan-700 text-white hover:bg-cyan-900'
-                              }`}
-                            >
-                              {loadingSuggestions ? 'Loading...' : 'Suggestions ▶'}
-                            </button>
+                            <div className="flex space-x-2">
+                              <button
+                                type="button"
+                                onClick={() => setShowBulkPasteModal(true)}
+                                disabled={formData.description.length < DESCRIPTION_MIN_CHARS}
+                                className={`px-3 py-1 text-sm font-normal rounded-md transition-colors ${
+                                  formData.description.length < DESCRIPTION_MIN_CHARS
+                                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed' 
+                                    : 'bg-gray-600 text-white hover:bg-gray-700'
+                                }`}
+                              >
+                                Bulk Paste
+                              </button>
+                              <button
+                                type="button"
+                                onClick={getSuggestions}
+                                disabled={loadingSuggestions}
+                                className={`px-3 py-1 text-sm font-normal rounded-md transition-colors ${
+                                  loadingSuggestions 
+                                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed' 
+                                    : 'bg-cyan-700 text-white hover:bg-cyan-900'
+                                }`}
+                              >
+                                {loadingSuggestions ? 'Loading...' : 'Suggestions ▶'}
+                              </button>
+                            </div>
                           </div>
                           
                           {formData.description.length < DESCRIPTION_MIN_CHARS && (
@@ -942,6 +1144,7 @@ export default function SessionsPage() {
                                     textareaRef={(el) => {
                                       textareaRefs.current[index] = el;
                                     }}
+                            onClick={handleRender}
                                     isDisabled={formData.description.length < DESCRIPTION_MIN_CHARS}
                                   />
                                 ))}
@@ -1011,9 +1214,10 @@ export default function SessionsPage() {
                                 }
                               }
                             }}
-                            disabled={!formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
+                            onClick={handleRender}
+                            disabled={!editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
-                              !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
+                              !editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
                                 : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
                             }`}
@@ -1034,7 +1238,8 @@ export default function SessionsPage() {
                 {/* Mobile Form */}
                 {showForm && (
                   <div className="md:hidden mt-4">
-                    <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}>
+                    <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}
+                            onClick={handleRender}>
                       <div className="space-y-6">
                         {/* Title Input */}
                         <div>
@@ -1049,6 +1254,7 @@ export default function SessionsPage() {
                               setFormData({ ...formData, title: e.target.value });
                               setFormSaved(false);
                             }}
+                            onClick={handleRender}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif"
                             placeholder="Enter session title"
                           />
@@ -1059,20 +1265,48 @@ export default function SessionsPage() {
                           <label htmlFor="reader-mobile" className="block text-sm font-medium text-gray-700 mb-2">
                             Reader
                           </label>
-                          <select
-                            id="reader-mobile"
-                            value={formData.reader}
-                            onChange={(e) => {
-                              setFormData({ ...formData, reader: e.target.value });
-                              setFormSaved(false);
-                            }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-                          >
-                            <option value="Sarah">Sarah</option>
-                            <option value="Michael">Michael</option>
-                            <option value="Emma">Emma</option>
-                            <option value="David">David</option>
-                          </select>
+                          <div className="relative reader-dropdown">
+                            <button
+                              type="button"
+                              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                              className="w-full px-3 py-2 text-left border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 bg-white"
+                            >
+                              {formData.reader || "Select a reader"}
+                              <span className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                ▼
+                              </span>
+                            </button>
+                            
+                            {isDropdownOpen && (
+                              <div className="absolute z-10 w-full max-w-[220px] mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                                {READERS.map((reader) => (
+                                  <div
+                                    key={reader.id}
+                                    className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                                    onClick={() => {
+                                      setFormData({ ...formData, reader: reader.name });
+                                      setFormSaved(false);
+                                      setIsDropdownOpen(false);
+                                    }}
+                            onClick={handleRender}
+                                  >
+                                    <span className="text-sm">{reader.name}</span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleAudio(reader.name, reader.audioFile);
+                                      }}
+                            onClick={handleRender}
+                                      className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded hover:bg-gray-200 transition-colors"
+                                    >
+                                      {playingReader === reader.name ? 'Pause' : 'Play'}
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {/* Description Input */}
@@ -1088,6 +1322,7 @@ export default function SessionsPage() {
                               setFormData({ ...formData, description: e.target.value });
                               setFormSaved(false);
                             }}
+                            onClick={handleRender}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 placeholder:text-gray-300 placeholder:text-xs placeholder:font-serif"
                             placeholder="Describe your goal or intention for this session..."
                           />
@@ -1102,18 +1337,32 @@ export default function SessionsPage() {
                             <label className="block text-sm font-medium text-gray-700">
                               Instructions
                             </label>
-                            <button
-                              type="button"
-                              onClick={getSuggestions}
-                              disabled={!formData.description.trim() || formData.description.length < 60}
-                              className={`text-xs px-3 py-1 rounded-md ${
-                                !formData.description.trim() || formData.description.length < 60
-                                  ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
-                                  : 'text-white bg-cyan-700 border border-cyan-700 hover:bg-cyan-900'
-                              }`}
-                            >
-                              Suggestions
-                            </button>
+                            <div className="flex space-x-2">
+                              <button
+                                type="button"
+                                onClick={() => setShowBulkPasteModal(true)}
+                                disabled={!formData.description.trim() || formData.description.length < 60}
+                                className={`text-xs px-3 py-1 rounded-md ${
+                                  !formData.description.trim() || formData.description.length < 60
+                                    ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
+                                    : 'text-white bg-gray-600 border border-gray-600 hover:bg-gray-700'
+                                }`}
+                              >
+                                Bulk Paste
+                              </button>
+                              <button
+                                type="button"
+                                onClick={getSuggestions}
+                                disabled={!formData.description.trim() || formData.description.length < 60}
+                                className={`text-xs px-3 py-1 rounded-md ${
+                                  !formData.description.trim() || formData.description.length < 60
+                                    ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
+                                    : 'text-white bg-cyan-700 border border-cyan-700 hover:bg-cyan-900'
+                                }`}
+                              >
+                                Suggestions
+                              </button>
+                            </div>
                           </div>
                           
                           <DndContext
@@ -1138,6 +1387,7 @@ export default function SessionsPage() {
                                         textareaRefs.current[index] = el;
                                       }
                                     }}
+                            onClick={handleRender}
                                     isDisabled={!formData.description.trim() || formData.description.length < 60}
                                   />
                                 ))}
@@ -1214,9 +1464,10 @@ export default function SessionsPage() {
                                 }
                               }
                             }}
-                            disabled={!formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
+                            onClick={handleRender}
+                            disabled={!editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
-                              !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
+                              !editingDraft || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
                                 : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
                             }`}
@@ -1238,6 +1489,77 @@ export default function SessionsPage() {
           </div>
         </div>
       </div>
+
+      {/* Bulk Paste Modal */}
+      {showBulkPasteModal && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setShowBulkPasteModal(false)}
+          />
+          
+          {/* Modal */}
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Bulk Paste Instructions</h3>
+                <button
+                  onClick={() => setShowBulkPasteModal(false)}
+                  className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 p-4">
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Paste your instructions below. Each new line will be inserted into the first available empty field.
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    • Empty lines will be ignored<br/>
+                    • Only fills empty instruction fields<br/>
+                    • Maximum 15 instructions total
+                  </p>
+                </div>
+                
+                <textarea
+                  value={bulkPasteText}
+                  onChange={(e) => setBulkPasteText(e.target.value)}
+                  placeholder="Paste your instructions here..."
+                  className="w-full h-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-sm resize-none"
+                />
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end space-x-3 p-4 border-t border-gray-200">
+                <button
+                  onClick={() => setShowBulkPasteModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBulkPaste}
+                  disabled={!bulkPasteText.trim()}
+                  className={`px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
+                    bulkPasteText.trim()
+                      ? 'text-white bg-cyan-700 hover:bg-cyan-900'
+                      : 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                  }`}
+                >
+                  Insert
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Suggestions Slide-out Panel */}
       <div className={`fixed inset-0 z-50 overflow-hidden transition-opacity duration-300 ease-out ${
