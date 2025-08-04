@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login, signup, signInWithGoogle, signInWithFacebook, signInWithApple, currentUser } = useAuth();
+  const { login, signup, signInWithGoogle, signInWithFacebook, currentUser } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -69,12 +69,12 @@ export default function LoginPage() {
     }
   }
 
-  const handleAppleSignInSuccess = (user: any) => {
+  const handleAppleSignInSuccess = (user: unknown) => {
     console.log('Apple Sign-In successful:', user);
     // The user will be automatically redirected by the useEffect that watches currentUser
   };
 
-  const handleAppleSignInError = (error: any) => {
+  const handleAppleSignInError = (error: unknown) => {
     console.error('Apple Sign-In error:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     setError('Failed to sign in with Apple: ' + errorMessage);

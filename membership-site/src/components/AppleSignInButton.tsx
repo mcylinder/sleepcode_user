@@ -1,23 +1,23 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getAuth, signInWithCredential, OAuthProvider } from 'firebase/auth';
+import { signInWithCredential, OAuthProvider } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
 declare global {
   interface Window {
     AppleID: {
       auth: {
-        init: (config: any) => void;
-        signIn: () => Promise<any>;
+        init: (config: unknown) => void;
+        signIn: () => Promise<unknown>;
       };
     };
   }
 }
 
 interface AppleSignInButtonProps {
-  onSuccess: (user: any) => void;
-  onError: (error: any) => void;
+  onSuccess: (user: unknown) => void;
+  onError: (error: unknown) => void;
   onLoadingChange: (loading: boolean) => void;
 }
 
@@ -60,7 +60,7 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
         document.head.removeChild(script);
       }
     };
-  }, []);
+  }, [initializeAppleSignIn]);
 
   const initializeAppleSignIn = async () => {
     if (typeof window.AppleID === 'undefined') {
