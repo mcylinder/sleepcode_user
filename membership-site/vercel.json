@@ -5,8 +5,8 @@
   "installCommand": "npm install",
   "rewrites": [
     {
-      "source": "/__/auth/handler",
-      "destination": "https://sleepcodingbase.firebaseapp.com/__/auth/handler"
+      "source": "/__/auth/(.*)",
+      "destination": "/api/firebase-auth/$1"
     },
     {
       "source": "/__/firebase/init.json",
