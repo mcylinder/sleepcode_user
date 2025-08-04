@@ -1,19 +1,8 @@
 'use client';
 
 import { useRef, useState, useCallback } from 'react';
-import { signInWithCredential, OAuthProvider } from 'firebase/auth';
+import { signInWithPopup, OAuthProvider } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-
-declare global {
-  interface Window {
-    AppleID: {
-      auth: {
-        init: (config: unknown) => void;
-        signIn: () => Promise<unknown>;
-      };
-    };
-  }
-}
 
 interface AppleSignInButtonProps {
   onSuccess: (user: unknown) => void;
@@ -23,105 +12,21 @@ interface AppleSignInButtonProps {
 
 export default function AppleSignInButton({ onSuccess, onError, onLoadingChange }: AppleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const nonceRef = useRef<string>('');
-
-  // Generate nonce function
-  const generateNonce = (length: number): string => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  // Hash nonce function using Web Crypto API
-  const hashNonce = async (nonce: string): Promise<string> => {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(nonce);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  };
-
-  const initializeAppleSignIn = useCallback(async () => {
-    if (typeof window.AppleID === 'undefined') {
-      console.error('Apple ID SDK not loaded');
-      return;
-    }
-
-    try {
-      // Generate nonce for this session
-      const unhashedNonce = generateNonce(10);
-      const hashedNonce = await hashNonce(unhashedNonce);
-      nonceRef.current = unhashedNonce;
-
-      // Initialize Apple Sign-In
-      window.AppleID.auth.init({
-        clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || 'sleepcoding.web.auth',
-        scope: 'name email',
-        redirectURI: 'https://sleepcodingbase.firebaseapp.com/__/auth/handler',
-        state: 'apple-signin',
-        nonce: hashedNonce
-      });
-
-      console.log('Apple Sign-In initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize Apple Sign-In:', error);
-      onError(error);
-    }
-  }, [onError]);
 
   const handleAppleSignIn = async () => {
-    if (isLoading) return;
+    if (isLoading || !auth) return;
 
     try {
       setIsLoading(true);
       onLoadingChange(true);
 
-      // Load Apple SDK only when button is clicked
-      if (typeof window.AppleID === 'undefined') {
-        const script = document.createElement('script');
-        script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
-        script.async = true;
-        
-        await new Promise<void>((resolve, reject) => {
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error('Failed to load Apple SDK'));
-          document.head.appendChild(script);
-        });
+      console.log('Starting Apple Sign-In with Firebase...');
 
-        // Initialize after SDK loads
-        await initializeAppleSignIn();
-      }
-
-      console.log('Starting Apple Sign-In...');
-
-      // Trigger Apple Sign-In
-      const response = await window.AppleID.auth.signIn();
-      console.log('Apple Sign-In response:', response);
-
-      // Type assertion for Apple response
-      const appleResponse = response as {
-        authorization: {
-          id_token: string;
-        };
-      };
-
-      // Create Firebase credential
+      // Use Firebase's built-in Apple Sign-In
       const provider = new OAuthProvider('apple.com');
-      const credential = provider.credential({
-        idToken: appleResponse.authorization.id_token,
-        rawNonce: nonceRef.current,
-      });
-
-      // Sign in with Firebase
-      if (!auth) {
-        throw new Error('Firebase auth not initialized');
-      }
-      const result = await signInWithCredential(auth, credential);
-      console.log('Firebase sign-in successful:', result);
+      const result = await signInWithPopup(auth, provider);
       
+      console.log('Firebase Apple sign-in successful:', result);
       onSuccess(result.user);
     } catch (error) {
       console.error('Apple Sign-In error:', error);
