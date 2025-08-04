@@ -1,2 +1,2 @@
 # Sleepcode User
-Session work started.
+Session work started. Restarting
