@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signInWithPopup, OAuthProvider } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { startAppleSignIn } from '@/lib/firebase';
 
 interface AppleSignInButtonProps {
   onSuccess: (user: unknown) => void;
@@ -14,7 +13,7 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAppleSignIn = async () => {
-    if (isLoading || !auth) return;
+    if (isLoading) return;
 
     try {
       setIsLoading(true);
@@ -22,12 +21,11 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
 
       console.log('Starting Apple Sign-In with Firebase...');
 
-      // Use Firebase's built-in Apple Sign-In
-      const provider = new OAuthProvider('apple.com');
-      const result = await signInWithPopup(auth, provider);
+      // Use the existing Apple Sign-In function
+      await startAppleSignIn();
       
-      console.log('Firebase Apple sign-in successful:', result);
-      onSuccess(result.user);
+      // Note: The redirect will happen, so we won't reach this point
+      // The success will be handled by the redirect result handler
     } catch (error) {
       console.error('Apple Sign-In error:', error);
       
