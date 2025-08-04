@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import AppleSignInDebug from '@/components/AppleSignInDebug';
 import AppleSignInButton from '@/components/AppleSignInButton';
 
 export default function LoginPage() {
@@ -200,7 +199,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-      <AppleSignInDebug />
     </div>
   );
 } 

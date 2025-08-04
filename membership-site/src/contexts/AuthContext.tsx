@@ -10,7 +10,7 @@ import {
   signInWithPopup,
   UserCredential
 } from 'firebase/auth';
-import { auth, googleProvider, facebookProvider, appleProvider, startAppleSignIn, handleAppleRedirectResult } from '@/lib/firebase';
+import { auth, googleProvider, facebookProvider } from '@/lib/firebase';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -19,7 +19,6 @@ interface AuthContextType {
   logout: () => Promise<void>;
   signInWithGoogle: () => Promise<UserCredential>;
   signInWithFacebook: () => Promise<UserCredential>;
-  signInWithApple: () => Promise<void>;
   loading: boolean;
 }
 
@@ -62,36 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return signInWithPopup(auth, facebookProvider);
   }
 
-  function signInWithApple() {
-    if (!auth || !appleProvider) throw new Error('Firebase not initialized. Please check your environment variables.');
-    return startAppleSignIn();
-  }
-
   useEffect(() => {
     if (!auth) {
       setLoading(false);
       return;
-    }
-
-    // Only handle Apple redirect result if we're on a page that might have one
-    const handleRedirectResult = async () => {
-      try {
-        const result = await handleAppleRedirectResult();
-        if (result) {
-          console.log('Apple redirect result handled successfully');
-        }
-      } catch (error) {
-        console.error('Error handling Apple redirect result:', error);
-      }
-    };
-
-    // Only check for redirect result on login page or when URL has auth parameters
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      const hasAuthParams = url.searchParams.has('apiKey') || url.searchParams.has('authType');
-      if (hasAuthParams || url.pathname === '/login') {
-        handleRedirectResult();
-      }
     }
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -109,7 +82,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     signInWithGoogle,
     signInWithFacebook,
-    signInWithApple,
     loading
   };
 
