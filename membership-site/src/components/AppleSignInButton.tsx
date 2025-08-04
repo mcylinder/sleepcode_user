@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, appleProvider } from '../lib/firebase';
 
 interface AppleSignInButtonProps {
   onSuccess: (user: unknown) => void;
@@ -8,108 +10,26 @@ interface AppleSignInButtonProps {
   onLoadingChange: (loading: boolean) => void;
 }
 
-interface AppleIDConfig {
-  clientId: string;
-  scope: string;
-  redirectURI: string;
-  state: string;
-  nonce: string;
-}
-
-interface AppleIDResponse {
-  authorization: {
-    id_token: string;
-    code: string;
-    state: string;
-  };
-}
-
-declare global {
-  interface Window {
-    AppleID: {
-      auth: {
-        init: (config: AppleIDConfig) => void;
-        signIn: () => Promise<AppleIDResponse>;
-      };
-    };
-  }
-}
-
 export default function AppleSignInButton({ onSuccess, onError, onLoadingChange }: AppleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  // Initialize Apple Sign-In
-  const initializeAppleSignIn = useCallback(async () => {
-    try {
-      // Get nonce from our backend
-      const nonceResponse = await fetch('/api/apple-auth/nonce');
-      const { hashedNonce, rawNonce } = await nonceResponse.json();
-
-      // Load Apple's JavaScript SDK
-      const script = document.createElement('script');
-      script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
-      script.onload = () => {
-        // Initialize Apple Sign-In with Firebase-recommended configuration
-        window.AppleID.auth.init({
-          clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || 'sleepcoding.web.auth',
-          scope: 'name email',
-          redirectURI: 'https://sleepcodingbase.firebaseapp.com/__/auth/handler',
-          state: '[STATE]', // Optional value that Apple will send back
-          nonce: hashedNonce // The hashed nonce from our backend
-        });
-        setIsInitialized(true);
-      };
-      document.head.appendChild(script);
-
-      // Store raw nonce for later use
-      (window as { __APPLE_RAW_NONCE__?: string }).__APPLE_RAW_NONCE__ = rawNonce;
-    } catch (error) {
-      console.error('Failed to initialize Apple Sign-In:', error);
-      onError(error);
-    }
-  }, [onError]);
-
-  useEffect(() => {
-    initializeAppleSignIn();
-  }, [initializeAppleSignIn]);
 
   const handleAppleSignIn = async () => {
-    if (isLoading || !isInitialized) return;
+    if (isLoading || !appleProvider || !auth) return;
 
     try {
       setIsLoading(true);
       onLoadingChange(true);
 
-      console.log('Starting Apple Sign-In with official SDK...');
+      console.log('Starting Apple Sign-In with Firebase...');
 
-      // Use Apple's official SDK to sign in
-      const response = await window.AppleID.auth.signIn();
+      // Use Firebase's built-in Apple provider
+      appleProvider.addScope('name');
+      appleProvider.addScope('email');
 
-      console.log('Apple Sign-In response:', response);
-
-      // Send the response to our backend for processing
-      const backendResponse = await fetch('/api/apple-auth/callback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id_token: response.authorization.id_token,
-          code: response.authorization.code,
-          state: response.authorization.state,
-          rawNonce: (window as { __APPLE_RAW_NONCE__?: string }).__APPLE_RAW_NONCE__
-        })
-      });
-
-      if (!backendResponse.ok) {
-        throw new Error(`Backend error: ${backendResponse.status}`);
-      }
-
-      const userData = await backendResponse.json();
-      console.log('Backend processed Apple Sign-In:', userData);
-
-      onSuccess(userData);
+      const result = await signInWithPopup(auth, appleProvider);
+      
+      console.log('Apple Sign-In successful:', result);
+      onSuccess(result.user);
     } catch (error) {
       console.error('Apple Sign-In failed:', error);
       
@@ -129,7 +49,7 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
   return (
     <button
       onClick={handleAppleSignIn}
-      disabled={isLoading || !isInitialized}
+      disabled={isLoading || !appleProvider || !auth}
       className="w-full flex items-center justify-center gap-3 bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       {isLoading ? (

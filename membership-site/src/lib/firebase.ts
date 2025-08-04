@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 // Firebase configuration using environment variables only
@@ -24,6 +24,7 @@ let auth: ReturnType<typeof getAuth> | null = null;
 let db: ReturnType<typeof getFirestore> | null = null;
 let googleProvider: GoogleAuthProvider | null = null;
 let facebookProvider: FacebookAuthProvider | null = null;
+let appleProvider: OAuthProvider | null = null;
 
 if (typeof window !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.projectId) {
   try {
@@ -32,10 +33,11 @@ if (typeof window !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.pro
     db = getFirestore(app);
     googleProvider = new GoogleAuthProvider();
     facebookProvider = new FacebookAuthProvider();
+    appleProvider = new OAuthProvider('apple.com');
   } catch (error) {
     console.warn('Firebase initialization failed:', error);
   }
 }
 
-export { auth, db, googleProvider, facebookProvider };
+export { auth, db, googleProvider, facebookProvider, appleProvider };
 export default app; 
