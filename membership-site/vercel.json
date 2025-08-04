@@ -2,5 +2,38 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "rewrites": [
+    {
+      "source": "/__/auth/handler",
+      "destination": "https://sleepcodingbase.firebaseapp.com/__/auth/handler"
+    },
+    {
+      "source": "/__/firebase/init.json",
+      "destination": "https://sleepcodingbase.firebaseapp.com/__/firebase/init.json"
+    },
+    {
+      "source": "/__/firebase/(.*)",
+      "destination": "https://sleepcodingbase.firebaseapp.com/__/firebase/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/__/auth/handler",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
+    }
+  ]
 } 
