@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { startAppleSignIn } from '@/lib/firebase';
+import { signInWithPopup, OAuthProvider } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 interface AppleSignInButtonProps {
   onSuccess: (user: unknown) => void;
@@ -12,20 +13,51 @@ interface AppleSignInButtonProps {
 export default function AppleSignInButton({ onSuccess, onError, onLoadingChange }: AppleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
+  // Generate cryptographically secure nonce
+  const generateNonce = (length: number = 32): string => {
+    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return result;
+  };
+
+  // SHA256 hash function
+  const sha256 = async (input: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
   const handleAppleSignIn = async () => {
-    if (isLoading) return;
+    if (isLoading || !auth) return;
 
     try {
       setIsLoading(true);
       onLoadingChange(true);
 
-      console.log('Starting Apple Sign-In with Firebase...');
+      // Generate nonce for this session
+      const rawNonce = generateNonce(32);
+      const hashedNonce = await sha256(rawNonce);
 
-      // Use the existing Apple Sign-In function
-      await startAppleSignIn();
+      console.log('Starting Apple Sign-In with proper nonce handling...');
+
+      // Create Apple OAuth provider with proper configuration
+      const provider = new OAuthProvider('apple.com');
       
-      // Note: The redirect will happen, so we won't reach this point
-      // The success will be handled by the redirect result handler
+      // Set custom parameters as per Firebase docs
+      provider.setCustomParameters({
+        nonce: hashedNonce
+      });
+
+      // Use popup for better UX (no redirect issues)
+      const result = await signInWithPopup(auth, provider);
+
+      console.log('Apple Sign-In successful:', result);
+      onSuccess(result.user);
     } catch (error) {
       console.error('Apple Sign-In error:', error);
       
@@ -39,8 +71,6 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
       onLoadingChange(false);
     }
   };
-
-
 
   return (
     <button
