@@ -44,24 +44,6 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
-  useEffect(() => {
-    // Load Apple's JavaScript SDK
-    const script = document.createElement('script');
-    script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
-    script.async = true;
-    script.onload = async () => {
-      await initializeAppleSignIn();
-    };
-    document.head.appendChild(script);
-
-    return () => {
-      // Cleanup
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
-  }, [initializeAppleSignIn]);
-
   const initializeAppleSignIn = async () => {
     if (typeof window.AppleID === 'undefined') {
       console.error('Apple ID SDK not loaded');
@@ -90,6 +72,24 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
       onError(error);
     }
   };
+
+  useEffect(() => {
+    // Load Apple's JavaScript SDK
+    const script = document.createElement('script');
+    script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
+    script.async = true;
+    script.onload = async () => {
+      await initializeAppleSignIn();
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
+  }, []);
 
   const handleAppleSignIn = async () => {
     if (!isInitialized || !auth) {
