@@ -10,7 +10,7 @@ import {
   signInWithPopup,
   UserCredential
 } from 'firebase/auth';
-import { auth, googleProvider, facebookProvider, appleProvider } from '@/lib/firebase';
+import { auth, googleProvider, facebookProvider, appleProvider, startAppleSignIn, handleAppleRedirectResult } from '@/lib/firebase';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   function signInWithApple() {
     if (!auth || !appleProvider) throw new Error('Firebase not initialized. Please check your environment variables.');
-    return signInWithPopup(auth, appleProvider);
+    return startAppleSignIn();
   }
 
   useEffect(() => {
@@ -72,6 +72,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       return;
     }
+
+    // Handle Apple redirect result
+    const handleRedirectResult = async () => {
+      try {
+        await handleAppleRedirectResult();
+      } catch (error) {
+        console.error('Error handling Apple redirect result:', error);
+      }
+    };
+
+    handleRedirectResult();
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);

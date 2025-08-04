@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import AppleSignInDebug from '@/components/AppleSignInDebug';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -71,8 +72,15 @@ export default function LoginPage() {
     try {
       setError('');
       setLoading(true);
+      console.log('Initiating Apple sign-in from login page...');
       await signInWithApple();
+      console.log('Apple sign-in initiated successfully');
     } catch (error: unknown) {
+      console.error('Apple sign-in error in login page:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       setError('Failed to sign in with Apple: ' + errorMessage);
       setLoading(false);
@@ -193,6 +201,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      <AppleSignInDebug />
     </div>
   );
 } 
