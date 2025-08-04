@@ -73,16 +73,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Handle Apple redirect result
+    // Only handle Apple redirect result if we're on a page that might have one
     const handleRedirectResult = async () => {
       try {
-        await handleAppleRedirectResult();
+        const result = await handleAppleRedirectResult();
+        if (result) {
+          console.log('Apple redirect result handled successfully');
+        }
       } catch (error) {
         console.error('Error handling Apple redirect result:', error);
       }
     };
 
-    handleRedirectResult();
+    // Only check for redirect result on login page or when URL has auth parameters
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      const hasAuthParams = url.searchParams.has('apiKey') || url.searchParams.has('authType');
+      if (hasAuthParams || url.pathname === '/login') {
+        handleRedirectResult();
+      }
+    }
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);

@@ -9,20 +9,16 @@ export async function GET(
   const url = new URL(request.url);
   const searchParams = url.searchParams.toString();
   
-  // Handle .js extension that Firebase SDK adds
-  const cleanPath = path.endsWith('.js') ? path.slice(0, -3) : path;
-  const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${cleanPath}${searchParams ? `?${searchParams}` : ''}`;
-  
   console.log('Firebase Auth proxy GET request:', {
     originalPath: path,
-    cleanPath,
-    firebaseUrl,
+    cleanPath: path,
+    firebaseUrl: `https://sleepcodingbase.firebaseapp.com/__/auth/${path}${searchParams ? `?${searchParams}` : ''}`,
     searchParams
   });
   
   // If this is a request for Firebase Auth JavaScript files, proxy them directly
-  if (cleanPath.endsWith('.js')) {
-    const scriptUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${cleanPath}`;
+  if (path.endsWith('.js')) {
+    const scriptUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${path}`;
     console.log('Proxying script request:', scriptUrl);
     
     try {
@@ -44,6 +40,7 @@ export async function GET(
   }
   
   try {
+    const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${path}${searchParams ? `?${searchParams}` : ''}`;
     const response = await fetch(firebaseUrl, {
       method: 'GET',
       headers: {
@@ -80,9 +77,7 @@ export async function POST(
   const url = new URL(request.url);
   const searchParams = url.searchParams.toString();
   
-  // Handle .js extension that Firebase SDK adds
-  const cleanPath = path.endsWith('.js') ? path.slice(0, -3) : path;
-  const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${cleanPath}${searchParams ? `?${searchParams}` : ''}`;
+  const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${path}${searchParams ? `?${searchParams}` : ''}`;
   
   try {
     const body = await request.text();
