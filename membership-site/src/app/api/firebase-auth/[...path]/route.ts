@@ -8,7 +8,16 @@ export async function GET(
   const url = new URL(request.url);
   const searchParams = url.searchParams.toString();
   
-  const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${path}${searchParams ? `?${searchParams}` : ''}`;
+  // Handle .js extension that Firebase SDK adds
+  const cleanPath = path.endsWith('.js') ? path.slice(0, -3) : path;
+  const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${cleanPath}${searchParams ? `?${searchParams}` : ''}`;
+  
+  console.log('Firebase Auth proxy GET request:', {
+    originalPath: path,
+    cleanPath,
+    firebaseUrl,
+    searchParams
+  });
   
   try {
     const response = await fetch(firebaseUrl, {
@@ -46,7 +55,9 @@ export async function POST(
   const url = new URL(request.url);
   const searchParams = url.searchParams.toString();
   
-  const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${path}${searchParams ? `?${searchParams}` : ''}`;
+  // Handle .js extension that Firebase SDK adds
+  const cleanPath = path.endsWith('.js') ? path.slice(0, -3) : path;
+  const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${cleanPath}${searchParams ? `?${searchParams}` : ''}`;
   
   try {
     const body = await request.text();
