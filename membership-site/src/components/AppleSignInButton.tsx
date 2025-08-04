@@ -30,7 +30,12 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
       onSuccess(result.user);
     } catch (error) {
       console.error('Apple Sign-In error:', error);
-      onError(error);
+      
+      // Only show error if it's not a user cancellation
+      const errorCode = (error as any)?.code;
+      if (errorCode !== 'auth/popup-closed-by-user' && errorCode !== 'auth/cancelled-popup-request') {
+        onError(error);
+      }
     } finally {
       setIsLoading(false);
       onLoadingChange(false);

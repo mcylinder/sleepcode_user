@@ -83,6 +83,10 @@ export default function LoginPage() {
 
   const handleAppleSignInLoading = (loading: boolean) => {
     setLoading(loading);
+    // Clear any existing error when starting Apple Sign-In
+    if (loading) {
+      setError('');
+    }
   };
 
   return (
