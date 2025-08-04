@@ -20,6 +20,29 @@ export async function GET(
     searchParams
   });
   
+  // If this is a request for experiments.js or handler.js, proxy it directly
+  if (cleanPath === 'experiments.js' || cleanPath === 'handler.js') {
+    const scriptUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${cleanPath}`;
+    console.log('Proxying script request:', scriptUrl);
+    
+    try {
+      const scriptResponse = await fetch(scriptUrl);
+      const scriptData = await scriptResponse.text();
+      
+      return new NextResponse(scriptData, {
+        status: scriptResponse.status,
+        headers: {
+          'Content-Type': 'application/javascript',
+          'Cache-Control': 'public, max-age=3600',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    } catch (error) {
+      console.error('Script proxy error:', error);
+      return new NextResponse('Script not found', { status: 404 });
+    }
+  }
+  
   try {
     const response = await fetch(firebaseUrl, {
       method: 'GET',
