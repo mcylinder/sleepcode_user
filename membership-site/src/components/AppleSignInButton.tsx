@@ -58,7 +58,7 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
 
       // Initialize Apple Sign-In
       window.AppleID.auth.init({
-        clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || 'com.sleepcoding.web',
+        clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || 'sleepcoding.web.auth',
         scope: 'name email',
         redirectURI: `${window.location.origin}/api/apple-auth/callback`,
         state: 'apple-signin',
