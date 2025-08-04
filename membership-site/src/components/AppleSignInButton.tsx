@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useCallback } from 'react';
+import { useState } from 'react';
 import { signInWithPopup, OAuthProvider } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -32,7 +32,7 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
       console.error('Apple Sign-In error:', error);
       
       // Only show error if it's not a user cancellation
-      const errorCode = (error as any)?.code;
+      const errorCode = (error as { code?: string })?.code;
       if (errorCode !== 'auth/popup-closed-by-user' && errorCode !== 'auth/cancelled-popup-request') {
         onError(error);
       }
