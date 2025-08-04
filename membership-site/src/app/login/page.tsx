@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import AppleSignInDebug from '@/components/AppleSignInDebug';
+import AppleSignInButton from '@/components/AppleSignInButton';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -68,24 +69,21 @@ export default function LoginPage() {
     }
   }
 
-  async function handleAppleSignIn() {
-    try {
-      setError('');
-      setLoading(true);
-      console.log('Initiating Apple sign-in from login page...');
-      await signInWithApple();
-      console.log('Apple sign-in initiated successfully');
-    } catch (error: unknown) {
-      console.error('Apple sign-in error in login page:', {
-        error,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      });
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      setError('Failed to sign in with Apple: ' + errorMessage);
-      setLoading(false);
-    }
-  }
+  const handleAppleSignInSuccess = (user: any) => {
+    console.log('Apple Sign-In successful:', user);
+    // The user will be automatically redirected by the useEffect that watches currentUser
+  };
+
+  const handleAppleSignInError = (error: any) => {
+    console.error('Apple Sign-In error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    setError('Failed to sign in with Apple: ' + errorMessage);
+    setLoading(false);
+  };
+
+  const handleAppleSignInLoading = (loading: boolean) => {
+    setLoading(loading);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -123,14 +121,11 @@ export default function LoginPage() {
               Continue with Facebook
             </button>
 
-            <button
-              onClick={handleAppleSignIn}
-              disabled={loading}
-              className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-            >
-              <span className="mr-2">🍎</span>
-              Continue with Apple
-            </button>
+            <AppleSignInButton
+              onSuccess={handleAppleSignInSuccess}
+              onError={handleAppleSignInError}
+              onLoadingChange={handleAppleSignInLoading}
+            />
           </div>
 
           <div className="mt-6">
