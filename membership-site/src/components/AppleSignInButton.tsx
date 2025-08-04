@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { signInWithCredential, OAuthProvider } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -22,7 +22,6 @@ interface AppleSignInButtonProps {
 }
 
 export default function AppleSignInButton({ onSuccess, onError, onLoadingChange }: AppleSignInButtonProps) {
-  const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const nonceRef = useRef<string>('');
 
@@ -66,7 +65,6 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
         nonce: hashedNonce
       });
 
-      setIsInitialized(true);
       console.log('Apple Sign-In initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Apple Sign-In:', error);
@@ -118,6 +116,9 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
       });
 
       // Sign in with Firebase
+      if (!auth) {
+        throw new Error('Firebase auth not initialized');
+      }
       const result = await signInWithCredential(auth, credential);
       console.log('Firebase sign-in successful:', result);
       
