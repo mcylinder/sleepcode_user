@@ -16,9 +16,12 @@ export async function GET(
     searchParams
   });
   
+  // Handle single underscore paths by converting to double underscore for Firebase Hosting
+  const normalizedPath = path.startsWith('_/') ? path.substring(1) : path;
+  
   // If this is a request for Firebase Auth JavaScript files, proxy them directly
-  if (path.endsWith('.js')) {
-    const scriptUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${path}`;
+  if (normalizedPath.endsWith('.js')) {
+    const scriptUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${normalizedPath}`;
     console.log('Proxying script request:', scriptUrl);
     
     try {
@@ -40,7 +43,7 @@ export async function GET(
   }
   
   try {
-    const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${path}${searchParams ? `?${searchParams}` : ''}`;
+    const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${normalizedPath}${searchParams ? `?${searchParams}` : ''}`;
     const response = await fetch(firebaseUrl, {
       method: 'GET',
       headers: {
@@ -77,7 +80,9 @@ export async function POST(
   const url = new URL(request.url);
   const searchParams = url.searchParams.toString();
   
-  const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${path}${searchParams ? `?${searchParams}` : ''}`;
+  // Handle single underscore paths by converting to double underscore for Firebase Hosting
+  const normalizedPath = path.startsWith('_/') ? path.substring(1) : path;
+  const firebaseUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${normalizedPath}${searchParams ? `?${searchParams}` : ''}`;
   
   try {
     const body = await request.text();
