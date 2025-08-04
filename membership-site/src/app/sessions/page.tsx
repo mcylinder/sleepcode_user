@@ -572,14 +572,14 @@ export default function SessionsPage() {
     });
   };
 
-  const stopAudio = () => {
+  const stopAudio = useCallback(() => {
     if (currentAudio) {
       currentAudio.pause();
       currentAudio.currentTime = 0;
       setCurrentAudio(null);
       setPlayingReader(null);
     }
-  };
+  }, [currentAudio]);
 
   const toggleAudio = (readerName: string, audioFile: string) => {
     if (playingReader === readerName) {
@@ -615,7 +615,7 @@ export default function SessionsPage() {
     if (!isDropdownOpen && currentAudio) {
       stopAudio();
     }
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, currentAudio, stopAudio]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -638,7 +638,7 @@ export default function SessionsPage() {
   }, [currentUser, loading, router]);
 
   // Load data function
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     // Load user drafts and session count from Firestore
     if (currentUser) {
       try {
@@ -668,14 +668,14 @@ export default function SessionsPage() {
         console.error('Error loading drafts:', error);
       }
     }
-  };
+  }, [currentUser]);
 
   // Load data on component mount
   useEffect(() => {
     if (currentUser) {
       loadData();
     }
-  }, [currentUser]);
+  }, [currentUser, loadData]);
 
 
 

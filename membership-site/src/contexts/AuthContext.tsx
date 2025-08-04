@@ -19,7 +19,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   signInWithGoogle: () => Promise<UserCredential>;
   signInWithFacebook: () => Promise<UserCredential>;
-  signInWithApple: () => Promise<UserCredential>;
+  signInWithApple: () => Promise<void>;
   loading: boolean;
 }
 

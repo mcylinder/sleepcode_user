@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { auth, appleProvider } from '@/lib/firebase';
 
 export default function AppleSignInDebug() {
-  const [debugInfo, setDebugInfo] = useState<any>({});
+  const [debugInfo, setDebugInfo] = useState<Record<string, unknown>>({});
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const gatherDebugInfo = () => {
-      const info: any = {
+      const info: Record<string, unknown> = {
         timestamp: new Date().toISOString(),
         userAgent: navigator.userAgent,
         platform: navigator.platform,

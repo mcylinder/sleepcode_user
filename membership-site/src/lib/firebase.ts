@@ -50,10 +50,10 @@ export const startAppleSignIn = async () => {
   } catch (err) {
     console.error('Apple sign-in initiation error:', {
       error: err,
-      code: (err as any)?.code,
-      message: (err as any)?.message,
-      customData: (err as any)?.customData,
-      stack: (err as any)?.stack
+      code: (err as { code?: string })?.code,
+      message: (err as Error)?.message,
+      customData: (err as { customData?: unknown })?.customData,
+      stack: (err as Error)?.stack
     });
     throw err;
   }
@@ -82,10 +82,10 @@ export const handleAppleRedirectResult = async () => {
   } catch (err) {
     console.error('Apple redirect result error:', {
       error: err,
-      code: (err as any)?.code,
-      message: (err as any)?.message,
-      customData: (err as any)?.customData,
-      stack: (err as any)?.stack
+      code: (err as { code?: string })?.code,
+      message: (err as Error)?.message,
+      customData: (err as { customData?: unknown })?.customData,
+      stack: (err as Error)?.stack
     });
     throw err;
   }
