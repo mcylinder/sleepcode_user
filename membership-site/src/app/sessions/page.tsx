@@ -504,8 +504,8 @@ export default function SessionsPage() {
       if (currentDraft && currentUser) {
         try {
                   await updateSession(currentUser.uid, currentDraft.id!, {
-          suggestions: data.suggestions
-        });
+            suggestions: data.suggestions
+          });
         } catch (error) {
           console.error('Error saving suggestions:', error);
         }
@@ -639,12 +639,12 @@ export default function SessionsPage() {
 
   // Load data function
   const loadData = useCallback(async () => {
-    // Load user drafts and session count from Firestore
-    if (currentUser) {
-      try {
+      // Load user drafts and session count from Firestore
+      if (currentUser) {
+        try {
         const userSessions = await getUserSessions(currentUser.uid);
-        const sessionCount = await getUserSessionCount(currentUser.uid);
-        
+          const sessionCount = await getUserSessionCount(currentUser.uid);
+          
         // Add default status to existing sessions that don't have it
         const sessionsWithStatus = userSessions.map(session => ({
           ...session,
@@ -652,7 +652,7 @@ export default function SessionsPage() {
         }));
         
         setDrafts(sessionsWithStatus);
-        setUserSessionCount(sessionCount);
+          setUserSessionCount(sessionCount);
         
         // Only show sessions that are being rendered (not in_edit)
         const renderingSessions = sessionsWithStatus.filter(session => session.status !== 'in_edit').map(session => ({
@@ -664,12 +664,12 @@ export default function SessionsPage() {
         }));
         
         setSessions(renderingSessions);
-      } catch (error) {
-        console.error('Error loading drafts:', error);
+        } catch (error) {
+          console.error('Error loading drafts:', error);
+        }
       }
-    }
   }, [currentUser]);
-
+      
   // Load data on component mount
   useEffect(() => {
     if (currentUser) {
@@ -956,7 +956,7 @@ export default function SessionsPage() {
 
               {/* Mobile Separator */}
               <div className="md:hidden border-t border-gray-200 my-6"></div>
-              
+
               {/* New Session Form Section */}
               <div className="mt-8">
                                   <button
@@ -1028,7 +1028,7 @@ export default function SessionsPage() {
                                     className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer"
                                     onClick={() => {
                                       setFormData({ ...formData, reader: reader.name });
-                                      setFormSaved(false);
+                          setFormSaved(false);
                                       setIsDropdownOpen(false);
                                     }}
                                   >
@@ -1099,18 +1099,18 @@ export default function SessionsPage() {
                               >
                                 Bulk Paste
                               </button>
-                              <button
-                                type="button"
-                                onClick={getSuggestions}
-                                disabled={loadingSuggestions}
-                                className={`px-3 py-1 text-sm font-normal rounded-md transition-colors ${
-                                  loadingSuggestions 
-                                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed' 
-                                    : 'bg-cyan-700 text-white hover:bg-cyan-900'
-                                }`}
-                              >
-                                {loadingSuggestions ? 'Loading...' : 'Suggestions ▶'}
-                              </button>
+                            <button
+                              type="button"
+                              onClick={getSuggestions}
+                              disabled={loadingSuggestions}
+                              className={`px-3 py-1 text-sm font-normal rounded-md transition-colors ${
+                                loadingSuggestions 
+                                  ? 'text-gray-400 bg-gray-100 cursor-not-allowed' 
+                                  : 'bg-cyan-700 text-white hover:bg-cyan-900'
+                              }`}
+                            >
+                              {loadingSuggestions ? 'Loading...' : 'Suggestions ▶'}
+                            </button>
                             </div>
                           </div>
                           
@@ -1151,15 +1151,15 @@ export default function SessionsPage() {
 
                         {/* Action Buttons */}
                         <div className="flex flex-wrap gap-3">
-                                                      <button
-                              type="submit"
+                          <button
+                            type="submit"
                               disabled={!formData.title.trim() || !formData.description.trim()}
                               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center space-x-2 ${
                                 !formData.title.trim() || !formData.description.trim()
-                                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                  : 'bg-cyan-700 text-white hover:bg-cyan-900'
-                              }`}
-                            >
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-cyan-700 text-white hover:bg-cyan-900'
+                            }`}
+                          >
                               <span className="text-sm">
                                 {formSaved ? '✓' : '☐'}
                               </span>
@@ -1515,7 +1515,7 @@ export default function SessionsPage() {
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900">Generated Suggestions</h3>
+                <h3 className="text-lg font-medium text-gray-900">Generated Suggestions</h3>
                   <p className="text-sm text-gray-500 mt-1">
                     {getEmptySlotCount()} empty slot{getEmptySlotCount() !== 1 ? 's' : ''} available
                   </p>

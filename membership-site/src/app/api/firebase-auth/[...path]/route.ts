@@ -20,8 +20,8 @@ export async function GET(
     searchParams
   });
   
-  // If this is a request for experiments.js or handler.js, proxy it directly
-  if (cleanPath === 'experiments.js' || cleanPath === 'handler.js') {
+  // If this is a request for Firebase Auth JavaScript files, proxy them directly
+  if (cleanPath.endsWith('.js')) {
     const scriptUrl = `https://sleepcodingbase.firebaseapp.com/__/auth/${cleanPath}`;
     console.log('Proxying script request:', scriptUrl);
     
