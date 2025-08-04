@@ -5,7 +5,11 @@
   "installCommand": "npm install",
   "rewrites": [
     {
-      "source": "/__/auth/(.*)",
+      "source": "/__/auth/handler",
+      "destination": "/api/firebase-auth/handler"
+    },
+    {
+      "source": "/__/auth/(.*\\.js)",
       "destination": "/api/firebase-auth/$1"
     },
     {
