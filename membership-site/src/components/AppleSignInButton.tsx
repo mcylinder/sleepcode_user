@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { signInWithCredential, OAuthProvider } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -44,7 +44,7 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
-  const initializeAppleSignIn = async () => {
+  const initializeAppleSignIn = useCallback(async () => {
     if (typeof window.AppleID === 'undefined') {
       console.error('Apple ID SDK not loaded');
       return;
@@ -71,7 +71,7 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
       console.error('Failed to initialize Apple Sign-In:', error);
       onError(error);
     }
-  };
+  }, [onError]);
 
   useEffect(() => {
     // Load Apple's JavaScript SDK
@@ -89,7 +89,7 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
         document.head.removeChild(script);
       }
     };
-  }, []);
+  }, [initializeAppleSignIn]);
 
   const handleAppleSignIn = async () => {
     if (!isInitialized || !auth) {
@@ -105,10 +105,17 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
       const response = await window.AppleID.auth.signIn();
       console.log('Apple Sign-In response:', response);
 
+      // Type assertion for Apple response
+      const appleResponse = response as {
+        authorization: {
+          id_token: string;
+        };
+      };
+
       // Create Firebase credential
       const provider = new OAuthProvider('apple.com');
       const credential = provider.credential({
-        idToken: response.authorization.id_token,
+        idToken: appleResponse.authorization.id_token,
         rawNonce: nonceRef.current,
       });
 
