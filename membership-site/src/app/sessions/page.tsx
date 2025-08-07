@@ -217,6 +217,26 @@ export default function SessionsPage() {
   const [showBulkPasteModal, setShowBulkPasteModal] = useState(false);
   const [bulkPasteText, setBulkPasteText] = useState('');
 
+  // Submit job function
+  async function submitJob(userId: string, sessionId: string) {
+    const response = await fetch('https://8gmn2c1bnj.execute-api.us-east-1.amazonaws.com/Mydefault/enqueueJob', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        sessionId: sessionId,
+        userId: userId,
+        params: {
+          someKey: "someValue"
+        }
+      })
+    });
+
+    const data = await response.json();
+    console.log('Lambda response:', data);
+  }
+
   // Form handlers
   const handleNewSession = () => {
     setEditingDraft(null);
@@ -336,6 +356,11 @@ export default function SessionsPage() {
       console.log('Decrementing available sessions...');
       await decrementAvailableSessions(currentUser.uid);
       console.log('Available sessions decremented successfully');
+      
+      // Submit job after sessions decremented
+      console.log('Submitting job...');
+      await submitJob(currentUser.uid, draftToRender.id!);
+      console.log('Job submitted successfully');
       
       // Remove from drafts list and add to sessions
       setDrafts(drafts.filter(draft => draft.id !== draftToRender.id));
@@ -1177,26 +1202,31 @@ export default function SessionsPage() {
                         </div>
 
                         {/* Render Button */}
-                        <div className="pt-4 border-t border-gray-200">
+                        <div className="pt-4 border-t border-gray-200 flex items-center justify-between">
                           <button
                             type="button"
                             onClick={handleRender}
-                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0 || getNonEmptyInstructionCount() < 1}
+                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
-                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0 || getNonEmptyInstructionCount() < 1
+                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
                                 : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
                             }`}
                           >
-                            {!formData.title.trim() || !formData.description.trim() 
-                              ? 'Render (Title & Description Required)' 
-                              : (userSessionCount?.availableSessions || 0) <= 0
-                                ? 'Render (No Sessions Available)'
-                                : getNonEmptyInstructionCount() < 1
-                                ? 'Render (No Sessions Available)'
-                                : 'Render Session'
-                            }
+                            Render Session
                           </button>
+                          <div className="text-sm text-gray-600">
+                            {!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1
+                              ? `Required: ${[
+                                  !(editingDraft || currentDraft) && 'save draft first',
+                                  !formData.title.trim() && 'title',
+                                  !formData.description.trim() && 'description', 
+                                  !formData.reader.trim() && 'reader',
+                                  getNonEmptyInstructionCount() < 1 && 'at least one instruction'
+                                ].filter(Boolean).join(', ')}`
+                              : 'Ready to render'
+                            }
+                          </div>
                         </div>
                       </div>
                     </form>
@@ -1393,26 +1423,31 @@ export default function SessionsPage() {
                         </div>
 
                         {/* Render Button */}
-                        <div className="pt-4 border-t border-gray-200">
+                        <div className="pt-4 border-t border-gray-200 flex items-center justify-between">
                           <button
                             type="button"
                             onClick={handleRender}
-                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0 || getNonEmptyInstructionCount() < 1}
+                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
-                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || (userSessionCount?.availableSessions || 0) <= 0 || getNonEmptyInstructionCount() < 1
+                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
                                 : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
                             }`}
                           >
-                            {!formData.title.trim() || !formData.description.trim() 
-                              ? 'Render (Title & Description Required)' 
-                              : (userSessionCount?.availableSessions || 0) <= 0
-                                ? 'Render (No Sessions Available)'
-                                : getNonEmptyInstructionCount() < 1
-                                ? 'Render (No Sessions Available)'
-                                : 'Render Session'
-                            }
+                            Render Session
                           </button>
+                          <div className="text-sm text-gray-600">
+                            {!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1
+                              ? `Required: ${[
+                                  !(editingDraft || currentDraft) && 'save draft first',
+                                  !formData.title.trim() && 'title',
+                                  !formData.description.trim() && 'description', 
+                                  !formData.reader.trim() && 'reader',
+                                  getNonEmptyInstructionCount() < 1 && 'at least one instruction'
+                                ].filter(Boolean).join(', ')}`
+                              : 'Ready to render'
+                            }
+                          </div>
                         </div>
                       </div>
                     </form>
