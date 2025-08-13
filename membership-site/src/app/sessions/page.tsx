@@ -274,22 +274,29 @@ export default function SessionsPage() {
 
   // Submit job function
   async function submitJob(userId: string, sessionId: string) {
-    const response = await fetch('https://8gmn2c1bnj.execute-api.us-east-1.amazonaws.com/Mydefault/enqueueJob', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        sessionId: sessionId,
-        userId: userId,
-        params: {
-          someKey: "someValue"
-        }
-      })
-    });
+    try {
+      const response = await fetch('/api/submit-job', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          userId: userId
+        })
+      });
 
-    const data = await response.json();
-    console.log('Lambda response:', data);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Lambda response:', data);
+      return data;
+    } catch (error) {
+      console.error('Error submitting job:', error);
+      throw error; // Re-throw so calling function can handle it
+    }
   }
 
   // Form handlers

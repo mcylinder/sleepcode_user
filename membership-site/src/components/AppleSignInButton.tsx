@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, appleProvider } from '../lib/firebase';
+import { useState, useEffect } from 'react';
+import { signInWithCredential, OAuthProvider } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 interface AppleSignInButtonProps {
   onSuccess: (user: unknown) => void;
@@ -10,11 +10,64 @@ interface AppleSignInButtonProps {
   onLoadingChange: (loading: boolean) => void;
 }
 
+// Generate a random nonce for Apple Sign-In
+const generateNonce = (length: number): string => {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return result;
+};
+
+// SHA256 hash function for nonce
+const sha256 = async (message: string): Promise<string> => {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+};
+
 export default function AppleSignInButton({ onSuccess, onError, onLoadingChange }: AppleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [appleIdInitialized, setAppleIdInitialized] = useState(false);
+
+  useEffect(() => {
+    // Check if Apple SDK is already loaded
+    if ((window as any).AppleID) {
+      console.log('Apple Sign-In SDK already loaded');
+      setAppleIdInitialized(true);
+      return;
+    }
+
+    // Check if script is already being loaded
+    const existingScript = document.querySelector('script[src*="appleid.auth.js"]');
+    if (existingScript) {
+      console.log('Apple Sign-In SDK script already exists');
+      return;
+    }
+
+    // Load Apple's JavaScript SDK
+    const script = document.createElement('script');
+    script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
+    script.async = true;
+    script.onload = () => {
+      console.log('Apple Sign-In SDK loaded');
+      setAppleIdInitialized(true);
+    };
+    script.onerror = () => {
+      console.error('Failed to load Apple Sign-In SDK');
+      onError(new Error('Failed to load Apple Sign-In SDK'));
+    };
+    document.head.appendChild(script);
+  }, [onError]);
 
   const handleAppleSignIn = async () => {
-    if (isLoading || !appleProvider || !auth) return;
+    if (isLoading || !auth || !appleIdInitialized) {
+      console.log('Apple Sign-In blocked:', { isLoading, hasAuth: !!auth, appleIdInitialized });
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -22,16 +75,42 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
 
       console.log('Starting Apple Sign-In with Firebase...');
 
-      // Use Firebase's built-in Apple provider
-      appleProvider.addScope('name');
-      appleProvider.addScope('email');
+      // Generate nonce
+      const unhashedNonce = generateNonce(10);
+      const hashedNonce = await sha256(unhashedNonce);
 
-      const result = await signInWithPopup(auth, appleProvider);
-      
-      console.log('Apple Sign-In successful:', result);
-      onSuccess(result.user);
+      console.log('Generated nonce:', { unhashedNonce, hashedNonce });
+
+      // Initialize Apple Sign-In
+      if (typeof window !== 'undefined' && (window as any).AppleID) {
+        (window as any).AppleID.auth.init({
+          clientId: 'RGGU95UTDS.me.sleepcoding', // Your Apple Service ID
+          scope: 'name email',
+          redirectURI: 'https://sleepcoding.me/_/auth/handler',
+          state: 'state',
+          nonce: hashedNonce
+        });
+
+        console.log('Apple Sign-In initialized');
+
+        // Sign in with Apple - this will redirect to Apple's auth page
+        console.log('Redirecting to Apple Sign-In...');
+        (window as any).AppleID.auth.signIn();
+        
+        // Note: The code below won't execute immediately because of the redirect
+        // We need to handle the response after the redirect back from Apple
+        console.log('This code will execute after redirect back from Apple');
+      } else {
+        throw new Error('Apple Sign-In SDK not available');
+      }
     } catch (error) {
       console.error('Apple Sign-In failed:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        code: (error as any)?.code || 'No code',
+        stack: error instanceof Error ? error.stack : 'No stack'
+      });
       
       // Filter out user cancellation errors
       if (error instanceof Error && error.message.includes('popup_closed')) {
@@ -49,7 +128,7 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
   return (
     <button
       onClick={handleAppleSignIn}
-      disabled={isLoading || !appleProvider || !auth}
+      disabled={isLoading || !auth || !appleIdInitialized}
       className="w-full flex items-center justify-center gap-3 bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       {isLoading ? (

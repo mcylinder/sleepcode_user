@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
 IMPORTANT GUIDELINES:
 - The statements should be created with the speaker voice of first person.
-- Use "I" or "I'm" or "I am" very infrequently.
+- Use "I" or "I'm" or "I am" for only half of the total results.
 - Use present tense, active voice
 - Make statements empowering and motivational
 - Each statement should be a simple sentence (maximum 18 words)
@@ -40,9 +40,9 @@ IMPORTANT GUIDELINES:
 
 Examples of good statements:
 - "Embracing this journey with confidence and determination"
-- "Moving forward with clarity and purpose"
+- "I am moving forward with clarity and purpose"
 - "Building strength through consistent practice"
-- "Creating positive change through focused action"
+- "I can create positive change through focused action"
 
 Return the response as a simple JSON array of strings.`;
 

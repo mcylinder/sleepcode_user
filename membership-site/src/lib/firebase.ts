@@ -28,15 +28,34 @@ let appleProvider: OAuthProvider | null = null;
 
 if (typeof window !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.projectId) {
   try {
+    console.log('Initializing Firebase with config:', {
+      apiKey: firebaseConfig.apiKey ? 'Present' : 'Missing',
+      authDomain: firebaseConfig.authDomain,
+      projectId: firebaseConfig.projectId,
+      hasAppId: !!firebaseConfig.appId
+    });
+    
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
     googleProvider = new GoogleAuthProvider();
     facebookProvider = new FacebookAuthProvider();
     appleProvider = new OAuthProvider('apple.com');
+    
+    console.log('Firebase initialized successfully:', {
+      hasApp: !!app,
+      hasAuth: !!auth,
+      hasAppleProvider: !!appleProvider
+    });
   } catch (error) {
     console.warn('Firebase initialization failed:', error);
   }
+} else {
+  console.warn('Firebase initialization skipped:', {
+    isClient: typeof window !== 'undefined',
+    hasApiKey: !!firebaseConfig.apiKey,
+    hasProjectId: !!firebaseConfig.projectId
+  });
 }
 
 export { auth, db, googleProvider, facebookProvider, appleProvider };
