@@ -14,6 +14,7 @@ import {
   duplicateSession,
   getUserSessionCount,
   decrementAvailableSessions,
+  decrementDraftCount,
   hasContentChanged
 } from '@/lib/draftService';
 import {
@@ -181,6 +182,7 @@ interface SessionDisplay {
   length: string; // format: "minute:second"
   reader: string;
   created: string; // date string
+  status: string; // session status
 }
 
 
@@ -216,6 +218,59 @@ export default function SessionsPage() {
   // Bulk paste modal state
   const [showBulkPasteModal, setShowBulkPasteModal] = useState(false);
   const [bulkPasteText, setBulkPasteText] = useState('');
+
+  // Polling interval for session status updates
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Function to check and update session statuses
+  const checkSessionStatuses = useCallback(async () => {
+    if (!currentUser) return;
+
+    try {
+      // Get all sessions from Firestore
+      const userSessions = await getUserSessions(currentUser.uid);
+      
+      // Update sessions state with latest statuses
+      setSessions(prevSessions => {
+        return prevSessions.map(session => {
+          const firestoreSession = userSessions.find(s => s.id === session.id);
+          if (firestoreSession) {
+            return {
+              ...session,
+              status: firestoreSession.status || session.status
+            };
+          }
+          return session;
+        });
+      });
+    } catch (error) {
+      console.error('Error checking session statuses:', error);
+    }
+  }, [currentUser]);
+
+  // Start polling for sessions that aren't completed
+  const startPolling = useCallback(() => {
+    // Clear any existing interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+
+    // Check if there are any sessions that aren't completed
+    const hasIncompleteSessions = sessions.some(session => session.status !== 'completed' && session.status !== 'complete');
+    
+    if (hasIncompleteSessions) {
+      // Start polling every 10 seconds
+      pollingIntervalRef.current = setInterval(checkSessionStatuses, 10000);
+    }
+  }, [sessions, checkSessionStatuses]);
+
+  // Stop polling
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  }, []);
 
   // Submit job function
   async function submitJob(userId: string, sessionId: string) {
@@ -264,6 +319,12 @@ export default function SessionsPage() {
 
   const handleSaveDraft = async () => {
     if (!currentUser) return;
+
+    // Validate that title exists before saving
+    if (!formData.title.trim()) {
+      alert('A title is required to save a draft.');
+      return;
+    }
 
     try {
       if (editingDraft || currentDraft) {
@@ -342,20 +403,36 @@ export default function SessionsPage() {
     const draftToRender = editingDraft || currentDraft;
     if (!draftToRender) return;
 
+    // Validate that title exists before rendering
+    if (!formData.title.trim()) {
+      alert('A title is required to render a session.');
+      return;
+    }
+
     try {
       console.log('Starting render process for draft:', draftToRender.id);
       
-      // Update session status to 'to_render'
-      console.log('Updating session status...');
+      // First, save the draft with all current form data (including reader selection)
+      console.log('Saving draft with current form data...');
       await updateSession(currentUser.uid, draftToRender.id!, {
-        status: 'to_render'
+        title: formData.title,
+        description: formData.description,
+        reader: formData.reader,
+        instructions: instructions,
+        suggestions: suggestions,
+        status: 'to_render' // Update status to rendering
       });
-      console.log('Session status updated successfully');
+      console.log('Draft saved with current form data successfully');
       
       // Decrement available sessions
       console.log('Decrementing available sessions...');
       await decrementAvailableSessions(currentUser.uid);
       console.log('Available sessions decremented successfully');
+      
+      // Decrement draft count since this draft is now being rendered
+      console.log('Decrementing draft count...');
+      await decrementDraftCount(currentUser.uid);
+      console.log('Draft count decremented successfully');
       
       // Submit job after sessions decremented
       console.log('Submitting job...');
@@ -455,7 +532,7 @@ export default function SessionsPage() {
       suggestions: suggestions
     });
 
-    if (currentContent !== lastSavedContent && hasContentChanged(currentDraft, currentDraft)) {
+    if (currentContent !== lastSavedContent && hasContentChanged(currentDraft, currentContent)) {
       try {
         await updateSession(currentUser.uid, currentDraft.id!, {
           title: formData.title,
@@ -685,7 +762,8 @@ export default function SessionsPage() {
           title: session.title,
           length: '00:00', // Placeholder until rendered
           reader: session.reader,
-          created: session.createdAt?.toDate().toISOString() || new Date().toISOString()
+          created: session.createdAt?.toDate().toISOString() || new Date().toISOString(),
+          status: session.status
         }));
         
         setSessions(renderingSessions);
@@ -702,8 +780,21 @@ export default function SessionsPage() {
     }
   }, [currentUser, loadData]);
 
+  // Start/stop polling based on session statuses
+  useEffect(() => {
+    if (sessions.length > 0) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+  }, [sessions, startPolling, stopPolling]);
 
-
+  // Cleanup polling on component unmount
+  useEffect(() => {
+    return () => {
+      stopPolling();
+    };
+  }, [stopPolling]);
 
 
   if (loading) {
@@ -737,16 +828,13 @@ export default function SessionsPage() {
                         Title
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Length
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Reader
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Created
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        View
+                        Status
                       </th>
                     </tr>
                   </thead>
@@ -757,18 +845,23 @@ export default function SessionsPage() {
                           {session.title}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {session.length}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {session.reader}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(session.created).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <button className="text-cyan-700 hover:text-cyan-900 font-medium">
-                            {session.length === '00:00' ? 'Rendering' : 'View'}
-                          </button>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            session.status === 'to_render' ? 'bg-yellow-100 text-yellow-800' :
+                            session.status === 'rendering' ? 'bg-blue-100 text-blue-800' :
+                            (session.status === 'completed' || session.status === 'complete') ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {session.status === 'to_render' ? 'To Render' :
+                             session.status === 'rendering' ? 'Recording' :
+                             (session.status === 'completed' || session.status === 'complete') ? 'Recorded' :
+                             session.status}
+                          </span>
                         </td>
                       </tr>
                     ))}
@@ -784,20 +877,24 @@ export default function SessionsPage() {
                       <h3 className="text-sm font-medium text-gray-900 flex-1 pr-4">
                         {session.title}
                       </h3>
-                      <button className="text-cyan-700 hover:text-cyan-900 font-medium text-sm">
-                        {session.length === '00:00' ? 'Rendering' : 'View'}
-                      </button>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        session.status === 'to_render' ? 'bg-yellow-100 text-yellow-800' :
+                        session.status === 'rendering' ? 'bg-blue-100 text-blue-800' :
+                        (session.status === 'completed' || session.status === 'complete') ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {session.status === 'to_render' ? 'To Render' :
+                         session.status === 'rendering' ? 'Recording' :
+                         (session.status === 'completed' || session.status === 'complete') ? 'Recorded' :
+                         session.status}
+                      </span>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-500">Length:</span>
-                        <span className="ml-1 text-gray-900">{session.length}</span>
-                      </div>
                       <div>
                         <span className="text-gray-500">Reader:</span>
                         <span className="ml-1 text-gray-900">{session.reader}</span>
                       </div>
-                      <div className="col-span-2">
+                      <div>
                         <span className="text-gray-500">Created:</span>
                         <span className="ml-1 text-gray-900">{new Date(session.created).toLocaleDateString()}</span>
                       </div>
@@ -867,7 +964,12 @@ export default function SessionsPage() {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleEditDraft(draft)}
-                                className="px-3 py-1 text-xs font-medium text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-md hover:bg-cyan-100 hover:border-cyan-300 transition-colors"
+                                disabled={showForm}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                                  showForm
+                                    ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
+                                    : 'text-cyan-700 bg-cyan-50 border border-cyan-200 hover:bg-cyan-100 hover:border-cyan-300'
+                                }`}
                               >
                                 Edit
                               </button>
@@ -929,7 +1031,12 @@ export default function SessionsPage() {
                         <div className="flex flex-col space-y-2">
                           <button 
                             onClick={() => handleEditDraft(draft)}
-                            className="px-3 py-1 text-xs font-medium text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-md hover:bg-cyan-100 hover:border-cyan-300 transition-colors"
+                            disabled={showForm}
+                            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                              showForm
+                                ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
+                                : 'text-cyan-700 bg-cyan-50 border border-cyan-200 hover:bg-cyan-100 hover:border-cyan-300'
+                            }`}
                           >
                             Edit
                           </button>
@@ -1206,9 +1313,9 @@ export default function SessionsPage() {
                           <button
                             type="button"
                             onClick={handleRender}
-                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1}
+                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1 || (userSessionCount?.availableSessions || 0) <= 0}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
-                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1
+                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1 || (userSessionCount?.availableSessions || 0) <= 0
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
                                 : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
                             }`}
@@ -1216,13 +1323,14 @@ export default function SessionsPage() {
                             Render Session
                           </button>
                           <div className="text-sm text-gray-600">
-                            {!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1
+                            {!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1 || (userSessionCount?.availableSessions || 0) <= 0
                               ? `Required: ${[
                                   !(editingDraft || currentDraft) && 'save draft first',
                                   !formData.title.trim() && 'title',
                                   !formData.description.trim() && 'description', 
                                   !formData.reader.trim() && 'reader',
-                                  getNonEmptyInstructionCount() < 1 && 'at least one instruction'
+                                  getNonEmptyInstructionCount() < 1 && 'at least one instruction',
+                                  (userSessionCount?.availableSessions || 0) <= 0 && 'available sessions'
                                 ].filter(Boolean).join(', ')}`
                               : 'Ready to render'
                             }
@@ -1427,9 +1535,9 @@ export default function SessionsPage() {
                           <button
                             type="button"
                             onClick={handleRender}
-                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1}
+                            disabled={!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1 || (userSessionCount?.availableSessions || 0) <= 0}
                             className={`px-4 py-2 text-sm font-medium rounded-md ${
-                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1
+                              !(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1 || (userSessionCount?.availableSessions || 0) <= 0
                                 ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
                                 : 'text-white bg-green-600 border border-green-600 hover:bg-green-700'
                             }`}
@@ -1437,13 +1545,14 @@ export default function SessionsPage() {
                             Render Session
                           </button>
                           <div className="text-sm text-gray-600">
-                            {!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1
+                            {!(editingDraft || currentDraft) || !formData.title.trim() || !formData.description.trim() || !formData.reader.trim() || getNonEmptyInstructionCount() < 1 || (userSessionCount?.availableSessions || 0) <= 0
                               ? `Required: ${[
                                   !(editingDraft || currentDraft) && 'save draft first',
                                   !formData.title.trim() && 'title',
                                   !formData.description.trim() && 'description', 
                                   !formData.reader.trim() && 'reader',
-                                  getNonEmptyInstructionCount() < 1 && 'at least one instruction'
+                                  getNonEmptyInstructionCount() < 1 && 'at least one instruction',
+                                  (userSessionCount?.availableSessions || 0) <= 0 && 'available sessions'
                                 ].filter(Boolean).join(', ')}`
                               : 'Ready to render'
                             }

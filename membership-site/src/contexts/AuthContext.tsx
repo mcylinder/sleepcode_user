@@ -10,7 +10,8 @@ import {
   signInWithPopup,
   UserCredential
 } from 'firebase/auth';
-import { auth, googleProvider, facebookProvider } from '@/lib/firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, googleProvider, facebookProvider, db } from '@/lib/firebase';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -31,6 +32,38 @@ export function useAuth() {
   }
   return context;
 }
+
+// Create user profile in Firestore
+const createUserProfile = async (user: User) => {
+  if (!db) return;
+  
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userRef);
+    
+    // Only create profile if it doesn't exist
+    if (!userDoc.exists()) {
+      await setDoc(userRef, {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName || null,
+        photoURL: user.photoURL || null,
+        emailVerified: user.emailVerified,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        // Initialize session account
+        availableSessions: 3, // Default free sessions
+        totalSessionsUsed: 0,
+        draftCount: 0, // Start with 0 drafts
+        subscriptionStatus: 'none',
+        subscriptionExpiry: null
+      });
+      console.log('User profile created successfully');
+    }
+  } catch (error) {
+    console.error('Error creating user profile:', error);
+  }
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -67,8 +100,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      
+      // Create user profile when user signs in (for new users)
+      if (user) {
+        await createUserProfile(user);
+      }
+      
       setLoading(false);
     });
 
