@@ -1,11 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { signInWithCredential, OAuthProvider } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
 interface AppleSignInButtonProps {
-  onSuccess: (user: unknown) => void;
   onError: (error: unknown) => void;
   onLoadingChange: (loading: boolean) => void;
 }
@@ -29,13 +27,14 @@ const sha256 = async (message: string): Promise<string> => {
   return hashHex;
 };
 
-export default function AppleSignInButton({ onSuccess, onError, onLoadingChange }: AppleSignInButtonProps) {
+export default function AppleSignInButton({ onError, onLoadingChange }: AppleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [appleIdInitialized, setAppleIdInitialized] = useState(false);
 
   useEffect(() => {
     // Check if Apple SDK is already loaded
-    if ((window as any).AppleID) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof window !== 'undefined' && (window as any).AppleID) {
       console.log('Apple Sign-In SDK already loaded');
       setAppleIdInitialized(true);
       return;
@@ -82,7 +81,9 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
       console.log('Generated nonce:', { unhashedNonce, hashedNonce });
 
       // Initialize Apple Sign-In
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (typeof window !== 'undefined' && (window as any).AppleID) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).AppleID.auth.init({
           clientId: 'RGGU95UTDS.me.sleepcoding', // Your Apple Service ID
           scope: 'name email',
@@ -95,6 +96,7 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
 
         // Sign in with Apple - this will redirect to Apple's auth page
         console.log('Redirecting to Apple Sign-In...');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).AppleID.auth.signIn();
         
         // Note: The code below won't execute immediately because of the redirect
@@ -108,6 +110,7 @@ export default function AppleSignInButton({ onSuccess, onError, onLoadingChange 
       console.error('Error details:', {
         name: error instanceof Error ? error.name : 'Unknown',
         message: error instanceof Error ? error.message : 'Unknown error',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         code: (error as any)?.code || 'No code',
         stack: error instanceof Error ? error.stack : 'No stack'
       });

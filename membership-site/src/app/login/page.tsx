@@ -68,10 +68,7 @@ export default function LoginPage() {
     }
   }
 
-  const handleAppleSignInSuccess = (user: unknown) => {
-    console.log('Apple Sign-In successful:', user);
-    // The user will be automatically redirected by the useEffect that watches currentUser
-  };
+
 
   const handleAppleSignInError = (error: unknown) => {
     console.error('Apple Sign-In error:', error);
@@ -125,7 +122,6 @@ export default function LoginPage() {
             </button>
 
             <AppleSignInButton
-              onSuccess={handleAppleSignInSuccess}
               onError={handleAppleSignInError}
               onLoadingChange={handleAppleSignInLoading}
             />
