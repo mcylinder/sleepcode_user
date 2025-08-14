@@ -85,7 +85,7 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
       if (typeof window !== 'undefined' && (window as any).AppleID) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).AppleID.auth.init({
-          clientId: 'me.sleepcoding', // Your Apple Service ID
+          clientId: 'sleepcoding.web.auth', // Your Apple Service ID
           scope: 'name email',
           redirectURI: 'https://sleepcoding.me/__/auth/handler',
           state: 'state',
