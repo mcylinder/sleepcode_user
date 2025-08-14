@@ -85,9 +85,9 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
       if (typeof window !== 'undefined' && (window as any).AppleID) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).AppleID.auth.init({
-          clientId: 'RGGU95UTDS.me.sleepcoding', // Your Apple Service ID
+          clientId: 'me.sleepcoding', // Your Apple Service ID
           scope: 'name email',
-          redirectURI: 'https://sleepcoding.me/_/auth/handler',
+          redirectURI: 'https://sleepcoding.me/__/auth/handler',
           state: 'state',
           nonce: hashedNonce
         });
@@ -132,23 +132,16 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
     <button
       onClick={handleAppleSignIn}
       disabled={isLoading || !auth || !appleIdInitialized}
-      className="w-full flex items-center justify-center gap-3 bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
     >
       {isLoading ? (
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-700"></div>
       ) : (
-        <svg className="w-5 h-5" viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M18.71 19.5c-.83 1.24-2.04 2.5-3.5 2.5-1.4 0-1.8-.8-3.5-.8-1.7 0-2.1.8-3.5.8-1.46 0-2.67-1.26-3.5-2.5C4.04 17.76 3 15.49 3 13.5c0-3.5 2.5-5.5 5-5.5 1.4 0 2.5.8 3.5.8 1 0 2.1-.8 3.5-.8 2.5 0 5 2 5 5.5 0 1.99-1.04 4.26-2.29 6z"
-          />
-          <path
-            fill="currentColor"
-            d="M13 3.5c.8-1.1 2.04-2.5 3.5-2.5 1.4 0 2.5.8 3.5.8 1 0 2.1-.8 3.5-.8 2.5 0 5 2 5 5.5 0 1.99-1.04 4.26-2.29 6-.83 1.24-2.04 2.5-3.5 2.5-1.4 0-1.8-.8-3.5-.8-1.7 0-2.1.8-3.5.8-1.46 0-2.67-1.26-3.5-2.5C4.04 17.76 3 15.49 3 13.5c0-3.5 2.5-5.5 5-5.5 1.4 0 2.5.8 3.5.8 1 0 2.1-.8 3.5-.8 2.5 0 5 2 5 5.5 0 1.99-1.04 4.26-2.29 6z"
-          />
+        <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.71 19.5c-.83 1.24-2.04 2.5-3.5 2.5-1.4 0-1.8-.8-3.5-.8-1.7 0-2.1.8-3.5.8-1.46 0-2.67-1.26-3.5-2.5C4.04 17.76 3 15.49 3 13.5c0-3.5 2.5-5.5 5-5.5 1.4 0 2.5.8 3.5.8 1 0 2.1-.8 3.5-.8 2.5 0 5 2 5 5.5 0 1.99-1.04 4.26-2.29 6z"/>
         </svg>
       )}
-      {isLoading ? 'Signing in...' : 'Sign in with Apple'}
+      {isLoading ? 'Signing in...' : 'Continue with Apple'}
     </button>
   );
 } 
