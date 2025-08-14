@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { auth, appleProvider } from '../lib/firebase';
-import { signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { auth } from '../lib/firebase';
+import { signInWithRedirect, getRedirectResult, OAuthProvider } from 'firebase/auth';
 
 interface AppleSignInButtonProps {
   onError: (error: unknown) => void;
@@ -34,16 +34,24 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
   useEffect(() => {
     // Handle redirect result on page load
     if (auth) {
-      getRedirectResult(auth).catch((error) => {
+      getRedirectResult(auth).then((result) => {
+        if (result) {
+          console.log('Apple Sign-In successful:', result.user);
+          // Handle successful sign-in here
+        }
+      }).catch((error) => {
         console.error('Error getting redirect result:', error);
-        onError(error);
+        // Only call onError for actual errors, not user cancellations
+        if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+          onError(error);
+        }
       });
     }
   }, [onError]);
 
   const handleAppleSignIn = async () => {
-    if (isLoading || !auth || !appleProvider) {
-      console.log('Apple Sign-In blocked:', { isLoading, hasAuth: !!auth, hasAppleProvider: !!appleProvider });
+    if (isLoading || !auth) {
+      console.log('Apple Sign-In blocked:', { isLoading, hasAuth: !!auth });
       return;
     }
 
@@ -59,15 +67,16 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
 
       console.log('Generated nonce:', { unhashedNonce, hashedNonce });
 
-      // Configure Apple provider with scopes and nonce
-      appleProvider.addScope('email');
-      appleProvider.addScope('name');
-      appleProvider.setCustomParameters({ nonce: hashedNonce });
+      // Create a new provider instance for this sign-in attempt
+      const provider = new OAuthProvider('apple.com');
+      provider.addScope('email');
+      provider.addScope('name');
+      provider.setCustomParameters({ nonce: hashedNonce });
 
       console.log('Apple provider configured, redirecting...');
       
       // Sign in with redirect - Firebase handles the state and callback
-      await signInWithRedirect(auth, appleProvider);
+      await signInWithRedirect(auth, provider);
       
       // Note: The code below won't execute immediately because of the redirect
       // The redirect result will be handled in the useEffect above
@@ -98,7 +107,7 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
   return (
     <button
       onClick={handleAppleSignIn}
-      disabled={isLoading || !auth || !appleProvider}
+      disabled={isLoading || !auth}
       className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
     >
       {isLoading ? (
