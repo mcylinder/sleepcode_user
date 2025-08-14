@@ -87,7 +87,7 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
         (window as any).AppleID.auth.init({
           clientId: 'sleepcoding.web.auth', // Your Apple Service ID
           scope: 'name email',
-          // redirectURI: 'https://sleepcoding.me/__/auth/handler',
+          redirectURI: 'https://sleepcoding.me/__/auth/handler',
           state: 'state',
           nonce: hashedNonce
         });
