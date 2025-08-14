@@ -1,102 +1,147 @@
 'use client';
 
-import * as React from 'react';
-import {
-  getAuth,
-  OAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
-  fetchSignInMethodsForEmail,
-  linkWithCredential,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from 'firebase/auth';
-import type { FirebaseError } from 'firebase/app';
+import { useState, useEffect } from 'react';
+import { auth } from '../lib/firebase';
 
-type WithCustomData = { customData?: { email?: string } };
+interface AppleSignInButtonProps {
+  onError: (error: unknown) => void;
+  onLoadingChange: (loading: boolean) => void;
+}
 
-export default function AppleSignInButton() {
-  const [loading, setLoading] = React.useState(false);
-  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+// Generate a random nonce for Apple Sign-In
+const generateNonce = (length: number): string => {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return result;
+};
 
-  // Finish the redirect on mount
-  React.useEffect(() => {
-    const auth = getAuth();
-    void getRedirectResult(auth)
-      .then(async (result) => {
-        if (!result) return; // no redirect to finish
-        // Signed in successfully; result.user is available.
-      })
-      .catch(async (err: unknown) => {
-        const e = err as FirebaseError & WithCustomData;
+// SHA256 hash function for nonce
+const sha256 = async (message: string): Promise<string> => {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+};
 
-        if (e.code === 'auth/account-exists-with-different-credential') {
-          try {
-            const auth = getAuth();
-            const email = e.customData?.email;
-            const pending = OAuthProvider.credentialFromError(e);
-            if (!email || !pending) throw e;
+export default function AppleSignInButton({ onError, onLoadingChange }: AppleSignInButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [appleIdInitialized, setAppleIdInitialized] = useState(false);
 
-            const methods = await fetchSignInMethodsForEmail(auth, email);
-
-            if (methods.includes('google.com')) {
-              const googleRes = await signInWithPopup(auth, new GoogleAuthProvider());
-              await linkWithCredential(googleRes.user, pending);
-              return;
-            }
-
-            if (methods.includes('password')) {
-              setErrorMsg(
-                'This email is already registered with a password. Sign in with email first, then link Apple in your profile.'
-              );
-              return;
-            }
-
-            setErrorMsg('This email is already registered with a different provider.');
-          } catch (linkErr) {
-            const le = linkErr as Error;
-            setErrorMsg(le.message || 'Failed to link accounts.');
-          }
-          return;
-        }
-
-        setErrorMsg(e.message || 'Apple sign-in failed.');
-      });
-  }, []);
-
-  const handleApple = React.useCallback(async () => {
-    setErrorMsg(null);
-    setLoading(true);
-    try {
-      const auth = getAuth();
-      const provider = new OAuthProvider('apple.com');
-      provider.addScope('email');
-      provider.addScope('name');
-      await signInWithRedirect(auth, provider); // Firebase sets state and handles /__/auth/handler
-    } catch (err) {
-      const e = err as Error;
-      setErrorMsg(e.message || 'Could not start Apple sign-in.');
-      setLoading(false);
+  useEffect(() => {
+    // Check if Apple SDK is already loaded
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof window !== 'undefined' && (window as any).AppleID) {
+      console.log('Apple Sign-In SDK already loaded');
+      setAppleIdInitialized(true);
+      return;
     }
-  }, []);
+
+    // Check if script is already being loaded
+    const existingScript = document.querySelector('script[src*="appleid.auth.js"]');
+    if (existingScript) {
+      console.log('Apple Sign-In SDK script already exists');
+      return;
+    }
+
+    // Load Apple's JavaScript SDK
+    const script = document.createElement('script');
+    script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
+    script.async = true;
+    script.onload = () => {
+      console.log('Apple Sign-In SDK loaded');
+      setAppleIdInitialized(true);
+    };
+    script.onerror = () => {
+      console.error('Failed to load Apple Sign-In SDK');
+      onError(new Error('Failed to load Apple Sign-In SDK'));
+    };
+    document.head.appendChild(script);
+  }, [onError]);
+
+  const handleAppleSignIn = async () => {
+    if (isLoading || !auth || !appleIdInitialized) {
+      console.log('Apple Sign-In blocked:', { isLoading, hasAuth: !!auth, appleIdInitialized });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      onLoadingChange(true);
+
+      console.log('Starting Apple Sign-In with Firebase...');
+
+      // Generate nonce
+      const unhashedNonce = generateNonce(10);
+      const hashedNonce = await sha256(unhashedNonce);
+
+      console.log('Generated nonce:', { unhashedNonce, hashedNonce });
+
+      // Initialize Apple Sign-In
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (typeof window !== 'undefined' && (window as any).AppleID) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).AppleID.auth.init({
+          clientId: 'sleepcoding.web.auth', // Your Apple Service ID
+          scope: 'name email',
+          // redirectURI: 'https://sleepcoding.me/__/auth/handler',
+          state: 'state',
+          nonce: hashedNonce
+        });
+
+        console.log('Apple Sign-In initialized');
+
+        // Sign in with Apple - this will redirect to Apple's auth page
+        console.log('Redirecting to Apple Sign-In...');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).AppleID.auth.signIn();
+        
+        // Note: The code below won't execute immediately because of the redirect
+        // We need to handle the response after the redirect back from Apple
+        console.log('This code will execute after redirect back from Apple');
+      } else {
+        throw new Error('Apple Sign-In SDK not available');
+      }
+    } catch (error) {
+      console.error('Apple Sign-In failed:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        code: (error as any)?.code || 'No code',
+        stack: error instanceof Error ? error.stack : 'No stack'
+      });
+      
+      // Filter out user cancellation errors
+      if (error instanceof Error && error.message.includes('popup_closed')) {
+        console.log('User cancelled Apple Sign-In');
+        return;
+      }
+      
+      onError(error);
+    } finally {
+      setIsLoading(false);
+      onLoadingChange(false);
+    }
+  };
 
   return (
-    <div className="w-full">
-      <button
-        type="button"
-        onClick={handleApple}
-        disabled={loading}
-        className="w-full h-10 rounded-md border flex items-center justify-center gap-2"
-        aria-label="Continue with Apple"
-      >
-        {loading ? 'Redirecting…' : 'Sign in with Apple'}
-      </button>
-
-      {errorMsg && (
-        <p className="mt-2 text-sm text-red-600" role="alert">
-          {errorMsg}
-        </p>
+    <button
+      onClick={handleAppleSignIn}
+      disabled={isLoading || !auth || !appleIdInitialized}
+      className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+    >
+      {isLoading ? (
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-700"></div>
+      ) : (
+        <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.71 19.5c-.83 1.24-2.04 2.5-3.5 2.5-1.4 0-1.8-.8-3.5-.8-1.7 0-2.1.8-3.5.8-1.46 0-2.67-1.26-3.5-2.5C4.04 17.76 3 15.49 3 13.5c0-3.5 2.5-5.5 5-5.5 1.4 0 2.5.8 3.5.8 1 0 2.1-.8 3.5-.8 2.5 0 5 2 5 5.5 0 1.99-1.04 4.26-2.29 6z"/>
+        </svg>
       )}
-    </div>
+      {isLoading ? 'Signing in...' : 'Continue with Apple'}
+    </button>
   );
-}
+} 
