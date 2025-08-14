@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { auth } from '../lib/firebase';
+import { auth, appleProvider } from '../lib/firebase';
+import { signInWithRedirect, getRedirectResult } from 'firebase/auth';
 
 interface AppleSignInButtonProps {
   onError: (error: unknown) => void;
@@ -29,42 +30,20 @@ const sha256 = async (message: string): Promise<string> => {
 
 export default function AppleSignInButton({ onError, onLoadingChange }: AppleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [appleIdInitialized, setAppleIdInitialized] = useState(false);
 
   useEffect(() => {
-    // Check if Apple SDK is already loaded
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof window !== 'undefined' && (window as any).AppleID) {
-      console.log('Apple Sign-In SDK already loaded');
-      setAppleIdInitialized(true);
-      return;
+    // Handle redirect result on page load
+    if (auth) {
+      getRedirectResult(auth).catch((error) => {
+        console.error('Error getting redirect result:', error);
+        onError(error);
+      });
     }
-
-    // Check if script is already being loaded
-    const existingScript = document.querySelector('script[src*="appleid.auth.js"]');
-    if (existingScript) {
-      console.log('Apple Sign-In SDK script already exists');
-      return;
-    }
-
-    // Load Apple's JavaScript SDK
-    const script = document.createElement('script');
-    script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
-    script.async = true;
-    script.onload = () => {
-      console.log('Apple Sign-In SDK loaded');
-      setAppleIdInitialized(true);
-    };
-    script.onerror = () => {
-      console.error('Failed to load Apple Sign-In SDK');
-      onError(new Error('Failed to load Apple Sign-In SDK'));
-    };
-    document.head.appendChild(script);
   }, [onError]);
 
   const handleAppleSignIn = async () => {
-    if (isLoading || !auth || !appleIdInitialized) {
-      console.log('Apple Sign-In blocked:', { isLoading, hasAuth: !!auth, appleIdInitialized });
+    if (isLoading || !auth || !appleProvider) {
+      console.log('Apple Sign-In blocked:', { isLoading, hasAuth: !!auth, hasAppleProvider: !!appleProvider });
       return;
     }
 
@@ -80,31 +59,19 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
 
       console.log('Generated nonce:', { unhashedNonce, hashedNonce });
 
-      // Initialize Apple Sign-In
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (typeof window !== 'undefined' && (window as any).AppleID) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).AppleID.auth.init({
-          clientId: 'sleepcoding.web.auth', // Your Apple Service ID
-          scope: 'name email',
-          redirectURI: 'https://sleepcoding.me/__/auth/handler',
-          state: 'state',
-          nonce: hashedNonce
-        });
+      // Configure Apple provider with scopes and nonce
+      appleProvider.addScope('email');
+      appleProvider.addScope('name');
+      appleProvider.setCustomParameters({ nonce: hashedNonce });
 
-        console.log('Apple Sign-In initialized');
-
-        // Sign in with Apple - this will redirect to Apple's auth page
-        console.log('Redirecting to Apple Sign-In...');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).AppleID.auth.signIn();
-        
-        // Note: The code below won't execute immediately because of the redirect
-        // We need to handle the response after the redirect back from Apple
-        console.log('This code will execute after redirect back from Apple');
-      } else {
-        throw new Error('Apple Sign-In SDK not available');
-      }
+      console.log('Apple provider configured, redirecting...');
+      
+      // Sign in with redirect - Firebase handles the state and callback
+      await signInWithRedirect(auth, appleProvider);
+      
+      // Note: The code below won't execute immediately because of the redirect
+      // The redirect result will be handled in the useEffect above
+      console.log('Redirect initiated to Apple Sign-In');
     } catch (error) {
       console.error('Apple Sign-In failed:', error);
       console.error('Error details:', {
@@ -131,7 +98,7 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
   return (
     <button
       onClick={handleAppleSignIn}
-      disabled={isLoading || !auth || !appleIdInitialized}
+      disabled={isLoading || !auth || !appleProvider}
       className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
     >
       {isLoading ? (
