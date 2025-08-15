@@ -32,6 +32,8 @@ export interface Session {
   suggestions: string[];
   userId: string;
   status: 'in_edit' | 'to_render' | 'rendering' | 'completed';
+  // Optional storage path for rendered audio asset
+  audioPath?: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
 }

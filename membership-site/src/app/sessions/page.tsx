@@ -427,7 +427,8 @@ export default function SessionsPage() {
         reader: formData.reader,
         instructions: instructions,
         suggestions: suggestions,
-        status: 'to_render' // Update status to rendering
+        status: 'to_render', // Update status to rendering
+        audioPath: `users/${currentUser.uid}/${draftToRender.id}_${formData.reader}.m4a`
       });
       console.log('Draft saved with current form data successfully');
       
