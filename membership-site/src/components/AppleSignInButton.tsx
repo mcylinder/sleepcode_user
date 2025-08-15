@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { auth } from '../lib/firebase';
-import { signInWithRedirect, getRedirectResult, OAuthProvider } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, OAuthProvider } from 'firebase/auth';
 
 interface AppleSignInButtonProps {
   onError: (error: unknown) => void;
@@ -30,26 +30,10 @@ const sha256 = async (message: string): Promise<string> => {
 
 export default function AppleSignInButton({ onError, onLoadingChange }: AppleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-
+  
   useEffect(() => {
-    // Complete the redirect on load so Firebase can read the stored state
-    if (auth) {
-      getRedirectResult(auth)
-        .then((result) => {
-          if (result) {
-            console.log('Apple Sign-In successful:', result.user);
-          }
-        })
-        .catch((error) => {
-          console.error('Error getting redirect result:', error);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const code = (error as any)?.code;
-          if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
-            onError(error);
-          }
-        });
-    }
-  }, [onError]);
+    // No redirect result handling needed for popup flow
+  }, []);
 
   const handleAppleSignIn = async () => {
     if (isLoading || !auth) {
@@ -75,7 +59,19 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
       provider.addScope('name');
       provider.setCustomParameters({ nonce: hashedNonce });
 
-      await signInWithRedirect(auth, provider);
+      try {
+        // Match Google/Facebook: try popup first
+        await signInWithPopup(auth, provider);
+      } catch (popupError) {
+        // Fallback to redirect only when popup is blocked/unsupported
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const code = (popupError as any)?.code;
+        if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+          await signInWithRedirect(auth, provider);
+        } else {
+          throw popupError;
+        }
+      }
     } catch (error) {
       console.error('Apple Sign-In failed:', error);
       console.error('Error details:', {
