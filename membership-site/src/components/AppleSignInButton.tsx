@@ -59,19 +59,9 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
       provider.addScope('name');
       provider.setCustomParameters({ nonce: hashedNonce });
 
-      try {
-        // Match Google/Facebook: try popup first
-        await signInWithPopup(auth, provider);
-      } catch (popupError) {
-        // Fallback to redirect only when popup is blocked/unsupported
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const code = (popupError as any)?.code;
-        if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
-          await signInWithRedirect(auth, provider);
-        } else {
-          throw popupError;
-        }
-      }
+      // Apple popup frequently closes immediately due to platform/browser
+      // restrictions. Use redirect for reliability.
+      await signInWithRedirect(auth, provider);
     } catch (error) {
       console.error('Apple Sign-In failed:', error);
       console.error('Error details:', {
