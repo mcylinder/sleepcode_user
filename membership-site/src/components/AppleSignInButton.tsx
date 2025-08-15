@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { auth } from '../lib/firebase';
-import { signInWithPopup, signInWithRedirect, OAuthProvider } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult, OAuthProvider } from 'firebase/auth';
 
 interface AppleSignInButtonProps {
   onError: (error: unknown) => void;
@@ -32,8 +32,20 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
   const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
-    // No redirect result handling needed for popup flow
-  }, []);
+    // If we used redirect, finalize the flow here and surface any errors
+    if (auth) {
+      getRedirectResult(auth)
+        .then((result) => {
+          if (result) {
+            console.log('Apple Sign-In redirect result user:', result.user);
+          }
+        })
+        .catch((error) => {
+          console.error('Error getting Apple redirect result:', error);
+          onError(error);
+        });
+    }
+  }, [onError]);
 
   const handleAppleSignIn = async () => {
     if (isLoading || !auth) {
