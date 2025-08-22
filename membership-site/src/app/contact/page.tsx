@@ -102,7 +102,7 @@ export default function ContactPage() {
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Response Time</h3>
                 <p className="text-gray-600">
-                  We typically respond to inquiries within 24 hours during business days. Premium members receive priority support with faster response times.
+                  We typically respond to inquiries within 72 hours.
                 </p>
               </div>
 
