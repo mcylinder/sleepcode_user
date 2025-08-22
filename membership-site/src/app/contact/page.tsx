@@ -25,11 +25,21 @@ export default function ContactPage() {
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
-    // Simulate form submission (replace with actual API call)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSubmitStatus('success');
-      setFormData({ name: '', email: '', subject: '', message: '' });
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        setSubmitStatus('error');
+      }
     } catch {
       setSubmitStatus('error');
     } finally {
@@ -57,12 +67,38 @@ export default function ContactPage() {
             </h2>
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Customer Support</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Sleep Coder LLC</h3>
                 <p className="text-gray-600">
-                  Our support team is available to help you with any questions or issues you may have with SleepCoding.
+                  Your trusted partner for sleep optimization and wellness technology.
                 </p>
               </div>
               
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Phone</h3>
+                <p className="text-gray-600">
+                  <a href="tel:207-358-9026" className="text-cyan-950 hover:text-cyan-800 transition-colors">
+                    207-358-9026
+                  </a>
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Email</h3>
+                <p className="text-gray-600">
+                  <a href="mailto:contact@sleepcoding.me" className="text-cyan-950 hover:text-cyan-800 transition-colors">
+                    contact@sleepcoding.me
+                  </a>
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Mailing Address</h3>
+                <p className="text-gray-600">
+                  PO BOX 2803<br />
+                  South Portland, ME 04116
+                </p>
+              </div>
+
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Response Time</h3>
                 <p className="text-gray-600">
@@ -70,21 +106,7 @@ export default function ContactPage() {
                 </p>
               </div>
 
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Business Hours</h3>
-                <p className="text-gray-600">
-                  Monday - Friday: 9:00 AM - 6:00 PM EST<br />
-                  Saturday: 10:00 AM - 4:00 PM EST<br />
-                  Sunday: Closed
-                </p>
-              </div>
 
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Email Support</h3>
-                <p className="text-gray-600">
-                  For general inquiries, technical issues, or billing questions: contact@sleepcoding.me
-                </p>
-              </div>
             </div>
           </div>
 

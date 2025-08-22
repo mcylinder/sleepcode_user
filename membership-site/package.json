@@ -4,18 +4,18 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.873.0",
+    "@aws-sdk/cloudfront-signer": "^3.637.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "firebase": "^12.0.0",
     "firebase-admin": "^12.6.0",
-    "@aws-sdk/cloudfront-signer": "^3.637.0",
     "next": "15.4.2",
     "react": "19.1.0",
     "react-dom": "19.1.0"

@@ -1,99 +1,151 @@
+import LegalContact from '@/components/LegalContact';
+
 export default function TermsPage() {
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-sm p-8">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-8">
-            Terms of Service
+      <div className="max-w-4xl mx-auto py-6 sm:py-12 px-0 sm:px-6 lg:px-8">
+        <div className="bg-white shadow-sm p-4 sm:p-8">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-8">
+            Terms & Conditions
           </h1>
           
           <div className="prose prose-lg max-w-none">
             <p className="text-sm text-gray-500 mb-8">
-              Last updated: {new Date().toLocaleDateString()}
+              Effective Date: {new Date().toLocaleDateString()}
+            </p>
+
+            <p className="text-gray-700 leading-relaxed mb-6">
+              These Terms & Conditions (&quot;Terms&quot;) constitute a legally binding agreement between you (&quot;User,&quot; &quot;you&quot;) and Sleep Coder LLC, a limited liability company organized under the laws of the State of Maine, United States (&quot;Company,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), governing your access to and use of the SleepCode mobile application, the sleepcoding.me website, and related services (collectively, the &quot;Service&quot;).
+            </p>
+            
+            <p className="text-gray-700 leading-relaxed mb-8">
+              By downloading, installing, creating an account, or otherwise accessing or using the Service, you agree to be bound by these Terms. If you do not agree, you must immediately discontinue use of the Service.
             </p>
 
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                1. Acceptance of Terms
+                1. Accounts & Eligibility
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                By accessing and using SleepCoding (&quot;the Service&quot;), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service. These Terms of Service govern your use of the SleepCoding application, website, and related services provided by SleepCoding Inc. (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;).
+                1.1 The Service is intended for individuals 13 years of age or older. If you are under 18, you represent and warrant that you have obtained parental or guardian consent prior to using the Service.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                1.2 Some free content may be accessible without account registration. However, creation of an account is required for subscription features, including the ability to create custom, private instructions.
               </p>
               <p className="text-gray-700 leading-relaxed">
-                We reserve the right to modify these terms at any time. We will notify users of any material changes by posting the new Terms of Service on this page and updating the &quot;Last updated&quot; date. Your continued use of the Service after such modifications constitutes your acceptance of the updated terms.
+                1.3 You agree to provide accurate, current, and complete information during registration and to maintain the security of your login credentials. You are solely responsible for all activity occurring under your account.
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                2. Description of Service
+                2. License Grant and Restrictions
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                SleepCoding is a sleep tracking and optimization platform that provides users with tools to monitor, analyze, and improve their sleep patterns. The Service includes sleep tracking functionality, data analytics, personalized recommendations, and related features accessible through our mobile applications and web platform.
+                2.1 Subject to compliance with these Terms, Company grants you a limited, revocable, non-exclusive, non-transferable, non-sublicensable license to install and use the Service for personal, non-commercial purposes only.
               </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                2.2 Except as expressly permitted, you shall not:
+              </p>
+              <ul className="list-disc pl-6 text-gray-700 leading-relaxed mb-4">
+                <li>(a) copy, reproduce, modify, or distribute any part of the Service;</li>
+                <li>(b) reverse-engineer, decompile, or disassemble the Service;</li>
+                <li>(c) sell, sublicense, or otherwise exploit content generated through the Service for commercial purposes;</li>
+                <li>(d) use the Service in a manner inconsistent with its intended purpose.</li>
+              </ul>
               <p className="text-gray-700 leading-relaxed">
-                We offer both free and premium subscription tiers. Free users have access to basic sleep tracking features, while premium subscribers receive advanced analytics, AI-powered recommendations, and priority customer support. The specific features available to each tier may be modified at our discretion with appropriate notice to users.
+                2.3 Therapists, educators, or similar professionals may use the Service as a tool with their clients or students, provided that any generated content remains for personal or instructional use only and is not resold or distributed.
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                3. User Accounts and Registration
+                3. Subscriptions, Billing, and Payments
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                To access certain features of the Service, you must create an account. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to provide accurate, current, and complete information during registration and to update such information to keep it accurate, current, and complete.
+                3.1 Paid subscriptions are managed exclusively through the Apple App Store and Google Play using RevenueCat. All billing, renewals, and cancellations are subject to the terms of those platforms.
               </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                3.2 Free Access: Users may access a curated library of pre-created instructions without charge.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                3.3 Paid Access: A subscription unlocks the ability to generate custom, private instructions. Subscriptions automatically renew unless canceled in accordance with Apple or Google procedures.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                3.4 Refunds: Refunds are governed by Apple and Google policies. In addition, Company may, at its sole discretion, remove erroneously created instructions and credit the User&apos;s account to create replacements. This remedy is limited to a maximum of three (3) occurrences per calendar year and may not be abused.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                3.5 Cancellation:
+              </p>
+              <ul className="list-disc pl-6 text-gray-700 leading-relaxed mb-4">
+                <li>(a) Annual subscriptions, once canceled, remain active until the end of the paid term; no prorated refunds are issued.</li>
+                <li>(b) User-generated content created under a paid subscription will remain associated with the User&apos;s account. If a subscription lapses and is later reactivated, such content will remain accessible for up to five (5) years after the initial cancellation date, after which it may be permanently deleted.</li>
+              </ul>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                4. User Conduct
+              </h2>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                4.1 You agree not to:
+              </p>
+              <ul className="list-disc pl-6 text-gray-700 leading-relaxed mb-4">
+                <li>(a) use the Service for unlawful purposes or in violation of applicable law;</li>
+                <li>(b) interfere with or disrupt the Service or its servers;</li>
+                <li>(c) attempt to bypass or manipulate payment or access controls;</li>
+                <li>(d) share, resell, or publicly distribute generated content.</li>
+              </ul>
               <p className="text-gray-700 leading-relaxed">
-                You are solely responsible for safeguarding your password and for any activities or actions under your account. You agree to notify us immediately of any unauthorized use of your account or any other breach of security. We cannot and will not be liable for any loss or damage arising from your failure to comply with this security obligation.
+                4.2 All user-generated content within the Service is private to the User and stored using best practices supported by Amazon Web Services (AWS).
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                4. Privacy and Data Protection
+                5. Intellectual Property
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Your privacy is important to us. Our collection and use of personal information is governed by our Privacy Policy, which is incorporated into these Terms of Service by reference. By using the Service, you consent to the collection and use of your information as described in our Privacy Policy.
+                5.1 All rights, title, and interest in and to the Service, including software, code, text, images, audio, designs, and trademarks, are owned by Sleep Coder LLC and are protected by copyright, trademark, and other intellectual property laws.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                5.2 Users acquire no ownership rights by virtue of generating custom instructions. All generated content, whether pre-created or user-generated, remains the intellectual property of Sleep Coder LLC.
               </p>
               <p className="text-gray-700 leading-relaxed">
-                We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the internet or electronic storage is 100% secure, and we cannot guarantee absolute security of your data.
+                5.3 Recording or duplicating Service content outside the app is permitted only for personal use. Any sale, redistribution, or public performance of such content is strictly prohibited.
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                5. Subscription and Billing
+                6. Health and Safety Disclaimer
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Premium subscriptions are billed on an annual basis. By subscribing to our premium service, you authorize us to charge your payment method for the subscription fee. Subscription fees are non-refundable except as required by law or as otherwise specified in these terms.
+                6.1 The Service is provided for purposes of relaxation, subconscious training, and self-improvement support. It is not a medical device and is not intended to diagnose, treat, cure, or prevent any medical or psychological condition.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                6.2 Company makes no representations or guarantees regarding specific results or outcomes. Individual experiences may vary.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                6.3 The Service should not be used while driving, operating machinery, or in any environment requiring alertness. Users must only engage with the Service in a safe and secure setting.
               </p>
               <p className="text-gray-700 leading-relaxed">
-                You may cancel your subscription at any time through your account settings or by contacting our support team. Upon cancellation, you will continue to have access to premium features until the end of your current billing period. After the billing period ends, your account will revert to the free tier.
+                6.4 Users should consult a licensed healthcare provider for any medical or mental health concerns.
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                6. Acceptable Use
+                7. Termination
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                You agree to use the Service only for lawful purposes and in accordance with these Terms of Service. You agree not to use the Service to transmit, distribute, store, or destroy material that could constitute or encourage conduct that would be considered a criminal offense, give rise to civil liability, or otherwise violate any local, state, national, or international law or regulation.
+                7.1 Company reserves the right to immediately suspend or terminate User accounts, without refund, if:
               </p>
-              <p className="text-gray-700 leading-relaxed">
-                You further agree not to attempt to gain unauthorized access to any portion of the Service, other systems or networks connected to the Service, or any server, computer, database, or other information accessible through the Service. You may not use any automated means to access the Service or collect any information from the Service.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                7. Disclaimer of Warranties
-              </h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                THE SERVICE IS PROVIDED ON AN &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; BASIS. WE MAKE NO WARRANTIES, EXPRESS OR IMPLIED, AND HEREBY DISCLAIM ALL WARRANTIES, INCLUDING WITHOUT LIMITATION WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-              </p>
-              <p className="text-gray-700 leading-relaxed">
-                We do not warrant that the Service will be uninterrupted, secure, or error-free, or that defects will be corrected. We do not warrant that the results obtained from using the Service will be accurate or reliable. The sleep tracking and analysis features are provided for informational purposes only and should not be considered medical advice.
-              </p>
+              <ul className="list-disc pl-6 text-gray-700 leading-relaxed mb-4">
+                <li>(a) the User violates these Terms;</li>
+                <li>(b) fraudulent or abusive activity is detected;</li>
+                <li>(c) continued use would expose Company to legal or security risk.</li>
+              </ul>
             </section>
 
             <section className="mb-8">
@@ -101,24 +153,35 @@ export default function TermsPage() {
                 8. Limitation of Liability
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                IN NO EVENT SHALL SLEEPCODING LLC., ITS OFFICERS, DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE FOR ANY INDIRECT, PUNITIVE, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES, INCLUDING WITHOUT LIMITATION DAMAGES FOR LOSS OF PROFITS, GOODWILL, USE, DATA, OR OTHER INTANGIBLE LOSSES, THAT RESULT FROM THE USE OF, OR INABILITY TO USE, THE SERVICE.
+                8.1 To the maximum extent permitted by law, Company shall not be liable for any indirect, incidental, consequential, or punitive damages, including but not limited to loss of profits, personal injury, or reliance on Service outcomes.
               </p>
               <p className="text-gray-700 leading-relaxed">
-                Our total liability to you for any claims arising from or relating to these Terms of Service or the Service shall not exceed the amount you paid us for the Service in the twelve (12) months preceding the claim. This limitation applies to all causes of action, whether based in contract, tort, or any other legal theory.
+                8.2 In no event shall Company&apos;s aggregate liability exceed the total fees paid by the User in the twelve (12) months preceding the claim. For annual subscriptions, liability shall be proportionally limited to the unused portion of the subscription term.
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                9. Contact Information
+                9. Governing Law and Jurisdiction
               </h2>
               <p className="text-gray-700 leading-relaxed">
-                If you have any questions about these Terms of Service, please contact us at contact@sleepcoding.me or by mail at SleepCoding Inc., 123 Sleep Street, Rest City, RC 12345, United States.
+                These Terms shall be governed by and construed under the laws of the United States of America, without regard to conflict-of-law principles. Any dispute arising under these Terms shall be subject to the exclusive jurisdiction of U.S. federal and state courts.
               </p>
             </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                10. Modifications
+              </h2>
+              <p className="text-gray-700 leading-relaxed">
+                Company reserves the right to amend these Terms at any time. Material changes will be communicated via email. Continued use of the Service after such changes take effect constitutes acceptance of the revised Terms.
+              </p>
+            </section>
+
+            <LegalContact />
           </div>
         </div>
       </div>
     </div>
   );
-} 
+}
