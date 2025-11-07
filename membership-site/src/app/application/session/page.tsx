@@ -13,6 +13,12 @@ interface Session {
   position: number;
 }
 
+interface SelectionState {
+  session: Session | null;
+  instructor: { id: number; name: string; elid: string } | null;
+  soundscape: { id: number; name: string; audio_file: string } | null;
+}
+
 const STORAGE_KEY = 'sleepcoding_application_selections';
 
 function loadSelections() {
@@ -30,7 +36,7 @@ function loadSelections() {
   return { session: null, instructor: null, soundscape: null };
 }
 
-function saveSelections(selections: any): void {
+function saveSelections(selections: SelectionState): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(selections));

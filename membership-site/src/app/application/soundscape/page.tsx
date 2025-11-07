@@ -14,6 +14,12 @@ interface Soundscape {
   position: number;
 }
 
+interface SelectionState {
+  session: { id: number; name: string; ins_id: string } | null;
+  instructor: { id: number; name: string; elid: string } | null;
+  soundscape: Soundscape | null;
+}
+
 const STORAGE_KEY = 'sleepcoding_application_selections';
 const SOUNDSCAPES_CACHE_KEY = 'sleepcoding_soundscapes_cache';
 const AUDIO_BASE_URL = 'https://sleepcode-beta.s3.us-east-1.amazonaws.com/soundscapes/';
@@ -35,7 +41,7 @@ function loadSelections() {
   return { session: null, instructor: null, soundscape: null };
 }
 
-function saveSelections(selections: any): void {
+function saveSelections(selections: SelectionState): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(selections));

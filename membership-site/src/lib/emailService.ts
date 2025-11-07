@@ -98,8 +98,9 @@ Timestamp: ${new Date().toLocaleString()}
 
 // Optional: Send confirmation email to the user
 // Note: This will only work if the user's email domain is verified in SES
-export async function sendConfirmationEmail(userEmail: string, userName: string): Promise<void> {
+export async function sendConfirmationEmail(_userEmail: string, _userName: string): Promise<void> {
   // Skip confirmation email for now since we're in sandbox mode
+  // Parameters prefixed with _ to indicate intentionally unused
   // and can only send to verified addresses
   return;
   

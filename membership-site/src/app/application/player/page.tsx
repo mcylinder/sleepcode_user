@@ -868,14 +868,18 @@ export default function PlayerPage() {
       if (selections.soundscape && selections.soundscape.audio_file) {
         if (sourceNodesRef.current.soundscape) {
           try {
-            (sourceNodesRef.current.soundscape as any).stop(0);
-            (sourceNodesRef.current.soundscape as any).disconnect();
-          } catch (_) {}
+            (sourceNodesRef.current.soundscape as AudioBufferSourceNode).stop(0);
+            (sourceNodesRef.current.soundscape as AudioBufferSourceNode).disconnect();
+          } catch {
+            // Ignore errors from already stopped sources
+          }
         }
         if (gainNodesRef.current.soundscape) {
           try {
-            (gainNodesRef.current.soundscape as any).disconnect();
-          } catch (_) {}
+            (gainNodesRef.current.soundscape as GainNode).disconnect();
+          } catch {
+            // Ignore disconnect errors
+          }
         }
 
         const soundscapeUrl = `https://sleepcode-beta.s3.us-east-1.amazonaws.com/soundscapes/${selections.soundscape.audio_file}`;
@@ -1319,8 +1323,8 @@ export default function PlayerPage() {
 function CrossfadeControl({ 
   crossfadeValue, 
   onCrossfadeChange, 
-  instructorName, 
-  soundscapeName, 
+  instructorName: _instructorName, 
+  soundscapeName: _soundscapeName, 
   isSoundscapeLoading = false 
 }: {
   crossfadeValue: number;
