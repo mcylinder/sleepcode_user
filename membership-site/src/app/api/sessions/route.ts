@@ -13,7 +13,7 @@ interface SessionData {
 
 export async function GET() {
   try {
-    const response = await fetch('https://sleepcoding.me/api/instructions', {
+    const response = await fetch('https://app.sleepcoding.me/api/instructions', {
       headers: {
         'Accept': 'application/json',
       },

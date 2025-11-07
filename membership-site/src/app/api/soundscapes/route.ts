@@ -12,7 +12,7 @@ interface SoundscapeData {
 
 export async function GET() {
   try {
-    const response = await fetch('https://sleepcoding.me/api/soundscapes', {
+    const response = await fetch('https://app.sleepcoding.me/api/soundscapes', {
       headers: {
         'Accept': 'application/json',
       },

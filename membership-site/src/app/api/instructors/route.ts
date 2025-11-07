@@ -12,7 +12,7 @@ interface InstructorData {
 
 export async function GET() {
   try {
-    const response = await fetch('https://sleepcoding.me/api/instructors', {
+    const response = await fetch('https://app.sleepcoding.me/api/instructors', {
       headers: {
         'Accept': 'application/json',
       },
