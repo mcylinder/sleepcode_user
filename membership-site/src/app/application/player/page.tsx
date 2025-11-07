@@ -31,6 +31,18 @@ interface Soundscape {
   position: number;
 }
 
+interface TimestampWrapper {
+  timestamps: number[];
+}
+
+interface TimestampError {
+  error: boolean;
+  status?: number;
+  message?: string;
+}
+
+type TimestampResult = number[] | TimestampWrapper | TimestampError | null;
+
 interface SelectionState {
   session: Session | null;
   instructor: Instructor | null;
@@ -57,6 +69,24 @@ function loadSelections(): SelectionState {
     console.error('Error loading selections:', error);
   }
   return { session: null, instructor: null, soundscape: null };
+}
+
+function isTimestampWrapper(value: unknown): value is TimestampWrapper {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'timestamps' in value &&
+    Array.isArray((value as TimestampWrapper).timestamps)
+  );
+}
+
+function isTimestampError(value: unknown): value is TimestampError {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'error' in value &&
+    typeof (value as TimestampError).error === 'boolean'
+  );
 }
 
 export default function PlayerPage() {
@@ -232,7 +262,7 @@ export default function PlayerPage() {
       console.log('Loading timestamps from:', jsonUrl);
       console.log('Full JSON URL:', jsonUrl);
       
-      const loadTimestamps = async (): Promise<number[] | { error: boolean; status?: number; message?: string } | null> => {
+      const loadTimestamps = async (): Promise<TimestampResult> => {
         // Try direct fetch first (S3 bucket is publicly accessible)
         try {
           console.log('Attempting direct S3 fetch from:', jsonUrl);
@@ -248,9 +278,13 @@ export default function PlayerPage() {
           console.log('Direct fetch response status:', directResponse.status, directResponse.statusText);
           
           if (directResponse.ok) {
-            const jsonData = await directResponse.json();
+            const jsonData: unknown = await directResponse.json();
             console.log('✅ Direct S3 fetch succeeded');
-            return jsonData;
+            if (Array.isArray(jsonData) || isTimestampWrapper(jsonData)) {
+              return jsonData;
+            }
+            console.warn('Direct fetch returned unexpected format:', jsonData);
+            return null;
           } else {
             console.warn('Direct S3 fetch failed with status:', directResponse.status, 'trying proxy...');
             // Try to read error for debugging
@@ -280,15 +314,20 @@ export default function PlayerPage() {
             return { error: true, status: proxyResponse.status, message: errorText };
           }
           
-          const data = await proxyResponse.json();
+          const data: unknown = await proxyResponse.json();
           
           // Check if proxy returned an error object
-          if (data && typeof data === 'object' && 'error' in data) {
-            console.error('❌ Proxy returned error:', data.error);
-            return { error: true, message: data.error };
+          if (isTimestampError(data)) {
+            console.error('❌ Proxy returned error:', data.message);
+            return data;
           }
           
-          return data;
+          if (Array.isArray(data) || isTimestampWrapper(data)) {
+            return data;
+          }
+
+          console.warn('Proxy fetch returned unexpected format:', data);
+          return null;
         } catch (proxyError) {
           console.error('❌ Proxy fetch error:', proxyError);
           return { error: true, message: proxyError instanceof Error ? proxyError.message : String(proxyError) };
@@ -296,34 +335,40 @@ export default function PlayerPage() {
       };
       
       loadTimestamps()
-        .then(timestamps => {
+        .then(result => {
           // Handle error responses
-          if (timestamps && typeof timestamps === 'object' && 'error' in timestamps) {
-            console.error('❌ Failed to load timestamps:', timestamps.message || timestamps);
+          if (isTimestampError(result)) {
+            console.error('❌ Failed to load timestamps:', result.message || result);
             return;
           }
           
-          console.log('Timestamps received:', timestamps);
-          console.log('Timestamps type:', typeof timestamps);
-          console.log('Is array?', Array.isArray(timestamps));
+          console.log('Timestamps received:', result);
+          console.log('Timestamps type:', typeof result);
+          console.log('Is array?', Array.isArray(result));
           
-          if (timestamps && Array.isArray(timestamps)) {
-            console.log('✅ Timestamps array length:', timestamps.length);
-            console.log('📋 ALL TIMESTAMP VALUES:', timestamps);
-            console.log('📋 Timestamps as JSON:', JSON.stringify(timestamps, null, 2));
-            console.log('First few timestamps:', timestamps.slice(0, 5));
-            console.log('Last few timestamps:', timestamps.slice(-5));
+          const timestampsArray = Array.isArray(result)
+            ? result
+            : isTimestampWrapper(result)
+              ? result.timestamps
+              : null;
+          
+          if (timestampsArray) {
+            console.log('✅ Timestamps array length:', timestampsArray.length);
+            console.log('📋 ALL TIMESTAMP VALUES:', timestampsArray);
+            console.log('📋 Timestamps as JSON:', JSON.stringify(timestampsArray, null, 2));
+            console.log('First few timestamps:', timestampsArray.slice(0, 5));
+            console.log('Last few timestamps:', timestampsArray.slice(-5));
             
-            if (timestamps.length < 2) {
-              console.warn('⚠️ Timestamps array has less than 2 elements:', timestamps.length);
+            if (timestampsArray.length < 2) {
+              console.warn('⚠️ Timestamps array has less than 2 elements:', timestampsArray.length);
             }
             
-            instructorTimestampsRef.current = timestamps;
-            const computedMax = Math.max(1, timestamps.length - 1);
-            console.log('✅ Computed maxSegments:', computedMax, 'from timestamps.length:', timestamps.length);
+            instructorTimestampsRef.current = timestampsArray;
+            const computedMax = Math.max(1, timestampsArray.length - 1);
+            console.log('✅ Computed maxSegments:', computedMax, 'from timestamps.length:', timestampsArray.length);
             console.log('📊 Segment breakdown:');
-            console.log('  - Total timestamp entries:', timestamps.length);
-            console.log('  - Intro ends at index 1:', timestamps[1], 'seconds');
+            console.log('  - Total timestamp entries:', timestampsArray.length);
+            console.log('  - Intro ends at index 1:', timestampsArray[1], 'seconds');
             console.log('  - Max segments available:', computedMax);
             console.log('  - Each segment represents one phrase boundary');
             setMaxSegments(computedMax);
@@ -334,20 +379,9 @@ export default function PlayerPage() {
             numSegmentsRef.current = clamped;
             console.log('✅ Set maxSegments to:', computedMax, 'numSegments to:', clamped);
           } else {
-            console.warn('❌ Timestamps is not a valid array:', timestamps);
-            console.warn('Timestamps value:', JSON.stringify(timestamps, null, 2));
-            // Try to handle if it's an object with a timestamps property
-            if (timestamps && typeof timestamps === 'object' && 'timestamps' in timestamps && Array.isArray(timestamps.timestamps)) {
-              console.log('✅ Found timestamps in object property, using that instead');
-              const tsArray = timestamps.timestamps;
-              instructorTimestampsRef.current = tsArray;
-              const computedMax = Math.max(1, tsArray.length - 1);
-              setMaxSegments(computedMax);
-              setSegmentsEnabled(true);
-              const clamped = Math.min(Math.max(1, numSegmentsRef.current), computedMax);
-              setNumSegments(clamped);
-              setRawSegmentsValue(clamped);
-              numSegmentsRef.current = clamped;
+            console.warn('❌ Timestamps is not a valid array:', result);
+            if (result !== null) {
+              console.warn('Timestamps value:', JSON.stringify(result, null, 2));
             }
           }
         })
@@ -422,7 +456,8 @@ export default function PlayerPage() {
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-
+    const videoElement = videoRef.current;
+    
     return () => {
       stopAllAudio();
       releaseWakeLock();
@@ -430,9 +465,8 @@ export default function PlayerPage() {
         clearInterval(timerIntervalRef.current);
       }
       // Capture video ref at cleanup time to avoid stale closure warning
-      const video = videoRef.current;
-      if (video) {
-        video.pause();
+      if (videoElement) {
+        videoElement.pause();
       }
       // Track leave on component unmount
       trackAction('leave');
@@ -763,33 +797,35 @@ export default function PlayerPage() {
             const jsonResponse = await fetch(proxyJsonUrl);
             console.log('Timestamps response in startPlayback:', jsonResponse.status, jsonResponse.statusText);
             if (jsonResponse.ok) {
-              timestamps = await jsonResponse.json();
-              console.log('Timestamps loaded in startPlayback:', timestamps);
-              console.log('Timestamps type:', typeof timestamps);
-              console.log('Is array?', Array.isArray(timestamps));
-              console.log('Length:', timestamps?.length);
-              if (timestamps && Array.isArray(timestamps)) {
+              const jsonData: unknown = await jsonResponse.json();
+              console.log('Timestamps loaded in startPlayback:', jsonData);
+              console.log('Timestamps type:', typeof jsonData);
+              console.log('Is array?', Array.isArray(jsonData));
+              console.log('Length:', (jsonData as { length?: number })?.length);
+              if (Array.isArray(jsonData)) {
+                timestamps = jsonData;
                 console.log('✅ Timestamps loaded in startPlayback');
-                console.log('📋 ALL TIMESTAMP VALUES:', timestamps);
-                console.log('📋 Timestamps as JSON:', JSON.stringify(timestamps, null, 2));
-                console.log('First few timestamps:', timestamps.slice(0, 5));
-                console.log('Last few timestamps:', timestamps.slice(-5));
-                instructorTimestampsRef.current = timestamps;
-                const computedMax = Math.max(1, timestamps.length - 1);
+                console.log('📋 ALL TIMESTAMP VALUES:', jsonData);
+                console.log('📋 Timestamps as JSON:', JSON.stringify(jsonData, null, 2));
+                console.log('First few timestamps:', jsonData.slice(0, 5));
+                console.log('Last few timestamps:', jsonData.slice(-5));
+                instructorTimestampsRef.current = jsonData;
+                const computedMax = Math.max(1, jsonData.length - 1);
                 console.log('📊 Segment breakdown:');
-                console.log('  - Total timestamp entries:', timestamps.length);
-                console.log('  - Intro ends at index 1:', timestamps[1], 'seconds');
+                console.log('  - Total timestamp entries:', jsonData.length);
+                console.log('  - Intro ends at index 1:', jsonData[1], 'seconds');
                 console.log('  - Max segments available:', computedMax);
-                console.log('Setting maxSegments to:', computedMax, 'from timestamps.length:', timestamps.length);
+                console.log('Setting maxSegments to:', computedMax, 'from timestamps.length:', jsonData.length);
                 setMaxSegments(computedMax);
                 setSegmentsEnabled(true);
                 const clamped = Math.min(Math.max(1, numSegmentsRef.current), computedMax);
                 setNumSegments(clamped);
                 setRawSegmentsValue(clamped);
                 numSegmentsRef.current = clamped;
-              } else if (timestamps && typeof timestamps === 'object' && 'timestamps' in timestamps && Array.isArray(timestamps.timestamps)) {
+              } else if (isTimestampWrapper(jsonData)) {
+                const tsArray = jsonData.timestamps;
+                timestamps = tsArray;
                 console.log('Found timestamps in object property in startPlayback');
-                const tsArray = timestamps.timestamps;
                 instructorTimestampsRef.current = tsArray;
                 const computedMax = Math.max(1, tsArray.length - 1);
                 setMaxSegments(computedMax);
@@ -798,9 +834,11 @@ export default function PlayerPage() {
                 setNumSegments(clamped);
                 setRawSegmentsValue(clamped);
                 numSegmentsRef.current = clamped;
+              } else if (isTimestampError(jsonData)) {
+                console.warn('Timestamp error object in startPlayback:', jsonData.message);
               } else {
-                console.warn('Timestamps is not a valid array in startPlayback:', timestamps);
-                console.warn('Timestamps value:', JSON.stringify(timestamps, null, 2));
+                console.warn('Timestamps is not a valid array in startPlayback:', jsonData);
+                console.warn('Timestamps value:', JSON.stringify(jsonData, null, 2));
               }
             } else {
               const errorText = await jsonResponse.text().catch(() => 'Could not read error');
