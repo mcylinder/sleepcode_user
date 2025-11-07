@@ -860,17 +860,17 @@ export default function SessionsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              session.status === 'to_render' ? 'bg-yellow-100 text-yellow-800' :
-                              session.status === 'rendering' ? 'bg-blue-100 text-blue-800' :
-                              (session.status === 'completed' || session.status === 'complete') ? 'bg-green-100 text-green-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {session.status === 'to_render' ? 'To Render' :
-                               session.status === 'rendering' ? 'Recording' :
-                               (session.status === 'completed' || session.status === 'complete') ? 'Recorded' :
-                               session.status}
-                            </span>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            session.status === 'to_render' ? 'bg-yellow-100 text-yellow-800' :
+                            session.status === 'rendering' ? 'bg-blue-100 text-blue-800' :
+                            (session.status === 'completed' || session.status === 'complete') ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {session.status === 'to_render' ? 'To Render' :
+                             session.status === 'rendering' ? 'Recording' :
+                             (session.status === 'completed' || session.status === 'complete') ? 'Recorded' :
+                             session.status}
+                          </span>
                             {session.status === 'rendering' && (
                               <img 
                                 src="/rendering.gif" 
@@ -890,22 +890,22 @@ export default function SessionsPage() {
               <div className="md:hidden space-y-4">
                 {sessions.map((session) => (
                   <div key={session.id} className="p-2">
-                                          <div className="flex justify-between items-start mb-3">
-                        <h3 className="text-sm font-medium text-gray-900 flex-1 pr-4">
-                          {session.title}
-                        </h3>
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-sm font-medium text-gray-900 flex-1 pr-4">
+                        {session.title}
+                      </h3>
                         <div className="flex items-center space-x-2">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            session.status === 'to_render' ? 'bg-yellow-100 text-yellow-800' :
-                            session.status === 'rendering' ? 'bg-blue-100 text-blue-800' :
-                            (session.status === 'completed' || session.status === 'complete') ? 'bg-green-100 text-green-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {session.status === 'to_render' ? 'To Render' :
-                             session.status === 'rendering' ? 'Recording' :
-                             (session.status === 'completed' || session.status === 'complete') ? 'Recorded' :
-                             session.status}
-                          </span>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        session.status === 'to_render' ? 'bg-yellow-100 text-yellow-800' :
+                        session.status === 'rendering' ? 'bg-blue-100 text-blue-800' :
+                        (session.status === 'completed' || session.status === 'complete') ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {session.status === 'to_render' ? 'To Render' :
+                         session.status === 'rendering' ? 'Recording' :
+                         (session.status === 'completed' || session.status === 'complete') ? 'Recorded' :
+                         session.status}
+                      </span>
                           {session.status === 'rendering' && (
                             <img 
                               src="/rendering.gif" 
@@ -914,7 +914,7 @@ export default function SessionsPage() {
                             />
                           )}
                         </div>
-                      </div>
+                    </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-gray-500">Reader:</span>

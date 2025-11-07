@@ -20,6 +20,12 @@ export default function Navigation() {
   };
 
   const isActive = (path: string) => pathname === path;
+  const isApplicationRoute = pathname === '/application' || pathname.startsWith('/application/');
+
+  // Hide navigation on application routes - it will be replaced with a title in the page
+  if (isApplicationRoute) {
+    return null;
+  }
 
   return (
     <nav className="border-b border-[#9098a1] bg-[#fcf0e8]">
@@ -32,6 +38,14 @@ export default function Navigation() {
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
+            <Link 
+              href="/application" 
+              className={`nav-link px-3 py-2 text-sm font-medium ${
+                isActive('/application') ? 'text-[#4e88dd] active' : 'text-[#465362] hover:text-[#4e88dd]'
+              }`}
+            >
+              Application
+            </Link>
             <Link 
               href="/about" 
               className={`nav-link px-3 py-2 text-sm font-medium ${
@@ -153,6 +167,15 @@ export default function Navigation() {
               </button>
             </div>
             
+            <Link 
+              href="/application" 
+              className={`block px-3 py-2 text-base font-medium ${
+                isActive('/application') ? 'text-[#b6e3f6]' : 'text-white hover:text-[#4e88dd]'
+              }`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Application
+            </Link>
             <Link 
               href="/about" 
               className={`block px-3 py-2 text-base font-medium ${

@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: false,
   },
+  // Allow cross-origin requests in development
+  allowedDevOrigins: ['192.168.86.23'],
 };
 
 export default nextConfig;

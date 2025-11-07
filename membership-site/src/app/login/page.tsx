@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (currentUser) {
-              router.push('/sessions');
+      router.replace('/application');
     }
   }, [currentUser, router]);
 

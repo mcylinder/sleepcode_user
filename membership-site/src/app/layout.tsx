@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import ClientAuthProvider from '@/components/ClientAuthProvider'
 import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
+import ConditionalFooter from '@/components/ConditionalFooter'
 import CookieBanner from '@/components/CookieBanner'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -23,11 +23,11 @@ export default function RootLayout({
       <body className={`${inter.className} bg-[#fcf0e8]`}>
         <ClientAuthProvider>
           <div className="flex flex-col min-h-screen">
-            <Navigation />
+          <Navigation />
             <main className="flex-grow">
-              {children}
-            </main>
-            <Footer />
+            {children}
+          </main>
+            <ConditionalFooter />
           </div>
           <CookieBanner />
         </ClientAuthProvider>

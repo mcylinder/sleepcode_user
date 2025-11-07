@@ -29,7 +29,7 @@ body {
     @apply bg-gray-200 text-gray-900 px-6 py-3 font-medium hover:bg-gray-300 transition-colors duration-200;
   }
   
-      .card {
+  .card {
       @apply border border-gray-200 p-6 shadow-sm;
     }
 
@@ -78,7 +78,7 @@ body {
 
     .footer-link:hover::after {
       transform: translateX(-50%) scaleX(1);
-    }
+  }
   
   .input-field {
     @apply w-full px-4 py-3 border border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-200;

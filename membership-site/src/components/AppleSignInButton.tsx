@@ -30,7 +30,7 @@ const sha256 = async (message: string): Promise<string> => {
 
 export default function AppleSignInButton({ onError, onLoadingChange }: AppleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  
+
   useEffect(() => {
     // If we used redirect, finalize the flow here and surface any errors
     if (auth) {
