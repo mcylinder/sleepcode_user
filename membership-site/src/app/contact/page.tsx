@@ -111,7 +111,7 @@ export default function ContactPage() {
           </div>
 
           {/* Contact Form */}
-          <div className="bg-white shadow-sm p-8">
+          <div className="bg-[#dfeaf0] shadow-sm p-8 rounded-lg">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Send us a Message
             </h2>
@@ -203,7 +203,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full btn-primary disabled:opacity-50"
+                  className="w-full btn-primary bg-[#4e88dd] text-white disabled:opacity-50"
                 >
                   {isSubmitting ? 'Sending...' : 'Send Message'}
                 </button>

@@ -25,7 +25,7 @@ export default function CookieBanner() {
 
   return (
     <div 
-      className="fixed inset-x-0 bottom-0 bg-gray-900 text-white p-4 z-50"
+      className="fixed inset-x-0 bottom-0 bg-[#340c35] text-white p-4 z-50"
       role="region" 
       aria-label="Cookie notice"
     >
@@ -44,7 +44,7 @@ export default function CookieBanner() {
         <div className="flex-shrink-0">
           <button
             onClick={handleAccept}
-            className="bg-cyan-950 text-white border-0 px-6 py-3 cursor-pointer rounded-md text-sm font-semibold hover:bg-cyan-900 transition-colors duration-200 shadow-sm"
+            className="bg-[#4e88dd] text-white border-0 px-6 py-3 cursor-pointer rounded-md text-sm font-semibold hover:bg-[#340c35] transition-colors duration-200 shadow-sm"
           >
             Accept
           </button>

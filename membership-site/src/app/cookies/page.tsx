@@ -2,9 +2,9 @@ import LegalContact from '@/components/LegalContact';
 
 export default function CookiesPage() {
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto py-6 sm:py-12 px-0 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-sm p-4 sm:p-8">
+      <div className="bg-white shadow-md p-4 sm:p-8 rounded-lg">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-8">
             Cookie Policy
           </h1>

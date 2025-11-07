@@ -56,7 +56,7 @@ export default function FAQPage() {
 
         <div className="space-y-6">
           {faqs.map((faq, index) => (
-            <div key={index} className="bg-white shadow-sm">
+            <div key={index} className="bg-[#dfeaf0] shadow-sm rounded-lg">
               <div className="px-6 py-8">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   {faq.question}
@@ -70,7 +70,7 @@ export default function FAQPage() {
         </div>
 
         <div className="mt-16 text-center">
-          <div className="bg-white shadow-sm p-8">
+          <div className="bg-[#dfeaf0] shadow-sm p-8 rounded-lg">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               Still have questions?
             </h2>

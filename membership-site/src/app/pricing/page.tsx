@@ -15,7 +15,7 @@ export default function PricingPage() {
 
         <div className="mt-16 max-w-4xl mx-auto grid gap-8 lg:grid-cols-2 lg:gap-x-8">
           {/* Free Plan */}
-          <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+          <div className="bg-[#dfeaf0] border border-[#9098a1] shadow-sm overflow-hidden rounded-lg">
             <div className="px-6 py-8">
               <h3 className="text-2xl font-semibold text-gray-900">Free Access</h3>
               <p className="mt-4 text-gray-600">
@@ -70,7 +70,7 @@ export default function PricingPage() {
               <div className="mt-8">
                 <Link
                   href="/login"
-                  className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Get Started Free
                 </Link>
@@ -79,7 +79,7 @@ export default function PricingPage() {
           </div>
 
           {/* Premium Plan */}
-          <div className="bg-white border-2 border-cyan-500 shadow-sm relative overflow-hidden">
+          <div className="bg-[#dfeaf0] border-2 border-[#4e88dd] shadow-sm relative overflow-hidden rounded-lg">
            
             <div className="px-6 py-8">
               <h3 className="text-2xl font-semibold text-gray-900">Premium Membership</h3>
@@ -159,7 +159,7 @@ export default function PricingPage() {
               <div className="mt-8">
                 <Link
                   href="/login"
-                  className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium text-white bg-cyan-700 hover:bg-cyan-900"
+                  className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium text-white bg-[#4e88dd] hover:bg-[#340c35]"
                 >
                   Start Premium Trial
                 </Link>
@@ -174,7 +174,7 @@ export default function PricingPage() {
             Membership Questions
           </h2>
           <div className="max-w-3xl mx-auto space-y-6">
-            <div className="bg-white p-6 shadow-sm">
+            <div className="bg-[#dfeaf0] p-6 shadow-sm rounded-lg">
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 Can I cancel my subscription anytime?
               </h3>
@@ -182,7 +182,7 @@ export default function PricingPage() {
                 Yes, you can cancel your premium subscription at any time. You&apos;ll continue to have access to premium features until the end of your current billing period.
               </p>
             </div>
-            <div className="bg-white p-6 shadow-sm">
+            <div className="bg-[#dfeaf0] p-6 shadow-sm rounded-lg">
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 Is there a free trial for the premium plan?
               </h3>
@@ -190,7 +190,7 @@ export default function PricingPage() {
               We don’t offer a traditional trial—but you don’t need one. The free plan gives you full access to 15 sessions, so you can experience how SleepCoding works and decide if premium is right for you.
               </p>
             </div>
-            <div className="bg-white p-6 shadow-sm">
+            <div className="bg-[#dfeaf0] p-6 shadow-sm rounded-lg">
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 What payment methods do you accept?
               </h3>

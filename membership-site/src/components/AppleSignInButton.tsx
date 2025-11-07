@@ -101,7 +101,7 @@ export default function AppleSignInButton({ onError, onLoadingChange }: AppleSig
     <button
       onClick={handleAppleSignIn}
       disabled={isLoading || !auth}
-      className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+      className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
     >
       {isLoading ? (
         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-700"></div>

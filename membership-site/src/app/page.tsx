@@ -14,16 +14,16 @@ export default function HomePage() {
   }
 
   return (
-    <div className="bg-white">
+            <div>
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+          <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
             <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
               <div className="sm:text-center lg:text-left">
                 <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
                   <span className="block xl:inline">Train your mind</span>{' '}
-                  <span className="block text-cyan-900 xl:inline"> while you sleep</span>
+                  <span className="block text-[#4e88dd] xl:inline"> while you sleep</span>
                 </h1>
                 <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
                 Your sleep can support meaningful change. SleepCoding pairs affirming language with calming sound environments to help ease you into sleep while planting the seeds of healthier thinking and behavior.
@@ -32,7 +32,7 @@ export default function HomePage() {
                   <div className="rounded-md shadow">
                     <Link
                       href="/pricing"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-white bg-cyan-700 hover:bg-cyan-900 md:py-4 md:text-lg md:px-10"
+                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-white bg-[#4e88dd] hover:bg-[#31548a] md:py-4 md:text-lg md:px-10"
                     >
                       Get Started
                     </Link>
@@ -40,7 +40,7 @@ export default function HomePage() {
                   <div className="mt-3 sm:mt-0 sm:ml-3">
                     <Link
                       href="/faq"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-cyan-700 bg-cyan-100 hover:bg-cyan-200 md:py-4 md:text-lg md:px-10"
+                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-white bg-[#340c35] hover:bg-[#000000] md:py-4 md:text-lg md:px-10"
                     >
                       Learn More
                     </Link>
@@ -53,7 +53,7 @@ export default function HomePage() {
       </div>
 
       {/* Features Section */}
-      <div className="py-6 sm:py-12 bg-white sm:bg-gray-50">
+              <div className="py-6 sm:py-12 sm:bg-white border-t border-[#c2c8cf]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
             <h2 className="text-base text-cyan-700 font-semibold tracking-wide uppercase">Features</h2>
@@ -102,18 +102,18 @@ export default function HomePage() {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-cyan-700">
+      <div className="bg-[#465362]">
         <div className="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
             <span className="block mb-2">Ready to shift your mindset?</span>
-            <span className="block">Start your free trial today.</span>
+            <span className="block">Free accounts available.</span>
           </h2>
-          <p className="mt-4 text-lg leading-6 text-cyan-200">
-            Join thousands of users who have already transformed their sleep experience with our platform.
+          <p className="mt-4 text-lg leading-6 text-white">
+            Join thousands of users who have already transformed<br/>their sleep experience with our method.
           </p>
           <Link
             href="/pricing"
-            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-cyan-700 bg-white hover:bg-cyan-50 sm:w-auto"
+            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-[#b6e3f6] hover:bg-[#b6e3f6] hover:text-[#465362] sm:w-auto"
           >
             View Pricing
           </Link>

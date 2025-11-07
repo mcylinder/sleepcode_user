@@ -54,10 +54,10 @@ export default function AccountPage() {
                      statusText === 'Expired' ? 'text-red-600' : 'text-gray-600';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#ffffff]">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow-sm">
+          <div className="bg-[#ffffff] shadow-sm rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <div className="flex items-center space-x-4 mb-6">
                 <div className="flex-shrink-0">
@@ -68,7 +68,7 @@ export default function AccountPage() {
                       alt="Profile"
                     />
                   ) : (
-                    <div className="h-12 w-12 bg-gray-300 flex items-center justify-center text-gray-600 font-medium">
+                    <div className="h-12 w-12 bg-gradient-to-tl from-[#340c35] to-[#4e88dd] flex items-center justify-center text-white font-medium shadow-lg rounded-full border-2 border-white">
                       {currentUser.email?.charAt(0).toUpperCase() || 'U'}
                     </div>
                   )}
@@ -83,10 +83,10 @@ export default function AccountPage() {
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 {/* Account Information */}
-                <div className="card">
+                <div className="bg-[#ffffff] border border-gray-200 p-6 shadow-sm rounded-lg">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Account Information</h3>
                   <dl className="space-y-3">
-                    <div>
+                    <div className="hidden">
                       <dt className="text-sm font-medium text-gray-500">User ID</dt>
                       <dd className="text-sm text-gray-900 font-mono">{currentUser.uid}</dd>
                     </div>
@@ -109,7 +109,7 @@ export default function AccountPage() {
                 </div>
 
                 {/* Subscription Status */}
-                <div className="card">
+                <div className="bg-[#ffffff] border border-gray-200 p-6 shadow-sm rounded-lg">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Subscription Status</h3>
                   {subscriptionLoading ? (
                     <div className="text-sm text-gray-500">Loading subscription status...</div>
@@ -148,7 +148,7 @@ export default function AccountPage() {
 
               {/* Subscription-based content */}
               {hasSubscription() ? (
-                <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-lg">
+                <div className="mt-8 p-6 bg-[#ffffff] border border-green-200 rounded-lg">
                   <h3 className="text-lg font-medium text-green-900 mb-2">🎉 Premium Features Active</h3>
                   <p className="text-green-700 mb-4">
                     You have access to all premium features including advanced analytics, unlimited sessions, and priority support.
@@ -169,7 +169,7 @@ export default function AccountPage() {
                   </div>
                 </div>
               ) : (
-                        <div className="mt-8 p-6 bg-cyan-50 border border-cyan-200 rounded-lg">
+                        <div className="mt-8 p-6 bg-[#ffffff] border border-cyan-200 rounded-lg">
           <h3 className="text-lg font-medium text-cyan-900 mb-2">🚀 Upgrade to Premium</h3>
           <p className="text-cyan-700 mb-4">
                     Unlock unlimited sessions, advanced analytics, and priority support with our premium subscription.
@@ -192,7 +192,7 @@ export default function AccountPage() {
               )}
 
               {/* Future Phase 2 Placeholder */}
-              <div className="mt-8 card">
+              <div className="mt-8 bg-[#ffffff] border border-gray-200 p-6 shadow-sm rounded-lg">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Coming Soon</h3>
                 <p className="text-gray-600">
                   In the next phase, you&apos;ll be able to create and manage your personal content here.

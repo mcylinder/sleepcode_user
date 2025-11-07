@@ -20,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-[#fcf0e8]`}>
         <ClientAuthProvider>
           <div className="flex flex-col min-h-screen">
             <Navigation />

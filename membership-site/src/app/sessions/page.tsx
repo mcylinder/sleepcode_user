@@ -818,10 +818,10 @@ export default function SessionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white sm:bg-gray-50">
+    <div className="min-h-screen bg-[#ffffff]">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-2 py-6 sm:px-0">
-          <div className="bg-white shadow-sm">
+          <div className="bg-[#ffffff] shadow-sm rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">Sessions</h1>
@@ -846,7 +846,7 @@ export default function SessionsPage() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200">
                     {sessions.map((session) => (
                       <tr key={session.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -859,17 +859,26 @@ export default function SessionsPage() {
                           {new Date(session.created).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            session.status === 'to_render' ? 'bg-yellow-100 text-yellow-800' :
-                            session.status === 'rendering' ? 'bg-blue-100 text-blue-800' :
-                            (session.status === 'completed' || session.status === 'complete') ? 'bg-green-100 text-green-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {session.status === 'to_render' ? 'To Render' :
-                             session.status === 'rendering' ? 'Recording' :
-                             (session.status === 'completed' || session.status === 'complete') ? 'Recorded' :
-                             session.status}
-                          </span>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              session.status === 'to_render' ? 'bg-yellow-100 text-yellow-800' :
+                              session.status === 'rendering' ? 'bg-blue-100 text-blue-800' :
+                              (session.status === 'completed' || session.status === 'complete') ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {session.status === 'to_render' ? 'To Render' :
+                               session.status === 'rendering' ? 'Recording' :
+                               (session.status === 'completed' || session.status === 'complete') ? 'Recorded' :
+                               session.status}
+                            </span>
+                            {session.status === 'rendering' && (
+                              <img 
+                                src="/rendering.gif" 
+                                alt="Recording in progress" 
+                                className="w-[17.6px] h-[17.6px] opacity-40"
+                              />
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -881,22 +890,31 @@ export default function SessionsPage() {
               <div className="md:hidden space-y-4">
                 {sessions.map((session) => (
                   <div key={session.id} className="p-2">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-sm font-medium text-gray-900 flex-1 pr-4">
-                        {session.title}
-                      </h3>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        session.status === 'to_render' ? 'bg-yellow-100 text-yellow-800' :
-                        session.status === 'rendering' ? 'bg-blue-100 text-blue-800' :
-                        (session.status === 'completed' || session.status === 'complete') ? 'bg-green-100 text-green-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {session.status === 'to_render' ? 'To Render' :
-                         session.status === 'rendering' ? 'Recording' :
-                         (session.status === 'completed' || session.status === 'complete') ? 'Recorded' :
-                         session.status}
-                      </span>
-                    </div>
+                                          <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-sm font-medium text-gray-900 flex-1 pr-4">
+                          {session.title}
+                        </h3>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            session.status === 'to_render' ? 'bg-yellow-100 text-yellow-800' :
+                            session.status === 'rendering' ? 'bg-blue-100 text-blue-800' :
+                            (session.status === 'completed' || session.status === 'complete') ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {session.status === 'to_render' ? 'To Render' :
+                             session.status === 'rendering' ? 'Recording' :
+                             (session.status === 'completed' || session.status === 'complete') ? 'Recorded' :
+                             session.status}
+                          </span>
+                          {session.status === 'rendering' && (
+                            <img 
+                              src="/rendering.gif" 
+                              alt="Recording in progress" 
+                              className="w-[17.6px] h-[17.6px] opacity-40"
+                            />
+                          )}
+                        </div>
+                      </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-gray-500">Reader:</span>
@@ -949,7 +967,7 @@ export default function SessionsPage() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200">
                       {drafts.filter(draft => draft.status === 'in_edit').map((draft) => (
                         <tr key={draft.id} className={`hover:bg-gray-50 ${
                           editingDraft?.id === draft.id ? 'bg-cyan-50 border-l-4 border-cyan-500' : ''
@@ -1110,7 +1128,7 @@ export default function SessionsPage() {
                   </button>
 
                 {showForm && (
-                  <div className="mt-4 bg-white shadow-sm rounded-lg p-6 border border-gray-200 md:block hidden">
+                  <div className="mt-4 bg-[#ffffff] shadow-sm rounded-lg p-6 border border-[#9098a1] md:block hidden">
                     <form onSubmit={(e) => { e.preventDefault(); handleSaveDraft(); }}>
                       <div className="space-y-6">
                         {/* Title Input */}
@@ -1152,7 +1170,7 @@ export default function SessionsPage() {
                             <button
                               type="button"
                               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                              className="w-full px-3 py-2 text-left border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 bg-white"
+                              className="w-full px-3 py-2 text-left border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
                             >
                               {formData.reader || "Select a reader"}
                               <span className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -1161,7 +1179,7 @@ export default function SessionsPage() {
                             </button>
                             
                             {isDropdownOpen && (
-                              <div className="absolute z-10 w-full max-w-[220px] mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                              <div className="absolute z-10 w-full max-w-[220px] mt-1 border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                                 {READERS.map((reader) => (
                                   <div
                                     key={reader.id}
@@ -1255,7 +1273,7 @@ export default function SessionsPage() {
                           </div>
                           
                           {formData.description.length < DESCRIPTION_MIN_CHARS && (
-                            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                            <div className="mb-4 p-3 bg-[#fcf0e8] border border-[#e4bfa6] rounded-md">
                               <p className="text-sm text-yellow-800">
                                 Please add a description (at least {DESCRIPTION_MIN_CHARS} characters) before writing instructions.
                               </p>
@@ -1381,7 +1399,7 @@ export default function SessionsPage() {
                             <button
                               type="button"
                               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                              className="w-full px-3 py-2 text-left border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 bg-white"
+                              className="w-full px-3 py-2 text-left border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
                             >
                               {formData.reader || "Select a reader"}
                               <span className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -1390,7 +1408,7 @@ export default function SessionsPage() {
                             </button>
                             
                             {isDropdownOpen && (
-                              <div className="absolute z-10 w-full max-w-[220px] mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                              <div className="absolute z-10 w-full max-w-[220px] mt-1 border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                                 {READERS.map((reader) => (
                                   <div
                                     key={reader.id}
@@ -1509,7 +1527,7 @@ export default function SessionsPage() {
                           <button
                             type="button"
                             onClick={handleCancelEdit}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                            className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
                           >
                             Cancel
                           </button>
@@ -1587,7 +1605,7 @@ export default function SessionsPage() {
           
           {/* Modal */}
           <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
+            <div className="bg-[#ffffff] rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">Bulk Paste Instructions</h3>
@@ -1660,7 +1678,7 @@ export default function SessionsPage() {
         />
         
         {/* Panel */}
-        <div className={`absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transform transition-transform duration-500 ease-out ${
+        <div className={`absolute right-0 top-0 h-full w-full max-w-md bg-[#ffffff] shadow-xl transform transition-transform duration-500 ease-out ${
           showSuggestions ? 'translate-x-0' : 'translate-x-full'
         }`}>
             <div className="flex flex-col h-full">
@@ -1695,7 +1713,7 @@ export default function SessionsPage() {
                         className={`flex items-center py-2 px-3 rounded-md ${
                           isUsed 
                             ? 'bg-gray-50 text-gray-500' 
-                            : 'bg-white hover:bg-gray-50'
+                            : 'hover:bg-gray-50'
                         }`}
                       >
                         <button
