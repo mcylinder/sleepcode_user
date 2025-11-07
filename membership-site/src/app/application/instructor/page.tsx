@@ -14,6 +14,12 @@ interface Instructor {
   position: number;
 }
 
+interface SelectionState {
+  session: { id: number; name: string; ins_id: string } | null;
+  instructor: Instructor | null;
+  soundscape: { id: number; name: string; audio_file: string } | null;
+}
+
 const STORAGE_KEY = 'sleepcoding_application_selections';
 const INSTRUCTORS_CACHE_KEY = 'sleepcoding_instructors_cache';
 const AUDIO_BASE_URL = 'https://sleepcode-beta.s3.us-east-1.amazonaws.com/';
