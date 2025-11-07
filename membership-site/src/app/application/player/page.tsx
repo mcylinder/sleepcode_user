@@ -232,7 +232,7 @@ export default function PlayerPage() {
       console.log('Loading timestamps from:', jsonUrl);
       console.log('Full JSON URL:', jsonUrl);
       
-      const loadTimestamps = async (): Promise<any> => {
+      const loadTimestamps = async (): Promise<number[] | { error: boolean; status?: number; message?: string } | null> => {
         // Try direct fetch first (S3 bucket is publicly accessible)
         try {
           console.log('Attempting direct S3 fetch from:', jsonUrl);
@@ -257,8 +257,8 @@ export default function PlayerPage() {
             try {
               const errorText = await directResponse.text();
               console.warn('Direct fetch error response:', errorText.substring(0, 200));
-            } catch (e) {
-              // Ignore
+            } catch {
+              // Ignore error reading response
             }
           }
         } catch (directError) {
@@ -429,6 +429,7 @@ export default function PlayerPage() {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
+      // Capture video ref at cleanup time to avoid stale closure warning
       const video = videoRef.current;
       if (video) {
         video.pause();
@@ -581,6 +582,7 @@ export default function PlayerPage() {
         }, 80);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawSegmentsValue, maxSegments, segmentsEnabled, isPlaying]);
 
   const buildLoopingWindowSource = (windowStartSeconds: number, windowEndSeconds: number, instructorBuffer: AudioBuffer, instructorVolume: number) => {
@@ -592,15 +594,21 @@ export default function PlayerPage() {
     if (sourceNodesRef.current.instructor) {
       try {
         (sourceNodesRef.current.instructor as AudioBufferSourceNode).stop(0);
-      } catch (_) {}
+      } catch {
+        // Ignore errors from already stopped sources
+      }
       try {
         (sourceNodesRef.current.instructor as AudioBufferSourceNode).disconnect();
-      } catch (_) {}
+      } catch {
+        // Ignore disconnect errors
+      }
     }
     if (gainNodesRef.current.instructor) {
       try {
         (gainNodesRef.current.instructor as GainNode).disconnect();
-      } catch (_) {}
+      } catch {
+        // Ignore disconnect errors
+      }
     }
 
     sourceNodesRef.current.instructor = undefined;
@@ -684,11 +692,8 @@ export default function PlayerPage() {
         // The timestamp marks a phrase boundary - it's where the current segment ENDS
         // and the next segment STARTS. To avoid hearing the start of the next segment,
         // we need to stop slightly before this boundary.
-        // Calculate a safe offset: use a small fraction of the gap to the next boundary,
+        // Calculate a safe offset: use a small fraction of the current segment gap,
         // or a fixed small amount (e.g., 0.75s as suggested), whichever is smaller
-        const gapToNext = candidateIndex < timestamps.length - 1 
-          ? timestamps[candidateIndex + 1] - boundaryTimestamp 
-          : instructorBuffer.duration - boundaryTimestamp;
         const gapFromPrev = candidateIndex > 0 
           ? boundaryTimestamp - timestamps[candidateIndex - 1]
           : boundaryTimestamp;
@@ -825,14 +830,18 @@ export default function PlayerPage() {
         } else {
           if (sourceNodesRef.current.instructor) {
             try {
-              (sourceNodesRef.current.instructor as any).stop(0);
-              (sourceNodesRef.current.instructor as any).disconnect();
-            } catch (_) {}
+              (sourceNodesRef.current.instructor as AudioBufferSourceNode).stop(0);
+              (sourceNodesRef.current.instructor as AudioBufferSourceNode).disconnect();
+            } catch {
+              // Ignore errors from already stopped sources
+            }
           }
           if (gainNodesRef.current.instructor) {
             try {
-              (gainNodesRef.current.instructor as any).disconnect();
-            } catch (_) {}
+              (gainNodesRef.current.instructor as GainNode).disconnect();
+            } catch {
+              // Ignore disconnect errors
+            }
           }
 
           const instructorSource = ctx.createBufferSource();
@@ -1323,8 +1332,8 @@ export default function PlayerPage() {
 function CrossfadeControl({ 
   crossfadeValue, 
   onCrossfadeChange, 
-  instructorName: _instructorName, 
-  soundscapeName: _soundscapeName, 
+  instructorName, 
+  soundscapeName, 
   isSoundscapeLoading = false 
 }: {
   crossfadeValue: number;
@@ -1333,6 +1342,10 @@ function CrossfadeControl({
   soundscapeName: string;
   isSoundscapeLoading?: boolean;
 }) {
+  // instructorName and soundscapeName are kept in the interface for future use
+  // but are not currently displayed in the UI
+  void instructorName;
+  void soundscapeName;
   const instructorVolume = 100 - crossfadeValue;
   const soundscapeVolume = crossfadeValue;
   const toOpacity = (pct: number) => 0.3 + 0.7 * (pct / 100);
