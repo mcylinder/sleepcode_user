@@ -105,6 +105,7 @@ export default function PlayerPage() {
   const [rawSegmentsValue, setRawSegmentsValue] = useState(1);
   const [maxSegments, setMaxSegments] = useState(1);
   const [segmentsEnabled, setSegmentsEnabled] = useState(false);
+  const [isTimestampLoading, setIsTimestampLoading] = useState(true);
   const [isSoundscapeLoading, setIsSoundscapeLoading] = useState(false);
   
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
@@ -208,6 +209,7 @@ export default function PlayerPage() {
     
     // Check if we have all required selections
     if (!savedSelections.session || !savedSelections.instructor || !savedSelections.soundscape) {
+      setIsTimestampLoading(false);
       router.replace('/application');
       return;
     }
@@ -240,9 +242,10 @@ export default function PlayerPage() {
 
     // Load instructor timestamps and preload audio
     if (savedSelections.instructor && savedSelections.session) {
+      setSegmentsEnabled(false);
+      setIsTimestampLoading(true);
       const instructionId = savedSelections.session.ins_id;
       const instructorId = savedSelections.instructor.elid;
-      const sessionType = 1; // Default to Focus (1), Immersive would be 2
       
       // Use CloudFront domain if available, otherwise fallback to S3
       // Check if we have CloudFront domain from environment (client-side can't access process.env directly)
@@ -252,8 +255,8 @@ export default function PlayerPage() {
         ? `https://${cloudfrontDomain}`
         : 'https://sleepcode-beta.s3.us-east-1.amazonaws.com';
       
-      const instructorUrl = `${baseUrl}/instructions/${instructionId}_${instructorId}_${sessionType}.m4a`;
-      // JSON files always use _2.json regardless of sessionType
+      const instructorUrl = `${baseUrl}/instructions/${instructionId}_${instructorId}_2.m4a`;
+      // Audio and JSON files always use _2 suffix regardless of session type
       const jsonUrl = `${baseUrl}/instructions/${instructionId}_${instructorId}_2.json`;
       const proxyJsonUrl = `/api/audio/proxy?url=${encodeURIComponent(jsonUrl)}`;
 
@@ -388,6 +391,9 @@ export default function PlayerPage() {
         .catch(error => {
           console.error('❌ Error loading instructor timestamps:', error);
           console.error('Error stack:', error.stack);
+        })
+        .finally(() => {
+          setIsTimestampLoading(false);
         });
 
       // Preload instructor audio
@@ -776,7 +782,6 @@ export default function PlayerPage() {
       if (selections.instructor && selections.session) {
         const instructionId = selections.session.ins_id;
         const instructorId = selections.instructor.elid;
-        const sessionType = 1; // Focus = 1, Immersive = 2 (TODO: get from session.type if available)
         
         // Use CloudFront domain if available, otherwise fallback to S3
         const cloudfrontDomain = process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN;
@@ -784,12 +789,13 @@ export default function PlayerPage() {
           ? `https://${cloudfrontDomain}`
           : 'https://sleepcode-beta.s3.us-east-1.amazonaws.com';
         
-        const instructorUrl = `${baseUrl}/instructions/${instructionId}_${instructorId}_${sessionType}.m4a`;
+        const instructorUrl = `${baseUrl}/instructions/${instructionId}_${instructorId}_2.m4a`;
 
         // Load timestamps if not already loaded (fallback for startPlayback)
         let timestamps = instructorTimestampsRef.current;
         if (!timestamps) {
-          // JSON files always use _2.json regardless of sessionType
+          setIsTimestampLoading(true);
+          // Audio/JSON files always use _2 suffix
           const jsonUrl = `${baseUrl}/instructions/${instructionId}_${instructorId}_2.json`;
           const proxyJsonUrl = `/api/audio/proxy?url=${encodeURIComponent(jsonUrl)}`;
           console.log('Loading timestamps in startPlayback from:', proxyJsonUrl);
@@ -846,6 +852,8 @@ export default function PlayerPage() {
             }
           } catch (error) {
             console.error('Error loading instructor timestamps in startPlayback:', error);
+          } finally {
+            setIsTimestampLoading(false);
           }
         } else {
           console.log('Timestamps already loaded:', timestamps, 'length:', timestamps.length, 'maxSegments should be:', Math.max(1, timestamps.length - 1));
@@ -1127,9 +1135,16 @@ export default function PlayerPage() {
 
         {/* Focus/Immersive Intensity Slider */}
         <div className="mb-10">
-          <div className={`${segmentsEnabled ? '' : 'opacity-50 pointer-events-none'} flex items-center justify-center`}
-               style={{ height: 100 }}>
-            {(() => {
+          <div
+            className={`${!segmentsEnabled && !isTimestampLoading ? 'opacity-50 pointer-events-none' : ''} flex items-center justify-center`}
+            style={{ height: 100 }}
+          >
+            {isTimestampLoading ? (
+              <div className="flex flex-col items-center gap-3 text-gray-200">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
+                <span className="text-sm font-medium tracking-wide">Loading intensity segments…</span>
+              </div>
+            ) : (() => {
               const handlePointerDown = (e: React.PointerEvent | React.TouchEvent) => {
                 if (!segmentsEnabled) return;
                 if (e.preventDefault) e.preventDefault();
@@ -1181,8 +1196,18 @@ export default function PlayerPage() {
               const handleBg = `hsl(${hue}, 90%, 50%)`;
               const handleBorder = `hsl(${hue}, 100%, 85%)`;
               const handleGlow = `0 0 ${halo}px hsla(${hue}, 100%, 60%, 0.6)`;
-              const currentSegment = Math.max(1, Math.min(Math.round(rawSegmentsValue), Math.max(1, maxSegments)));
-              const totalSegments = Math.max(1, maxSegments);
+              const maxAvailable = Math.max(1, maxSegments);
+              const currentSegment = Math.max(1, Math.min(Math.round(rawSegmentsValue), maxAvailable));
+              const totalSegments = maxAvailable;
+              const canDecreaseIntensity = segmentsEnabled && !isTimestampLoading && currentSegment > 1;
+              const canIncreaseIntensity = segmentsEnabled && !isTimestampLoading && currentSegment < maxAvailable;
+              const adjustSegments = (delta: number) => {
+                if (!segmentsEnabled || isTimestampLoading) return;
+                const next = Math.max(1, Math.min(maxAvailable, currentSegment + delta));
+                if (next !== currentSegment) {
+                  setRawSegmentsValue(next);
+                }
+              };
 
               return (
                 <div className="w-full px-6 flex flex-col items-center">
@@ -1207,9 +1232,25 @@ export default function PlayerPage() {
                   <div className="mt-2 text-white text-center">
                     <span className="text-sm font-mono">{`${currentSegment} of ${totalSegments}`}</span>
                   </div>
-                  <div className="mt-2 flex justify-between text-sm text-gray-300 w-full max-w-[800px]">
-                    <span className="font-medium">Focus</span>
-                    <span className="font-medium">Immersive</span>
+              <div className="mt-3 flex justify-between w-full max-w-[800px]">
+                <button
+                  type="button"
+                  onClick={() => adjustSegments(-1)}
+                  disabled={!canDecreaseIntensity}
+                  className="px-4 py-1.5 text-sm font-medium text-gray-200 rounded-md border border-gray-400/40 bg-transparent transition-colors hover:border-gray-200/60 disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Decrease intensity toward Focus"
+                >
+                  Focus
+                </button>
+                <button
+                  type="button"
+                  onClick={() => adjustSegments(1)}
+                  disabled={!canIncreaseIntensity}
+                  className="px-4 py-1.5 text-sm font-medium text-gray-200 rounded-md border border-gray-400/40 bg-transparent transition-colors hover:border-gray-200/60 disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Increase intensity toward Immersive"
+                >
+                  Immersive
+                </button>
                   </div>
                 </div>
               );
@@ -1439,15 +1480,31 @@ function CrossfadeControl({
   const handleBg = `hsl(0, 0%, 70%)`;
   const handleBorder = `hsl(0, 0%, 90%)`;
   const handleGlow = `0 0 ${halo}px hsla(0, 0%, 80%, 0.6)`;
+  const crossfadeStep = 1;
+  const adjustCrossfade = (delta: number) => {
+    const target = Math.min(100, Math.max(0, Math.round(crossfadeValue + delta)));
+    if (target !== crossfadeValue) {
+      onCrossfadeChange(target);
+    }
+  };
+  const canDecrease = crossfadeValue > 0;
+  const canIncrease = crossfadeValue < 100;
 
   return (
     <div className="flex flex-col items-center">
       <div className="flex items-center gap-3 w-full px-4 max-w-[800px]">
-        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0" style={{ opacity: leftOpacity }}>
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button
+          type="button"
+          onClick={() => adjustCrossfade(-crossfadeStep)}
+          disabled={!canDecrease}
+          className="relative w-11 h-11 flex items-center justify-center flex-shrink-0 rounded-full border border-gray-400/40 bg-transparent text-white transition-colors hover:border-gray-200/60 disabled:cursor-not-allowed disabled:opacity-40"
+          style={{ opacity: leftOpacity }}
+          aria-label="Increase instructor volume"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
           </svg>
-        </div>
+        </button>
 
         <div className="flex-1 relative h-8" style={{ touchAction: 'none' }} onPointerDown={handlePointerDown} onTouchStart={handlePointerDown}>
           <div ref={trackRef} className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 rounded-full bg-gray-400/60"></div>
@@ -1455,15 +1512,22 @@ function CrossfadeControl({
                style={{ left: pct, width: handleSize, height: handleSize, background: handleBg, border: `2px solid ${handleBorder}`, boxShadow: handleGlow }} />
         </div>
 
-        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 relative" style={{ opacity: rightOpacity }}>
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+        <button
+          type="button"
+          onClick={() => adjustCrossfade(crossfadeStep)}
+          disabled={!canIncrease}
+          className="relative w-11 h-11 flex items-center justify-center flex-shrink-0 rounded-full border border-gray-400/40 bg-transparent text-white transition-colors hover:border-gray-200/60 disabled:cursor-not-allowed disabled:opacity-40"
+          style={{ opacity: rightOpacity }}
+          aria-label="Increase soundscape volume"
+        >
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
             <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
           </svg>
           {isSoundscapeLoading && (
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full animate-pulse opacity-70"
                  style={{ boxShadow: '0 0 4px rgba(255,255,255,0.8)' }} />
           )}
-        </div>
+        </button>
       </div>
 
       <div className="mt-2 text-white text-center">
