@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { Bevan } from 'next/font/google';
 
 interface Session {
   id: number;
@@ -48,6 +49,11 @@ interface SelectionState {
   instructor: Instructor | null;
   soundscape: Soundscape | null;
 }
+
+const bevan = Bevan({
+  subsets: ['latin'],
+  weight: '400',
+});
 
 const STORAGE_KEY = 'sleepcoding_application_selections';
 
@@ -1119,13 +1125,12 @@ export default function PlayerPage() {
         {sessionDescription && (
           <div className="text-center mb-8 px-2">
             <p
+              className={bevan.className}
               style={{
-                fontWeight: '300',
+                fontWeight: '600',
                 fontSize: 23,
                 color: intensityColor,
-                textAlign: 'center',
-                fontFamily: "'Noto Serif', serif",
-                textShadow: '0 0 8px rgba(255,255,255,0.25)'
+                textAlign: 'center'
               }}
             >
               {sessionDescription}
