@@ -194,7 +194,23 @@ export default function ApplicationPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    const handlePageShow = () => {
+      requestAnimationFrame(resetScroll);
+    };
+
+    resetScroll();
+    requestAnimationFrame(resetScroll);
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+    };
   }, []);
 
   useEffect(() => {
