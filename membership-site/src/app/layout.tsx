@@ -1,16 +1,28 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Space_Grotesk, Space_Mono } from 'next/font/google'
 import './globals.css'
 import ClientAuthProvider from '@/components/ClientAuthProvider'
-import Navigation from '@/components/Navigation'
-import ConditionalFooter from '@/components/ConditionalFooter'
 import CookieBanner from '@/components/CookieBanner'
 
-const inter = Inter({ subsets: ['latin'] })
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-space-grotesk',
+})
+
+const spaceMono = Space_Mono({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-space-mono',
+})
 
 export const metadata: Metadata = {
-  title: 'SleepCoding - Membership Support',
-  description: 'Your membership support website for SleepCoding application',
+  title: 'SleepCode — Rewire How You Fall Asleep',
+  description: 'One voice, speaking in first person, layered under a slow pulse. A method for falling asleep.',
+}
+
+export const viewport: Viewport = {
+  themeColor: '#16191c',
 }
 
 export default function RootLayout({
@@ -19,16 +31,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-[#fcf0e8]`}>
+    <html lang="en" className={`${spaceGrotesk.variable} ${spaceMono.variable}`}>
+      <body className="sc-dotgrid">
         <ClientAuthProvider>
-          <div className="flex flex-col min-h-screen">
-          <Navigation />
-            <main className="flex-grow">
-            {children}
-          </main>
-            <ConditionalFooter />
-          </div>
+          {children}
           <CookieBanner />
         </ClientAuthProvider>
       </body>

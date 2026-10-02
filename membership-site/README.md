@@ -1,222 +1,84 @@
-# SleepCoding Membership Support Website
+# SleepCode Website
 
-A modern, responsive membership support website built with Next.js, Firebase Authentication, and RevenueCat integration for subscription management.
+The SleepCode website: marketing pages, accounts, a paid membership, and the in-browser player.
 
 ## Features
 
-- **Authentication**: Firebase Auth with social logins (Google, Facebook, Apple) and email/password
-- **Subscription Management**: RevenueCat REST API integration for subscription status
-- **Protected Routes**: Account with user authentication required
-- **Responsive Design**: Mobile-first design with TailwindCSS
-- **Clean UI**: Minimal design with square corners (no rounded borders)
-- **Public Pages**: Homepage, Pricing, FAQ, Contact, Terms, Privacy
+- **Accounts:** Firebase Auth with email/password, Google, Apple, and Facebook. Password reset, email verification, and linking several sign-in methods to one account.
+- **Membership (SleepCode+):** one paid tier, $7/month or $49/year, sold on this site with Stripe Checkout. Members manage billing in the Stripe Customer Portal.
+- **Free and members-only sessions:** sessions flagged `free` in `src/data/sessions.json` are open to every signed-in user. All others need a membership. The server enforces this when it signs audio URLs.
+- **Account page:** membership status, profile, sign-in methods, password, and account deletion.
+- **Player:** `/application` (Home) lists the sessions. Each session is a folder of short statement clips plus a pulse track, loaded into memory and played in lockstep on a loop, with a voice/pulse blend, repeat count (1x/2x/4x), session timer, and Night Shade.
 
-## Tech Stack
+## Design system
 
-- **Frontend**: Next.js 14 (App Router), React 19, TypeScript
-- **Styling**: TailwindCSS (customized for square corners)
-- **Authentication**: Firebase Authentication
-- **Database**: Firestore (ready for Phase 2 expansion)
-- **Subscription**: RevenueCat REST API
-- **Hosting**: Vercel-ready
+The visual design comes from the design handoff (`../handoff/`). Tokens and shared patterns (colors, Space Grotesk / Space Mono, hairline rows, the single `--signal` accent, tab bar / side-nav, bottom sheet) live in `src/app/globals.css` and are exposed to Tailwind in `tailwind.config.ts` (`bg-bg`, `text-fg-muted`, `border-line`, the `wide:` 900px breakpoint, and so on). Check new UI against the handoff README's "Hard rules" before shipping.
 
-## Getting Started
+## Tech stack
 
-### Prerequisites
+- Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS
+- Firebase Auth and Firestore (client SDK and Admin SDK)
+- Stripe (Checkout, Customer Portal, webhooks)
+- AWS SES for the contact form
+- Session audio in a private S3 bucket (`slpcd-media`) served through CloudFront signed URLs
 
-- Node.js 18+ 
-- npm or yarn
-- Firebase project
-- RevenueCat account
+## Getting started
 
-### Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd membership-site
-```
-
-2. Install dependencies:
 ```bash
 npm install
-```
-
-3. Set up environment variables:
-Create a `.env.local` file in the root directory with the following variables:
-
-```env
-# Firebase Configuration
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyCn51coB3MJH-uP6iX37ErpkKDcZC40oaA
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=sleepcodingbase.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=sleepcodingbase
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=sleepcodingbase.firebasestorage.app
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=2186950665
-NEXT_PUBLIC_FIREBASE_APP_ID=1:2186950665:web:87ab81aa19f8cc17f120d8
-NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-6J693D0VCT
-
-# RevenueCat Configuration
-REVENUECAT_API_KEY=your_revenuecat_api_key_here
-
-# Development Override (for testing subscription features)
-NEXT_PUBLIC_HAS_SUBSCRIPTION=false
-```
-
-**⚠️ IMPORTANT:** The `.env.local` file is already in `.gitignore` and will not be committed to your repository. This keeps your API keys secure.
-
-4. Run the development server:
-```bash
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+Create `.env.local` with the variables listed in [VERCEL_ENV_SETUP.md](VERCEL_ENV_SETUP.md), which also covers the Stripe, Firebase, and catalog setup.
 
-## Firebase Setup
+## How membership works
 
-1. Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
-2. Enable Authentication with the following providers:
-   - Email/Password
-   - Google
-   - Facebook
-   - Apple
-3. Get your Firebase configuration from Project Settings
-4. Add your configuration to `.env.local`
+1. A signed-in user starts checkout from the pricing or account page. `POST /api/billing/checkout` creates a Stripe Checkout Session.
+2. Stripe calls `POST /api/billing/webhook`. The webhook re-reads the customer's subscriptions from Stripe and writes the result to `users/{uid}.membership` in Firestore.
+3. The `useMembership` hook listens to that document, so the account page and session locks update as soon as the webhook lands.
+4. Members open the Stripe Customer Portal via `POST /api/billing/portal` to switch plans, update their card, or cancel. Those changes arrive through the same webhook.
 
-## RevenueCat Setup
+Only the server writes `membership` and `stripeCustomerId`. `firestore.rules` blocks clients from changing them.
 
-1. Create a RevenueCat account at [RevenueCat](https://www.revenuecat.com/)
-2. Set up your app and products
-3. Get your API key from the RevenueCat dashboard
-4. Add your API key to `.env.local`
-
-## Project Structure
+## Project structure
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── api/               # API routes
-│   ├── account/           # Protected account page
-│   ├── sessions/          # Protected sessions page
-│   ├── login/            # Authentication page
-│   ├── pricing/          # Pricing page
-│   ├── faq/              # FAQ page
-│   ├── contact/          # Contact page
-│   ├── terms/            # Terms of Service
-│   ├── privacy/          # Privacy Policy
-│   └── layout.tsx        # Root layout
-├── components/           # Reusable components
-│   └── Navigation.tsx    # Main navigation
-├── contexts/             # React contexts
-│   └── AuthContext.tsx   # Authentication context
-└── lib/                  # Utility libraries
-    ├── firebase.ts       # Firebase configuration
-    └── revenuecat.ts     # RevenueCat service
+├── app/
+│   ├── api/
+│   │   ├── account/delete/      # Deletes the user's data, Stripe subscription, and login
+│   │   ├── billing/checkout/    # Starts Stripe Checkout
+│   │   ├── billing/portal/      # Opens the Stripe Customer Portal
+│   │   ├── billing/webhook/     # Syncs Stripe subscription state to Firestore
+│   │   ├── media/session/       # Signs CloudFront access to one session's audio folder
+│   │   └── ...                  # contact, auth proxy
+│   ├── (site)/                  # Marketing, pricing, and legal pages (shared header and footer)
+│   ├── account/                 # Account page
+│   ├── application/             # Home (session list) and the player
+│   └── login/                   # Sign in, sign up, password reset
+├── components/
+│   ├── account/                 # Account page sections and the re-sign-in sheet
+│   ├── site/                    # Marketing header, footer, article layout, breathing rings
+│   └── ui/                      # App shell, back header, bottom sheet, icons
+├── contexts/AuthContext.tsx     # Auth state and sign-in actions
+├── hooks/useMembership.ts       # Live membership status
+└── lib/
+    ├── firebase.ts              # Client Firebase
+    ├── firebaseAdmin.ts         # Admin Firebase and requireUser()
+    ├── stripe.ts                # Stripe client and membership sync
+    ├── membership.ts            # Prices and shared membership types
+    ├── catalog.ts               # Session catalog (from src/data/sessions.json) and lock rules
+    ├── cloudfront.ts            # Signs wildcard CloudFront URL policies
+    ├── playerPrefs.ts           # Blend, repeat, and timer preferences
+    ├── audio/                   # Clip engine (Web Audio), play order, stay-awake
+    ├── authProviders.ts         # Social provider setup and account linking
+    └── authErrors.ts            # Friendly auth error messages
 ```
-
-## Pages Overview
-
-- **Homepage** (`/`): Landing page with features and call-to-action
-- **Pricing** (`/pricing`): Free and premium plan comparison
-- **FAQ** (`/faq`): Frequently asked questions
-- **Contact** (`/contact`): Contact form and support information
-- **Terms** (`/terms`): Terms of Service
-- **Privacy** (`/privacy`): Privacy Policy
-- **Login** (`/login`): Authentication page
-- **Account** (`/account`): Protected user account page
-- **Sessions** (`/sessions`): Protected sleep sessions page
-
-## Authentication Flow
-
-1. Users can sign up/sign in via:
-   - Email and password
-   - Google OAuth
-   - Facebook OAuth
-   - Apple OAuth
-2. Successful authentication redirects to account page
-3. Unauthenticated users trying to access account page are redirected to login
-4. Logout redirects to homepage
-
-## Subscription Integration
-
-- Uses RevenueCat REST API to fetch subscription status
-- Firebase UID is used as the `app_user_id` for RevenueCat
-- Account page displays subscription status (Active, Expired, No Subscription)
-- "Manage Subscription" link redirects to RevenueCat management page
-
-## Customization
-
-### Styling
-- TailwindCSS is configured to remove rounded corners
-- Custom utility classes are defined in `globals.css`
-- Color scheme and spacing can be modified in `tailwind.config.ts`
-
-### Content
-- All page content is placeholder text and can be customized
-- Legal pages (Terms, Privacy) contain realistic placeholder text
-- Contact form is functional but doesn't actually submit (backend integration needed)
 
 ## Deployment
 
-### Vercel Deployment
-
-1. **Push to GitHub:**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
-
-2. **Deploy to Vercel:**
-   - Connect your GitHub repository to Vercel
-   - Add environment variables in Vercel dashboard:
-     - `NEXT_PUBLIC_FIREBASE_API_KEY`
-     - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
-     - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
-     - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
-     - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
-     - `NEXT_PUBLIC_FIREBASE_APP_ID`
-     - `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`
-     - `REVENUECAT_API_KEY`
-
-3. **Configure Firebase:**
-   - Add your Vercel domain to Firebase Authentication authorized domains
-   - Update Firebase project settings if needed
-
-### Security Notes
-
-- ✅ Firebase API keys are client-side safe (they're meant to be public)
-- ✅ Server-side API keys (like RevenueCat) are kept secure via environment variables
-- ✅ `.env.local` is in `.gitignore` to prevent accidental commits
-- ⚠️ Always use environment variables for sensitive data in production
-
-### Other Platforms
-
-The app can be deployed to any platform that supports Next.js:
-- Netlify
-- Railway
-- DigitalOcean App Platform
-- AWS Amplify
-
-## Phase 2 Expansion
-
-The project is structured to easily expand for Phase 2 features:
-- User-created text-based data (journal entries)
-- Firestore integration for data storage
-- Enhanced account page with data management
-- Additional user features
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
+Deploys on Vercel. Add every environment variable from [VERCEL_ENV_SETUP.md](VERCEL_ENV_SETUP.md), point the Stripe webhook at `https://<your-domain>/api/billing/webhook`, and deploy `firestore.rules`.
 
 ## Support
 
-For support, email contact@sleepcoding.me or create an issue in the repository.
+Email contact@sleepcoding.me.

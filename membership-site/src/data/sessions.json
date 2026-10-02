@@ -1,0 +1,44 @@
+[
+  {
+    "id": "optimism-monologue",
+    "title": "Optimism",
+    "theme": "Confidence",
+    "description": "This piece centers on morning optimism and staying in a good mood through the day, moving through themes like choosing your first thought, letting go of negativity, bouncing back from setbacks, and feeling excited that anything is possible.",
+    "free": true
+  },
+  {
+    "id": "deep-rest",
+    "title": "Deep Rest",
+    "theme": "Sleep",
+    "description": "Placeholder. Replace with the real session.",
+    "free": false
+  },
+  {
+    "id": "quiet-abundance",
+    "title": "Quiet Abundance",
+    "theme": "Gratitude",
+    "description": "Placeholder. Replace with the real session.",
+    "free": false
+  },
+  {
+    "id": "loosening-the-grip",
+    "title": "Loosening the Grip",
+    "theme": "Anxiety",
+    "description": "Placeholder. Replace with the real session.",
+    "free": false
+  },
+  {
+    "id": "steady-ground",
+    "title": "Steady Ground",
+    "theme": "Confidence",
+    "description": "Placeholder. Replace with the real session.",
+    "free": false
+  },
+  {
+    "id": "clear-signal",
+    "title": "Clear Signal",
+    "theme": "Focus",
+    "description": "Placeholder. Replace with the real session.",
+    "free": false
+  }
+]

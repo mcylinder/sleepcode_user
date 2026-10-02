@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
     });
 
-    // Send email to SleepCoding team
+    // Send email to SleepCode team
     await sendContactFormEmail({
       name,
       email,
