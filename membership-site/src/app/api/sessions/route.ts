@@ -9,6 +9,7 @@ interface SessionData {
   ins_id: string;
   position: number;
   published?: number;
+  free?: number | boolean;
 }
 
 export async function GET() {
@@ -41,7 +42,8 @@ export async function GET() {
     // Filter to only published sessions and sort by position
     const publishedSessions = data
       .filter((s) => s.published === 1)
-      .sort((a, b) => (a.position || 0) - (b.position || 0));
+      .sort((a, b) => (a.position || 0) - (b.position || 0))
+      .map((s) => ({ ...s, free: s.free === 1 || s.free === true }));
 
     return NextResponse.json(publishedSessions);
   } catch (error) {

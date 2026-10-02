@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMembership } from '@/hooks/useMembership';
 
 interface Session {
   id: number;
@@ -11,6 +12,7 @@ interface Session {
   description: string;
   ins_id: string;
   position: number;
+  free?: boolean;
 }
 
 interface Instructor {
@@ -71,7 +73,7 @@ function loadSelections(): SelectionState {
 
 
 const DESKTOP_ACK_KEY = 'sleepcoding_desktop_acknowledged';
-const SESSIONS_CACHE_KEY = 'sleepcoding_sessions_cache';
+const SESSIONS_CACHE_KEY = 'sleepcoding_sessions_cache_v2';
 const INSTRUCTORS_CACHE_KEY = 'sleepcoding_instructors_cache';
 const SOUNDSCAPES_CACHE_KEY = 'sleepcoding_soundscapes_cache';
 
@@ -162,6 +164,7 @@ function saveSoundscapesCache(soundscapes: Soundscape[]): void {
 
 export default function ApplicationPage() {
   const { currentUser } = useAuth();
+  const { isMember, loading: membershipLoading } = useMembership();
   const router = useRouter();
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const [desktopAcknowledged, setDesktopAcknowledged] = useState(false);
@@ -289,7 +292,8 @@ export default function ApplicationPage() {
     }
   }, [currentUser, isMobile, desktopAcknowledged]);
 
-  const allSelected = selections.session && selections.instructor && selections.soundscape;
+  const sessionLocked = !!selections.session && !selections.session.free && !isMember && !membershipLoading;
+  const allSelected = selections.session && selections.instructor && selections.soundscape && !sessionLocked;
 
   if (!currentUser) {
     return (
@@ -355,9 +359,12 @@ export default function ApplicationPage() {
               <p className="text-sm text-gray-400">
                 {selections.session ? selections.session.name : 'Select a session'}
               </p>
+              {sessionLocked && (
+                <p className="text-xs text-[#b6e3f6] mt-1">Members only. Choose a free session or become a member.</p>
+              )}
             </div>
             <div className="flex items-center gap-2">
-              {selections.session && (
+              {selections.session && !sessionLocked && (
                 <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>

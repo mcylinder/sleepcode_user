@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMembership } from '@/hooks/useMembership';
 import Link from 'next/link';
 import { Bevan } from 'next/font/google';
 
@@ -12,6 +13,7 @@ interface Session {
   description: string;
   ins_id: string;
   position: number;
+  free?: boolean;
 }
 
 interface Instructor {
@@ -96,6 +98,33 @@ function isTimestampError(value: unknown): value is TimestampError {
 }
 
 export default function PlayerPage() {
+  const { currentUser } = useAuth();
+  const { isMember, loading: membershipLoading } = useMembership();
+  const router = useRouter();
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    if (!currentUser || membershipLoading) return;
+    const session = loadSelections().session;
+    if (session && !session.free && !isMember) {
+      router.replace('/application/session?locked=1');
+      return;
+    }
+    setAllowed(true);
+  }, [currentUser, isMember, membershipLoading, router]);
+
+  if (currentUser && !allowed) {
+    return (
+      <main className="bg-[#130a1a] min-h-screen flex items-center justify-center text-white">
+        <p>Loading...</p>
+      </main>
+    );
+  }
+
+  return <Player />;
+}
+
+function Player() {
   const { currentUser } = useAuth();
   const router = useRouter();
   const [selections, setSelections] = useState<SelectionState>({ session: null, instructor: null, soundscape: null });
