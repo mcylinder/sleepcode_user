@@ -10,7 +10,7 @@ const MESSAGES: Record<string, string> = {
   'auth/popup-blocked': 'Your browser blocked the sign-in window. Allow pop-ups for this site and try again.',
   'auth/user-disabled': 'This account has been disabled. Please contact support.',
   'auth/requires-recent-login': 'For your security, please sign in again to continue.',
-  'auth/credential-already-in-use': 'That sign-in is already used by a different SleepCoding account.',
+  'auth/credential-already-in-use': 'That sign-in is already used by a different SleepCode account.',
   'auth/provider-already-linked': 'That sign-in method is already connected to your account.',
   'auth/no-such-provider': 'That sign-in method isn\u2019t connected to your account.',
   'auth/email-change-needs-verification': 'Check your inbox to confirm the new email address.',

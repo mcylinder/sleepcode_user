@@ -1,36 +1,43 @@
-export function Section({
-  title,
-  description,
-  children,
-  tone = 'default',
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-  tone?: 'default' | 'danger';
-}) {
+import { ChevronRight } from '@/components/ui/icons';
+
+export function AccountSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section
-      className={`bg-white border p-6 shadow-sm rounded-lg ${tone === 'danger' ? 'border-red-200' : 'border-gray-200'}`}
-    >
-      <h2 className={`text-lg font-medium ${tone === 'danger' ? 'text-red-800' : 'text-gray-900'}`}>{title}</h2>
-      {description && <p className="mt-1 text-sm text-gray-600">{description}</p>}
-      <div className="mt-4">{children}</div>
+    <section className="mt-[30px] wide:mt-[34px]">
+      <div className="sc-eyebrow mb-1">{title}</div>
+      {children}
     </section>
   );
 }
 
-export type Status = { type: 'error' | 'success'; text: string } | null;
-
-export function StatusMessage({ status }: { status: Status }) {
-  if (!status) return null;
+// A settings row that opens in place, keeping the hairline-row layout instead of modal cards.
+export function ExpandableRow({
+  label,
+  value,
+  open,
+  onToggle,
+  children,
+}: {
+  label: string;
+  value?: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <div
-      className={`mt-4 px-4 py-3 text-sm border ${
-        status.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-800'
-      }`}
-    >
-      {status.text}
+    <div className="border-b border-line">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between py-4 text-left wide:py-[15px]"
+      >
+        <span className="text-[15px] font-medium wide:text-[14px]">{label}</span>
+        <span className="flex items-center gap-[6px]">
+          {value && <span className="text-[13px] text-fg-muted">{value}</span>}
+          <ChevronRight className={`transition-transform duration-150 ${open ? 'rotate-90' : ''}`} />
+        </span>
+      </button>
+      {open && <div className="flex flex-col gap-4 pb-6">{children}</div>}
     </div>
   );
 }

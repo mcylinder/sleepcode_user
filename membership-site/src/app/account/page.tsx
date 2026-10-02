@@ -4,17 +4,25 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReauth } from '@/components/account/useReauth';
-import MembershipCard from '@/components/account/MembershipCard';
-import ProfileCard from '@/components/account/ProfileCard';
-import SignInMethodsCard from '@/components/account/SignInMethodsCard';
-import PasswordCard from '@/components/account/PasswordCard';
-import DeleteAccountCard from '@/components/account/DeleteAccountCard';
+import Link from 'next/link';
+import AppShell from '@/components/ui/AppShell';
+import { AccountSection, ExpandableRow } from '@/components/account/Section';
+import IdentityBlock from '@/components/account/IdentityBlock';
+import MembershipSection from '@/components/account/MembershipSection';
+import PreferencesSection from '@/components/account/PreferencesSection';
+import EmailPanel from '@/components/account/EmailPanel';
+import PasswordPanel from '@/components/account/PasswordPanel';
+import SignInMethodsPanel from '@/components/account/SignInMethodsPanel';
+import DeleteAccountPanel from '@/components/account/DeleteAccountPanel';
+
+type Row = 'email' | 'password' | 'methods' | 'delete';
 
 export default function AccountPage() {
   const { currentUser, loading, logout } = useAuth();
   const router = useRouter();
   const { reauthenticate, withRecentLogin, dialog } = useReauth();
   const [justCheckedOut, setJustCheckedOut] = useState(false);
+  const [openRow, setOpenRow] = useState<Row | null>(null);
 
   useEffect(() => {
     if (!loading && !currentUser) {
@@ -30,55 +38,68 @@ export default function AccountPage() {
     }
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
+  if (loading || !currentUser) {
+    return null;
   }
 
-  if (!currentUser) {
-    return null; // Will redirect to login
-  }
+  const toggle = (row: Row) => setOpenRow((current) => (current === row ? null : row));
+  const methodCount = currentUser.providerData.length;
 
-  const initial = (currentUser.displayName || currentUser.email || 'U').charAt(0).toUpperCase();
+  async function handleLogout() {
+    await logout().catch(() => undefined);
+    window.location.replace('/');
+  }
 
   return (
-    <div className="min-h-screen bg-[#fcf0e8]">
-      <div className="max-w-3xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            {currentUser.photoURL ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="h-12 w-12 rounded-full" src={currentUser.photoURL} alt="" referrerPolicy="no-referrer" />
-            ) : (
-              <div className="h-12 w-12 bg-gradient-to-tl from-[#340c35] to-[#4e88dd] flex items-center justify-center text-white font-medium shadow-lg rounded-full border-2 border-white">
-                {initial}
-              </div>
-            )}
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {currentUser.displayName ? `Welcome, ${currentUser.displayName}` : 'Your account'}
-              </h1>
-              <p className="text-gray-600 text-sm">{currentUser.email}</p>
-            </div>
-          </div>
-          <button onClick={() => logout()} className="text-sm text-gray-700 hover:text-gray-900 whitespace-nowrap">
-            Sign out
-          </button>
+    <AppShell
+      active="account"
+      topbar={
+        <div className="flex justify-center">
+          <div className="sc-eyebrow--muted">SleepCode</div>
         </div>
+      }
+    >
+      <div className="wide:max-w-[560px]">
+        <IdentityBlock />
+        <MembershipSection justCheckedOut={justCheckedOut} />
+        <PreferencesSection />
 
-        <div className="space-y-6">
-          <MembershipCard justCheckedOut={justCheckedOut} />
-          <ProfileCard withRecentLogin={withRecentLogin} />
-          <SignInMethodsCard withRecentLogin={withRecentLogin} />
-          <PasswordCard withRecentLogin={withRecentLogin} />
-          <DeleteAccountCard reauthenticate={reauthenticate} />
+        <AccountSection title="Account">
+          <ExpandableRow label="Change Email" open={openRow === 'email'} onToggle={() => toggle('email')}>
+            <EmailPanel withRecentLogin={withRecentLogin} />
+          </ExpandableRow>
+          <ExpandableRow label="Password" open={openRow === 'password'} onToggle={() => toggle('password')}>
+            <PasswordPanel withRecentLogin={withRecentLogin} />
+          </ExpandableRow>
+          <ExpandableRow
+            label="Sign-in Methods"
+            value={`${methodCount} connected`}
+            open={openRow === 'methods'}
+            onToggle={() => toggle('methods')}
+          >
+            <SignInMethodsPanel withRecentLogin={withRecentLogin} />
+          </ExpandableRow>
+          <ExpandableRow label="Delete Account" open={openRow === 'delete'} onToggle={() => toggle('delete')}>
+            <DeleteAccountPanel reauthenticate={reauthenticate} />
+          </ExpandableRow>
+          <button
+            onClick={handleLogout}
+            className="w-full py-4 text-left text-[15px] font-medium text-fg-muted hover:text-fg wide:py-[15px] wide:text-[14px]"
+          >
+            Log Out
+          </button>
+        </AccountSection>
+
+        <div className="mt-[34px] flex items-center justify-between pb-5">
+          <span className="sc-eyebrow--muted text-[10px]">SleepCode</span>
+          <span className="text-[11px] text-fg-faint">
+            <Link href="/privacy" className="hover:text-fg-muted">Privacy</Link> &middot;{' '}
+            <Link href="/terms" className="hover:text-fg-muted">Terms</Link>
+          </span>
         </div>
       </div>
 
       {dialog}
-    </div>
+    </AppShell>
   );
 }

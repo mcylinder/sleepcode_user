@@ -1,2 +1,5 @@
 .DS_Store
 /membership-site/setup-env.sh
+/membership-site/pbcopy
+*-firebase-adminsdk-*.json
+/.claude/worktrees/

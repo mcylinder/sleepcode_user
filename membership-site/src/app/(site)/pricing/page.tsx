@@ -6,34 +6,52 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMembership } from '@/hooks/useMembership';
 import { authedFetch } from '@/lib/authedFetch';
 import { PRICES, type BillingInterval } from '@/lib/membership';
+import StatusText from '@/components/ui/StatusText';
 
 const FREE_FEATURES = [
-  'Free sessions to try SleepCoding',
-  'Voices, music, and environment presets',
-  'Sleep timer and voice/soundscape mixing',
+  'A handful of sessions, free permanently',
+  'Voice and pulse blend, repeat control',
+  'Session timer and Night Shade',
   'Works in your phone\u2019s browser',
 ];
 
 const MEMBER_FEATURES = [
-  'Every session in the library',
+  'Every session in the catalogue',
   'New sessions as they\u2019re added',
-  'Voices, music, and environment presets',
-  'Sleep timer and voice/soundscape mixing',
-  'Cancel anytime',
+  'No ads, no gimmicks',
+  'Cancel any time',
+];
+
+const FAQS = [
+  {
+    question: 'Can I cancel any time?',
+    answer:
+      'Yes. Go to your account and choose Manage billing. You keep every session until the end of the period you\u2019ve already paid for, and you won\u2019t be charged again.',
+  },
+  {
+    question: 'Is there a free trial?',
+    answer:
+      'There\u2019s no trial, and you don\u2019t need one. A free account includes the free sessions, so you can hear how SleepCode works before you join.',
+  },
+  {
+    question: 'Can I switch between monthly and yearly?',
+    answer: 'Yes. Choose Manage billing in your account. Stripe adjusts the price for the time left on your current plan.',
+  },
+  {
+    question: 'How do I pay?',
+    answer: 'All major credit and debit cards. Payments are processed by Stripe; we never see or store your card details.',
+  },
 ];
 
 const YEARLY_SAVINGS_PERCENT = Math.round((1 - 49 / (7 * 12)) * 100);
 
-function CheckItem({ children }: { children: React.ReactNode }) {
+function FeatureList({ items }: { items: string[] }) {
   return (
-    <li className="flex items-start">
-      <div className="flex-shrink-0">
-        <svg className="h-6 w-6 text-cyan-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
-      <p className="ml-3 text-sm text-gray-700">{children}</p>
-    </li>
+    <ul className="mt-5 border-t border-line">
+      {items.map((item) => (
+        <li key={item} className="sc-row text-[14px] text-fg-muted">{item}</li>
+      ))}
+    </ul>
   );
 }
 
@@ -75,146 +93,83 @@ export default function PricingPage() {
   const signupThenCheckout = `/login?mode=signup&next=${encodeURIComponent(`/pricing?checkout=${billingInterval}`)}`;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">Pick what supports you</h1>
-          <p className="mt-4 text-xl text-gray-600">Start free. Become a member to unlock every session.</p>
-        </div>
-
-        <div className="mt-10 flex justify-center">
-          <div className="inline-flex border border-[#9098a1] bg-white p-1 rounded-full">
-            {(['month', 'year'] as BillingInterval[]).map((option) => (
-              <button
-                key={option}
-                onClick={() => setBillingInterval(option)}
-                className={`px-5 py-2 text-sm font-medium rounded-full transition-colors ${
-                  billingInterval === option ? 'bg-[#4e88dd] text-white' : 'text-gray-700 hover:text-gray-900'
-                }`}
-              >
-                {option === 'month' ? 'Monthly' : `Yearly (save ${YEARLY_SAVINGS_PERCENT}%)`}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {error && (
-          <div className="mt-6 max-w-4xl mx-auto bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">{error}</div>
-        )}
-
-        <div className="mt-10 max-w-4xl mx-auto grid gap-8 lg:grid-cols-2 lg:gap-x-8">
-          {/* Free */}
-          <div className="bg-[#dfeaf0] border border-[#9098a1] shadow-sm overflow-hidden rounded-lg">
-            <div className="px-6 py-8 flex flex-col h-full">
-              <h3 className="text-2xl font-semibold text-gray-900">Free</h3>
-              <p className="mt-4 text-gray-600">Try SleepCoding at no cost</p>
-              <p className="mt-8">
-                <span className="text-4xl font-extrabold text-gray-900">$0</span>
-              </p>
-              <p className="text-sm text-gray-500 mt-2">Free account required</p>
-              <ul className="mt-8 space-y-4 flex-grow">
-                {FREE_FEATURES.map((feature) => (
-                  <CheckItem key={feature}>{feature}</CheckItem>
-                ))}
-              </ul>
-              <div className="mt-8">
-                {currentUser ? (
-                  <div className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-500">
-                    {isMember ? 'Included in your membership' : 'Your current plan'}
-                  </div>
-                ) : (
-                  <Link
-                    href="/login?mode=signup"
-                    className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Create a free account
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Membership */}
-          <div className="bg-[#dfeaf0] border-2 border-[#4e88dd] shadow-sm relative overflow-hidden rounded-lg">
-            <div className="px-6 py-8 flex flex-col h-full">
-              <h3 className="text-2xl font-semibold text-gray-900">Membership</h3>
-              <p className="mt-4 text-gray-600">Unlimited access to every session</p>
-              <p className="mt-8">
-                <span className="text-4xl font-extrabold text-gray-900">{price.amount}</span>
-                <span className="text-base font-medium text-gray-500">/{billingInterval === 'year' ? 'year' : 'month'}</span>
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                {billingInterval === 'year' ? 'About $4.08/month, billed annually' : 'Billed monthly'}
-              </p>
-              <ul className="mt-8 space-y-4 flex-grow">
-                {MEMBER_FEATURES.map((feature) => (
-                  <CheckItem key={feature}>{feature}</CheckItem>
-                ))}
-              </ul>
-              <div className="mt-8">
-                {!currentUser ? (
-                  <Link
-                    href={signupThenCheckout}
-                    className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium text-white bg-[#4e88dd] hover:bg-[#340c35]"
-                  >
-                    Become a member
-                  </Link>
-                ) : isMember ? (
-                  <Link
-                    href="/account"
-                    className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium text-white bg-[#4e88dd] hover:bg-[#340c35]"
-                  >
-                    You&apos;re a member: manage in your account
-                  </Link>
-                ) : (
-                  <button
-                    onClick={() => startCheckout(billingInterval)}
-                    disabled={busy || membershipLoading}
-                    className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium text-white bg-[#4e88dd] hover:bg-[#340c35] disabled:opacity-50"
-                  >
-                    {busy ? 'Opening checkout...' : `Become a member, ${price.amount}/${billingInterval === 'year' ? 'year' : 'month'}`}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">Membership Questions</h2>
-          <div className="max-w-3xl mx-auto space-y-6">
-            <div className="bg-[#dfeaf0] p-6 shadow-sm rounded-lg">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Can I cancel my membership anytime?</h3>
-              <p className="text-gray-600">
-                Yes. Go to your account and choose Manage billing. You keep access to every session until the end of the
-                period you&apos;ve already paid for, and you won&apos;t be charged again.
-              </p>
-            </div>
-            <div className="bg-[#dfeaf0] p-6 shadow-sm rounded-lg">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Is there a free trial?</h3>
-              <p className="text-gray-600">
-                We don&apos;t offer a trial, but you don&apos;t need one. A free account lets you listen to our free
-                sessions, so you can experience how SleepCoding works before you join.
-              </p>
-            </div>
-            <div className="bg-[#dfeaf0] p-6 shadow-sm rounded-lg">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Can I switch between monthly and yearly?</h3>
-              <p className="text-gray-600">
-                Yes. Choose Manage billing in your account to switch plans. Stripe adjusts the price for the time
-                remaining on your current plan.
-              </p>
-            </div>
-            <div className="bg-[#dfeaf0] p-6 shadow-sm rounded-lg">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">How do I pay?</h3>
-              <p className="text-gray-600">
-                We accept all major credit and debit cards. Payments are processed securely by Stripe, and we never see
-                or store your card details.
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="mx-auto w-full max-w-[1060px] px-[30px] pt-10 wide:px-[60px] wide:pt-[70px]">
+      <div className="max-w-[480px]">
+        <div className="sc-eyebrow">SleepCode+</div>
+        <h1 className="mt-[10px] text-[27px] font-semibold leading-[1.25] tracking-[-0.01em] wide:text-[40px] wide:leading-[1.2]">
+          One membership.<br />Every session.
+        </h1>
+        <p className="mt-[14px] text-[14px] leading-[1.55] text-fg-muted wide:text-[15px] wide:leading-[1.6]">
+          A handful of sessions are free with an account. SleepCode+ unlocks the full catalogue as it grows.
+        </p>
       </div>
+
+      <div className="mt-9 flex gap-[22px] text-[13px]" role="radiogroup" aria-label="Billing period">
+        {(['month', 'year'] as BillingInterval[]).map((option) => (
+          <button
+            key={option}
+            role="radio"
+            aria-checked={billingInterval === option}
+            onClick={() => setBillingInterval(option)}
+            className={billingInterval === option ? 'font-semibold text-fg' : 'text-fg-faint hover:text-fg-muted'}
+          >
+            {option === 'month' ? 'Monthly' : `Yearly \u00b7 save ${YEARLY_SAVINGS_PERCENT}%`}
+          </button>
+        ))}
+      </div>
+
+      {error && <StatusText status={{ type: 'error', text: error }} className="mt-6" />}
+
+      <div className="mt-8 grid gap-12 wide:grid-cols-2 wide:gap-[60px]">
+        <section>
+          <div className="sc-eyebrow--muted">Free</div>
+          <div className="mt-3 text-[34px] font-semibold leading-none">$0</div>
+          <p className="mt-2 text-[13px] text-fg-faint">Free account required</p>
+          <FeatureList items={FREE_FEATURES} />
+          <div className="mt-6 text-[13px]">
+            {currentUser ? (
+              <span className="text-fg-faint">{isMember ? 'Included in your membership' : 'Your current plan'}</span>
+            ) : (
+              <Link href="/login?mode=signup" className="sc-textbtn">Create a free account</Link>
+            )}
+          </div>
+        </section>
+
+        <section>
+          <div className="sc-eyebrow--muted">SleepCode+</div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-[34px] font-semibold leading-none">{price.amount}</span>
+            <span className="text-[14px] text-fg-muted">{price.label}</span>
+          </div>
+          <p className="mt-2 text-[13px] text-fg-faint">
+            {billingInterval === 'year' ? 'About $4.08 a month, billed yearly' : 'Billed monthly'}
+          </p>
+          <FeatureList items={MEMBER_FEATURES} />
+          <div className="mt-6">
+            {!currentUser ? (
+              <Link href={signupThenCheckout} className="sc-cta">Join SleepCode+</Link>
+            ) : isMember ? (
+              <Link href="/account" className="sc-textbtn">You&apos;re a member. Manage it in your account</Link>
+            ) : (
+              <button onClick={() => startCheckout(billingInterval)} disabled={busy || membershipLoading} className="sc-cta">
+                {busy ? 'Opening checkout\u2026' : `Join SleepCode+ \u00b7 ${price.amount}`}
+              </button>
+            )}
+          </div>
+        </section>
+      </div>
+
+      <section className="mt-16 wide:mt-[84px] wide:max-w-[560px]">
+        <div className="sc-eyebrow mb-1">Membership Questions</div>
+        <dl>
+          {FAQS.map((faq, i) => (
+            <div key={faq.question} className={`sc-row ${i === FAQS.length - 1 ? 'sc-row--last' : ''}`}>
+              <dt className="text-[15px] font-semibold">{faq.question}</dt>
+              <dd className="mt-[6px] text-[14px] leading-[1.6] text-fg-muted">{faq.answer}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
     </div>
   );
 }

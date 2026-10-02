@@ -57,7 +57,7 @@ export async function sendContactFormEmail(formData: ContactFormData): Promise<v
                 </div>
                 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">
-                  <p>This message was sent from the SleepCoding contact form.</p>
+                  <p>This message was sent from the SleepCode contact form.</p>
                   <p>Timestamp: ${new Date().toLocaleString()}</p>
                 </div>
               </div>
@@ -78,7 +78,7 @@ Message:
 ${message}
 
 ---
-This message was sent from the SleepCoding contact form.
+This message was sent from the SleepCode contact form.
 Timestamp: ${new Date().toLocaleString()}
           `,
           Charset: 'UTF-8',
@@ -113,7 +113,7 @@ export async function sendConfirmationEmail(_userEmail: string, _userName: strin
     },
     Message: {
       Subject: {
-        Data: 'Thank you for contacting SleepCoding',
+        Data: 'Thank you for contacting SleepCode',
         Charset: 'UTF-8',
       },
       Body: {
@@ -139,7 +139,7 @@ export async function sendConfirmationEmail(_userEmail: string, _userName: strin
                   <li>Email: contact@sleepcoding.me</li>
                 </ul>
                 
-                <p>Best regards,<br>The SleepCoding Team</p>
+                <p>Best regards,<br>The SleepCode Team</p>
                 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">
                   <p>Sleep Coder LLC<br>

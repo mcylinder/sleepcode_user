@@ -10,7 +10,17 @@ function adminApp(): App {
   if (!raw) {
     throw new Error('Missing required environment variable: FIREBASE_SERVICE_ACCOUNT');
   }
-  return initializeApp({ credential: cert(JSON.parse(raw)) });
+  return initializeApp({ credential: cert(parseServiceAccount(raw)) });
+}
+
+// Accepts the key file's JSON as one line, or pasted with real line breaks inside
+// private_key (common when copying into .env files or the Vercel dashboard).
+function parseServiceAccount(raw: string): object {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return JSON.parse(raw.replace(/\r?\n/g, '\\n'));
+  }
 }
 
 export function adminAuth() {

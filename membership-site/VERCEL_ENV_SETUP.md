@@ -19,7 +19,7 @@ NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-6J693D0VCT
 ```
 FIREBASE_SERVICE_ACCOUNT={"type":"service_account","project_id":"sleepcodingbase",...}
 ```
-Firebase Console, Project settings, Service accounts, **Generate new private key**. Paste the whole JSON file on one line.
+Firebase Console, Project settings, Service accounts, **Generate new private key**. Paste the whole JSON file, ideally on one line. Line breaks inside the private key are tolerated.
 
 ### Stripe (server, secret)
 ```
@@ -40,18 +40,19 @@ SES_FROM_EMAIL=...
 SES_TO_EMAIL=...
 ```
 
-### Player audio
+### Session audio (server, secret)
 ```
-CLOUDFRONT_DOMAIN=...
-NEXT_PUBLIC_CLOUDFRONT_DOMAIN=...
+CLOUDFRONT_DOMAIN=d2c4c2fkwcquar.cloudfront.net
+CLOUDFRONT_KEY_PAIR_ID=K...
+CLOUDFRONT_PRIVATE_KEY_BASE64=...
 ```
-Optional. Without them the player loads audio directly from S3.
+Required. `/api/media/session` uses these to sign one CloudFront URL policy per session folder. The key pair ID is the **public key** ID (CloudFront, Key management, Public keys), not the key group ID. For the private key, run `base64 -i cf_private_key.pem` and paste the output.
 
-No longer used, safe to delete: `REVENUECAT_API_KEY`, `NEXT_PUBLIC_HAS_SUBSCRIPTION`, `CHAT_GPT_API_CODE`, `CHAT_GPT_API_MODEL`, `CLOUDFRONT_KEY_PAIR_ID`, `CLOUDFRONT_PRIVATE_KEY`.
+No longer used, safe to delete: `REVENUECAT_API_KEY`, `NEXT_PUBLIC_HAS_SUBSCRIPTION`, `CHAT_GPT_API_CODE`, `CHAT_GPT_API_MODEL`, `NEXT_PUBLIC_CLOUDFRONT_DOMAIN`, `CLOUDFRONT_PRIVATE_KEY`.
 
 ## Stripe dashboard
 
-1. **Product:** Product catalog, Add product, name it "SleepCoding Membership". Add two recurring prices: **$7 per month** and **$49 per year**. Copy each price ID (`price_...`) into `STRIPE_PRICE_MONTHLY` and `STRIPE_PRICE_YEARLY`.
+1. **Product:** Product catalog, Add product, name it "SleepCode+". Add two recurring prices: **$7 per month** and **$49 per year**. Copy each price ID (`price_...`) into `STRIPE_PRICE_MONTHLY` and `STRIPE_PRICE_YEARLY`.
 2. **Customer portal:** Settings, Billing, Customer portal. Turn on:
    - Customers can update payment methods
    - Customers can view invoice history
@@ -92,5 +93,27 @@ firebase deploy --only firestore:rules
 ### Facebook Login
 In the Meta for Developers app, add the OAuth redirect URI shown in the Firebase Facebook provider settings, and copy the Meta app ID and secret into Firebase.
 
-## Catalog: marking free sessions
-In the app.sleepcoding.me admin, give each instruction a `free` field (`1` for free, `0` or empty for members-only) and set it on the one or two free sessions. `/api/sessions` passes it through. Sessions without the field are treated as members-only.
+## Session catalog and media
+
+### Catalog
+Sessions are listed in `src/data/sessions.json`, in display order. Each entry has:
+- `id`: the session's folder name in the media bucket (`session/{id}/`).
+- `title`, `theme`, `description`: shown on Home. `theme` also drives the theme filter.
+- `free`: `true` for any signed-in user, `false` for SleepCode+ members only. The server checks this before signing.
+
+Changing the catalog means editing the file and deploying.
+
+### Media bucket (S3 `slpcd-media` + CloudFront)
+Each session folder holds `manifest.json`, `pulse.m4a`, and the statement clips the manifest lists (`c01_v1.m4a`, `c01_v2.m4a`, ...). The bucket is private. CloudFront reads it through Origin Access Control, and the default behavior requires signed URLs (trusted key group).
+
+CORS comes from a CloudFront Function (`slpcd-cors`, runtime `cloudfront-js-2.0`) attached to the default behavior's **Viewer response** event:
+
+```js
+function handler(event) {
+  var response = event.response;
+  response.headers['access-control-allow-origin'] = { value: '*' };
+  return response;
+}
+```
+
+The managed response headers policies aren't enough on their own: Chrome sends a `Priority` header on `fetch`, and CloudFront then omits `Access-Control-Allow-Origin`, so the browser blocks the audio. Custom response headers policies would fix that but aren't available on the flat-rate Free plan.

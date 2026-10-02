@@ -8,23 +8,26 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      borderRadius: {
-        // Keep default border radius but make them minimal
-        'sm': '2px',
-        'md': '3px',
-        'lg': '4px',
-        'xl': '6px',
-        '2xl': '8px',
-        '3xl': '12px',
-        'full': '9999px',
+      screens: {
+        // The design's single breakpoint: tab bar below, side-nav at and above.
+        wide: '900px',
       },
       colors: {
-        background: 'var(--background)',
-        foreground: 'var(--foreground)',
+        bg: 'var(--bg)',
+        'bg-soft': 'var(--bg-soft)',
+        fg: 'var(--fg)',
+        'fg-muted': 'var(--fg-muted)',
+        'fg-faint': 'var(--fg-faint)',
+        line: 'var(--line)',
+        signal: 'var(--signal)',
+      },
+      fontFamily: {
+        sans: ['var(--font-sans)'],
+        mono: ['var(--font-mono)'],
       },
     },
   },
   plugins: [],
 }
 
-export default config 
+export default config
