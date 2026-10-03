@@ -1,48 +1,31 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Logo from './Logo';
 
-type Tab = 'home' | 'application' | 'library' | 'account';
+type Tab = 'library' | 'account';
 
-// Home is the public landing page. Library is the session list on Application until it becomes
-// its own screen.
+// The logo leads back to the public site.
 const TABS: { id: Tab; label: string; href: string }[] = [
-  { id: 'home', label: 'Home', href: '/' },
-  { id: 'application', label: 'Application', href: '/application' },
-  { id: 'library', label: 'Library', href: '/application#sessions' },
+  { id: 'library', label: 'Library', href: '/application' },
   { id: 'account', label: 'Account', href: '/account' },
 ];
 
-// Desktop: a 200px rail on the left. Mobile: a sticky tab bar at the bottom.
+// Desktop: a 200px rail on the left. Mobile: the logo on top and a sticky tab bar at the bottom.
 export default function AppShell({
   active,
   maxWidth = 860,
   children,
 }: {
-  active: 'application' | 'account';
+  active: Tab;
   maxWidth?: number;
   children: React.ReactNode;
 }) {
-  const [current, setCurrent] = useState<Tab>(active);
-
-  useEffect(() => {
-    if (active !== 'application') return;
-    const sync = () => setCurrent(window.location.hash === '#sessions' ? 'library' : 'application');
-    sync();
-    window.addEventListener('hashchange', sync);
-    return () => window.removeEventListener('hashchange', sync);
-  }, [active]);
-
   const link = (tab: (typeof TABS)[number], className: string) => {
-    const isActive = tab.id === current;
+    const isActive = tab.id === active;
     return (
       <Link
         key={tab.id}
         href={tab.href}
         aria-current={isActive ? 'page' : undefined}
-        onClick={() => setCurrent(tab.id)}
         className={`${className} ${isActive ? 'font-semibold text-accent' : ''}`}
       >
         {tab.label}
@@ -60,6 +43,9 @@ export default function AppShell({
           </nav>
         </aside>
         <main className="flex min-w-0 flex-1 flex-col px-[clamp(22px,4vw,56px)] py-[clamp(26px,4vw,56px)]">
+          <div className="mb-[26px] wide:hidden">
+            <Logo href="/" compact />
+          </div>
           <div className="flex w-full flex-col" style={{ maxWidth }}>
             {children}
           </div>

@@ -1,27 +1,24 @@
 import Link from 'next/link';
-import { FEATURED_FREE_SESSION } from '@/lib/catalog';
-import PlayLink from '@/components/ui/PlayLink';
 import Rings from '@/components/ui/Rings';
+import HeroCta from '@/components/site/HeroCta';
 import PricingPlans from '@/components/site/PricingPlans';
 
 const STEPS = [
   {
     title: 'Choose one goal.',
-    body: 'A steadier mood, focus at work, confidence when it counts. Each session is written for one specific goal.',
+    body: 'A steadier mood, focus at work, confidence when it counts. Each session is created for one specific goal.',
   },
   {
     title: 'Hear it in the first person.',
-    body: 'Every line is spoken as \u201cI\u201d (\u201cI finish what I start\u201d), so it sounds like your own thinking, not an instruction.',
+    body: 'Each line is written in the first person (for example, \u201cI finish what I start\u201d), so it feels like your own internal dialogue rather than an instruction.',
   },
   {
     title: 'Listen, and repeat.',
-    body: 'A slow pulse sits under the voice. It is supraliminal: every word is clearly audible. Nothing is hidden, and repetition does the work.',
+    body: 'A slow 111 Hz tone pulses with each statement. It gives you a subtle, hypnotic focal point that helps you absorb the statements as you drift from conscious to asleep. Adjust the balance to match how active your mind is as you fall asleep.',
   },
 ];
 
 export default function LandingPage() {
-  const free = FEATURED_FREE_SESSION;
-
   return (
     <>
       <section className="sc-px grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] items-center gap-[clamp(32px,5vw,72px)] pb-[clamp(48px,8vw,110px)] pt-[clamp(28px,6vw,80px)]">
@@ -32,16 +29,7 @@ export default function LandingPage() {
             SleepCode sessions are supraliminal: one calm voice, speaking in the first person over a slow pulse, says
             clearly and often how you&rsquo;d like to think about a goal. You hear every word.
           </p>
-          <div className="flex flex-wrap items-center gap-[18px]">
-            {free ? (
-              <PlayLink session={free} className="sc-btn sc-btn--lg">
-                Play {free.title}, free
-              </PlayLink>
-            ) : (
-              <Link href="/login?mode=signup" className="sc-btn sc-btn--lg">Create a free account</Link>
-            )}
-            <span className="text-[14px] text-ink-muted">Our most-played session</span>
-          </div>
+          <HeroCta />
         </div>
         <div className="w-full max-w-[420px] justify-self-center">
           <Rings color="var(--accent)" restOpacity={0.55} />
@@ -62,6 +50,9 @@ export default function LandingPage() {
             </li>
           ))}
         </ol>
+        <Link href="/how-to-listen" className="sc-link self-start text-[16px]">
+          Read the full listening guide
+        </Link>
       </section>
 
       <section className="sc-section grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] items-start gap-[clamp(28px,5vw,72px)]">
@@ -71,18 +62,18 @@ export default function LandingPage() {
         </div>
         <div className="flex max-w-[620px] flex-col gap-5 text-[clamp(17px,1.6vw,20px)] leading-[1.6]">
           <p className="text-[clamp(24px,2.6vw,32px)] font-medium leading-[1.25] tracking-[-0.02em]">
-            For years I knew exactly what I wanted to change, and kept talking myself out of it.
+          I always knew. I just kept talking myself out of it.
           </p>
           <p className="text-ink-muted">
             I tried the books, the journals, the subliminal tracks. The subliminal ones asked me to trust messages I
             couldn&rsquo;t hear, and I never could.
           </p>
           <p className="text-ink-muted">
-            What helped was the opposite: hearing, plainly and often, the sentences I wanted to believe, in a calm voice,
-            as if they were already mine. SleepCode is that, made carefully and openly, for anyone working on something
-            that matters to them.
+          I tried many different approaches, and one worked best: hearing, plainly and often, the sentences I wanted
+            to believe, in a calm voice, as if they were already mine. SleepCode is that, made carefully and openly,
+            for anyone working on something that matters to them.
           </p>
-          <p className="text-[15px]">The founder</p>
+          <p className="text-[15px]">- Peter D.</p>
         </div>
       </section>
 
@@ -92,6 +83,9 @@ export default function LandingPage() {
           <h2 className="sc-h-section">Plain pricing.</h2>
         </div>
         <PricingPlans />
+        <Link href="/pricing" className="sc-link self-start text-[16px]">
+          See pricing details and questions
+        </Link>
       </section>
     </>
   );

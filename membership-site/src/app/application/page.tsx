@@ -72,7 +72,7 @@ export default function HomePage() {
   if (!currentUser) return null;
 
   return (
-    <AppShell active="application">
+    <AppShell active="library">
       <div className="flex flex-col gap-[34px]">
         <h1 className="sc-h-app">What are you working on?</h1>
 
@@ -98,7 +98,7 @@ export default function HomePage() {
           </div>
         )}
 
-        <div id="sessions" className="flex scroll-mt-6 flex-col gap-[34px]">
+        <div className="flex flex-col gap-[34px]">
           {THEMES.length > 1 && (
             <div className="sc-scroll-fade sc-no-scrollbar -mb-2 flex gap-2 overflow-x-auto pb-2" role="group" aria-label="Filter by goal">
               {[ALL, ...THEMES].map((item) => (

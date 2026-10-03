@@ -297,14 +297,26 @@ function Player({ session }: { session: Session }) {
     >
       <div className="flex items-center justify-between gap-3 px-[clamp(22px,4vw,48px)] pb-[18px] pt-[calc(18px+env(safe-area-inset-top,0px))] text-[15px] text-p-muted">
         <Link href="/application" className="flex min-h-[44px] items-center">&lsaquo; Back</Link>
-        <button
-          type="button"
-          onClick={() => setShadeOn(true)}
-          className="flex min-h-[44px] items-center gap-2 rounded-full border border-p-chip-border px-4 text-[14px] font-medium text-p-fg"
-        >
-          <NightShadeIcon />
-          Night shade
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="/how-to-listen"
+            target="_blank"
+            rel="noopener"
+            aria-label="How to listen (opens in a new tab)"
+            title="How to listen"
+            className="grid h-[44px] w-[44px] place-items-center rounded-full border border-p-chip-border font-mono text-[15px] text-p-fg"
+          >
+            ?
+          </a>
+          <button
+            type="button"
+            onClick={() => setShadeOn(true)}
+            className="flex min-h-[44px] items-center gap-2 rounded-full border border-p-chip-border px-4 text-[14px] font-medium text-p-fg"
+          >
+            <NightShadeIcon />
+            Night shade
+          </button>
+        </div>
       </div>
 
       <div className="mx-auto box-border flex w-full max-w-[520px] flex-1 flex-col items-center justify-center gap-[clamp(16px,2.2vw,26px)] px-[clamp(26px,4vw,48px)] pb-[calc(30px+env(safe-area-inset-bottom,0px))]">
