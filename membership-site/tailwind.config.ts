@@ -9,17 +9,27 @@ const config: Config = {
   theme: {
     extend: {
       screens: {
-        // The design's single breakpoint: tab bar below, side-nav at and above.
+        // Desktop app layout (side rail) at and above; bottom tab bar below.
         wide: '900px',
       },
       colors: {
         bg: 'var(--bg)',
-        'bg-soft': 'var(--bg-soft)',
-        fg: 'var(--fg)',
-        'fg-muted': 'var(--fg-muted)',
-        'fg-faint': 'var(--fg-faint)',
-        line: 'var(--line)',
-        signal: 'var(--signal)',
+        'bg-alt': 'var(--bg-alt)',
+        ink: 'var(--ink)',
+        'ink-body': 'var(--ink-body)',
+        'ink-muted': 'var(--ink-muted)',
+        accent: 'var(--accent)',
+        'on-accent': 'var(--on-accent)',
+        hairline: 'var(--hairline)',
+        'hairline-strong': 'var(--hairline-strong)',
+        'p-bg': 'var(--p-bg)',
+        'p-fg': 'var(--p-fg)',
+        'p-muted': 'var(--p-muted)',
+        'p-accent': 'var(--p-accent)',
+        'p-on-accent': 'var(--p-on-accent)',
+        'p-track': 'var(--p-track)',
+        'p-chip-border': 'var(--p-chip-border)',
+        'p-sheet': 'var(--p-sheet)',
       },
       fontFamily: {
         sans: ['var(--font-sans)'],

@@ -37,7 +37,7 @@ export default function DeleteAccountPanel({ reauthenticate }: { reauthenticate:
 
   return (
     <form onSubmit={deleteAccount} className="flex flex-col gap-4">
-      <p className="text-[13px] leading-relaxed text-fg-muted">
+      <p className="text-[15px] leading-[1.6] text-ink-muted">
         Permanently delete your SleepCode account and everything saved with it. This can&apos;t be undone.
         {isMember && ' Your membership is cancelled immediately and you won\u2019t be charged again.'}
       </p>

@@ -160,6 +160,21 @@ export class SessionEngine {
     this.fadeTimer = setTimeout(() => this.stop(), seconds * 1000);
   }
 
+  // Like fadeOutAndStop, but keeps the position so play() picks up where it left off.
+  // play() restores full volume.
+  fadeOutAndPause(seconds: number): void {
+    if (!this.ctx || !this.master || !this.playing) return;
+    const gain = this.master.gain;
+    const now = this.ctx.currentTime;
+    gain.cancelScheduledValues(now);
+    gain.setValueAtTime(gain.value, now);
+    gain.linearRampToValueAtTime(0, now + seconds);
+    this.fadeTimer = setTimeout(() => {
+      this.fadeTimer = null;
+      void this.pause();
+    }, seconds * 1000);
+  }
+
   // iOS can suspend the context while the page is hidden.
   resumeIfPlaying(): void {
     if (this.playing && this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {});

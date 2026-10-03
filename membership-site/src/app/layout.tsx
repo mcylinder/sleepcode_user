@@ -1,28 +1,30 @@
 import type { Metadata, Viewport } from 'next'
-import { Space_Grotesk, Space_Mono } from 'next/font/google'
+import { Hanken_Grotesk, Space_Mono } from 'next/font/google'
 import './globals.css'
 import ClientAuthProvider from '@/components/ClientAuthProvider'
 import CookieBanner from '@/components/CookieBanner'
+import { DissolveProvider } from '@/components/ui/Dissolve'
 
-const spaceGrotesk = Space_Grotesk({
+const hankenGrotesk = Hanken_Grotesk({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-space-grotesk',
+  weight: ['400', '500', '600'],
+  variable: '--font-hanken',
 })
 
 const spaceMono = Space_Mono({
   subsets: ['latin'],
-  weight: ['400', '700'],
+  weight: ['400'],
   variable: '--font-space-mono',
 })
 
 export const metadata: Metadata = {
-  title: 'SleepCode — Rewire How You Fall Asleep',
-  description: 'One voice, speaking in first person, layered under a slow pulse. A method for falling asleep.',
+  title: 'SleepCode — Supraliminal audio for specific goals',
+  description:
+    'One calm voice, speaking in the first person over a slow pulse, says clearly and often how you\u2019d like to think about a goal. You hear every word.',
 }
 
 export const viewport: Viewport = {
-  themeColor: '#16191c',
+  themeColor: '#ddd3c5',
 }
 
 export default function RootLayout({
@@ -31,11 +33,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${spaceMono.variable}`}>
-      <body className="sc-dotgrid">
+    <html lang="en" className={`${hankenGrotesk.variable} ${spaceMono.variable}`}>
+      <body>
         <ClientAuthProvider>
-          {children}
-          <CookieBanner />
+          <DissolveProvider>
+            {children}
+            <CookieBanner />
+          </DissolveProvider>
         </ClientAuthProvider>
       </body>
     </html>
