@@ -78,7 +78,7 @@ export const PRICING_FAQ: FaqGroup[] = [
       CANCEL,
       {
         q: 'Is there a free trial?',
-        a: `There\u2019s no trial, and you don\u2019t need one. ${FREE_TITLE} is free with an account, so you can hear how SleepCode works before you join.`,
+        a: `There\u2019s no trial, and you don\u2019t need one. ${FREE_TITLE} is free with an account signup.`,
       },
       {
         q: 'Can I switch between monthly and yearly?',

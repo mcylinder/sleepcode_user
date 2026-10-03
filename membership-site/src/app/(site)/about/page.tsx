@@ -18,7 +18,7 @@ export default function AboutPage() {
       eyebrow="About"
       title="An instrument, not an appliance."
       dek="SleepCode is supraliminal audio for specific goals, built to get out of the way rather than be admired."
-      byline="Sleep Coder LLC \u00b7 South Portland, Maine"
+     
     >
       <div className="sc-prose">
         <p>

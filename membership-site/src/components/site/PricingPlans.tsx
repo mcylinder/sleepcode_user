@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMembership } from '@/hooks/useMembership';
 import { useBilling } from '@/lib/useBilling';
-import { FEATURED_FREE_SESSION, MEMBER_ONLY_COUNT, moreSessionsLabel } from '@/lib/catalog';
+import { FEATURED_FREE_SESSION, MEMBER_ONLY_COUNT, SESSIONS, moreSessionsLabel } from '@/lib/catalog';
 import { PRICES, type BillingInterval } from '@/lib/membership';
 import BillingToggle from '@/components/ui/BillingToggle';
 import PlayLink from '@/components/ui/PlayLink';
@@ -42,8 +42,8 @@ export default function PricingPlans({ resumeCheckout = false }: { resumeCheckou
         <span className="text-[44px] font-medium leading-tight tracking-[-0.03em]">$0</span>
         <p className="text-[16px] leading-[1.6] text-ink-muted">
           {free
-            ? `${free.title}, our most-played session. Yours to keep, with no time limit.`
-            : 'A free session to keep, with no time limit.'}
+            ? `${free.title}, our most-played session.`
+            : 'A free session.'}
         </p>
         {free && (
           <PlayLink session={free} className="sc-link self-start">
@@ -65,6 +65,18 @@ export default function PricingPlans({ resumeCheckout = false }: { resumeCheckou
           {free ? `${free.title} plus ${moreSessionsLabel(MEMBER_ONLY_COUNT)}` : 'Every session'}, each written for a
           specific goal. {price.note}
         </p>
+        <ul aria-label="Sessions included with SleepCode+" className="border-b border-hairline">
+          {SESSIONS.map((session, i) => (
+            <li
+              key={session.id}
+              className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-t border-hairline py-[9px] text-[15px]"
+            >
+              <span className="font-mono text-[12px] text-ink-muted">{String(i + 1).padStart(2, '0')}</span>
+              <span className="font-medium">{session.title}</span>
+              <span className="text-[13px] text-ink-muted">{session.free ? 'Free' : session.theme}</span>
+            </li>
+          ))}
+        </ul>
         <div className="self-start">
           {!currentUser ? (
             <Link href={signupThenCheckout} className="sc-btn-outline">Start SleepCode+</Link>
@@ -77,7 +89,7 @@ export default function PricingPlans({ resumeCheckout = false }: { resumeCheckou
               disabled={busy || membershipLoading}
               className="sc-btn-outline"
             >
-              {busy ? 'Opening checkout\u2026' : 'Start SleepCode+'}
+              {busy ? 'Opening checkout\u2026' : 'Upgrade to SleepCode+'}
             </button>
           )}
         </div>

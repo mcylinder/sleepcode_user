@@ -32,6 +32,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState<Mode>('signin');
   const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
   const [next, setNext] = useState(DEFAULT_DESTINATION);
@@ -58,12 +59,14 @@ export default function LoginPage() {
   function switchMode(nextMode: Mode) {
     setMode(nextMode);
     setError('');
+    setFormError('');
     setNotice('');
   }
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setFormError('');
     setNotice('');
 
     if (mode === 'reset') {
@@ -72,7 +75,7 @@ export default function LoginPage() {
         await resetPassword(email);
         setNotice(`If an account exists for ${email}, a password reset link is on its way. Check your inbox.`);
       } catch (err) {
-        setError(authErrorMessage(err) ?? '');
+        setFormError(authErrorMessage(err) ?? '');
       } finally {
         setLoading(false);
       }
@@ -80,7 +83,7 @@ export default function LoginPage() {
     }
 
     if (password.length < 6) {
-      return setError('Password must be at least 6 characters');
+      return setFormError('Password must be at least 6 characters');
     }
 
     try {
@@ -91,7 +94,7 @@ export default function LoginPage() {
         await login(email, password);
       }
     } catch (err) {
-      setError(authErrorMessage(err) ?? '');
+      setFormError(authErrorMessage(err) ?? '');
     } finally {
       setLoading(false);
     }
@@ -100,6 +103,7 @@ export default function LoginPage() {
   async function handleProviderSignIn(id: SocialProviderId) {
     try {
       setError('');
+      setFormError('');
       setNotice('');
       setLoading(true);
       await signInWithProvider(id);
@@ -195,6 +199,8 @@ export default function LoginPage() {
               )}
             </div>
           )}
+
+          <StatusText status={formError ? { type: 'error', text: formError } : null} />
 
           <button type="submit" disabled={loading} className="sc-btn mt-2 min-h-[48px] w-full">
             {loading
