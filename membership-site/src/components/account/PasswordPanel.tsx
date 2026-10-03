@@ -65,12 +65,12 @@ export default function PasswordPanel({
     });
 
   if (!user.email) {
-    return <p className="text-[13px] text-fg-muted">Add an email address to your account before setting a password.</p>;
+    return <p className="text-[15px] text-ink-muted">Add an email address to your account before setting a password.</p>;
   }
 
   return (
     <form onSubmit={save} className="flex flex-col gap-4">
-      <p className="text-[13px] text-fg-muted">
+      <p className="text-[15px] text-ink-muted">
         {hasPassword
           ? 'Change the password you use to sign in with your email.'
           : `Set a password so you can also sign in with ${user.email}.`}

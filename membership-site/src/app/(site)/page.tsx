@@ -1,71 +1,97 @@
-import BreathingRings from '@/components/site/BreathingRings';
-import StartSessionCta from '@/components/site/StartSessionCta';
-import { LockIcon } from '@/components/ui/icons';
+import Link from 'next/link';
+import { FEATURED_FREE_SESSION } from '@/lib/catalog';
+import PlayLink from '@/components/ui/PlayLink';
+import Rings from '@/components/ui/Rings';
+import PricingPlans from '@/components/site/PricingPlans';
 
 const STEPS = [
   {
-    title: 'One instructor voice',
-    desc: 'First-person statements, not affirmations spoken at you. Your mind rehearses them as its own.',
+    title: 'Choose one goal.',
+    body: 'A steadier mood, focus at work, confidence when it counts. Each session is written for one specific goal.',
   },
   {
-    title: 'A pulse underneath',
-    desc: 'A slow tone at sleep tempo occupies just enough attention to quiet the counterargument.',
+    title: 'Hear it in the first person.',
+    body: 'Every line is spoken as \u201cI\u201d (\u201cI finish what I start\u201d), so it sounds like your own thinking, not an instruction.',
   },
   {
-    title: 'You blend it, then drift',
-    desc: 'Set the balance once. The session runs its length and stops itself — no phone to silence.',
+    title: 'Listen, and repeat.',
+    body: 'A slow pulse sits under the voice. It is supraliminal: every word is clearly audible. Nothing is hidden, and repetition does the work.',
   },
 ];
 
 export default function LandingPage() {
+  const free = FEATURED_FREE_SESSION;
+
   return (
     <>
-      <section className="mx-auto flex w-full max-w-[1060px] flex-col items-center px-[30px] pt-10 text-center wide:flex-row wide:gap-[60px] wide:px-[60px] wide:pt-[70px] wide:text-left">
-        <div className="max-w-[300px] wide:max-w-[430px] wide:flex-1">
-          <h1 className="text-[27px] font-semibold leading-[1.25] tracking-[-0.01em] wide:text-[40px] wide:leading-[1.2]">
-            Rewire how<br />you fall asleep.
-          </h1>
-          <p className="mt-[14px] text-[14px] leading-[1.55] text-fg-muted wide:mt-[18px] wide:text-[15px] wide:leading-[1.6]">
-            One voice, speaking in first person, layered over a slow pulse tuned to hold just enough attention. Not a
-            soundscape. Not a story. A method.
+      <section className="sc-px grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] items-center gap-[clamp(32px,5vw,72px)] pb-[clamp(48px,8vw,110px)] pt-[clamp(28px,6vw,80px)]">
+        <div className="flex flex-col gap-6">
+          <span className="sc-eyebrow">Supraliminal audio for specific goals</span>
+          <h1 className="sc-h-hero">Attitudes are habits. Habits can be recoded.</h1>
+          <p className="max-w-[30em] text-[clamp(17px,1.5vw,19px)] leading-[1.6] text-ink-muted">
+            SleepCode sessions are supraliminal: one calm voice, speaking in the first person over a slow pulse, says
+            clearly and often how you&rsquo;d like to think about a goal. You hear every word.
           </p>
-          <div className="mt-[34px] flex flex-col items-center wide:mt-[30px] wide:flex-row wide:gap-5">
-            <StartSessionCta />
-            <span className="mt-[14px] text-[12px] text-fg-faint wide:mt-0">Free account. No card needed.</span>
+          <div className="flex flex-wrap items-center gap-[18px]">
+            {free ? (
+              <PlayLink session={free} className="sc-btn sc-btn--lg">
+                Play {free.title}, free
+              </PlayLink>
+            ) : (
+              <Link href="/login?mode=signup" className="sc-btn sc-btn--lg">Create a free account</Link>
+            )}
+            <span className="text-[14px] text-ink-muted">Our most-played session</span>
           </div>
         </div>
-        <div className="mt-[34px] flex-shrink-0 wide:mt-0">
-          <BreathingRings />
+        <div className="w-full max-w-[420px] justify-self-center">
+          <Rings color="var(--accent)" restOpacity={0.55} />
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-[1060px] px-[30px] pt-14 wide:px-[60px] wide:pt-[84px]">
-        <div className="sc-eyebrow mb-5">How It Works</div>
-        <ol className="flex flex-col wide:grid wide:grid-cols-3 wide:gap-10">
+      <section id="how-it-works" className="sc-band sc-section flex scroll-mt-4 flex-col gap-10">
+        <div className="flex max-w-[640px] flex-col gap-[14px]">
+          <span className="sc-eyebrow">How it works</span>
+          <h2 className="sc-h-section">Simple to use. Clear about what it is.</h2>
+        </div>
+        <ol className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-x-10">
           {STEPS.map((step, i) => (
-            <li
-              key={step.title}
-              className="flex gap-4 border-b border-line py-[22px] first:pt-0 last:border-b-0 wide:flex-col wide:gap-0 wide:border-b-0 wide:border-t wide:pb-0 wide:pt-5 wide:first:pt-5"
-            >
-              <span className="flex-shrink-0 font-mono text-[12px] text-fg-faint">{String(i + 1).padStart(2, '0')}</span>
-              <div>
-                <div className="text-[15px] font-semibold wide:mt-[10px] wide:text-[16px]">{step.title}</div>
-                <p className="mt-1 text-[13px] leading-[1.5] text-fg-muted wide:mt-[6px] wide:leading-[1.55]">{step.desc}</p>
-              </div>
+            <li key={step.title} className="flex flex-col gap-[10px] border-t border-[rgba(44,38,32,0.2)] pb-[26px] pt-[22px]">
+              <span className="font-mono text-[13px] text-ink-muted">{String(i + 1).padStart(2, '0')}</span>
+              <h3 className="text-[20px] font-semibold leading-[1.25] tracking-[-0.01em]">{step.title}</h3>
+              <p className="text-[16px] leading-[1.6] text-ink-muted">{step.body}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      <section className="mx-auto w-full max-w-[1060px] px-[30px] pt-11 wide:px-[60px] wide:pt-[60px]">
-        <div className="sc-eyebrow mb-[14px]">Free to Start</div>
-        <div className="flex items-start gap-3 wide:max-w-[560px]">
-          <LockIcon size={14} className="mt-[2px]" />
-          <p className="text-[13px] leading-[1.6] text-fg-muted">
-            A handful of sessions are free, permanently. SleepCode+ unlocks the full catalogue as it grows — no ads, no
-            gimmicks, cancel any time.
-          </p>
+      <section className="sc-section grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] items-start gap-[clamp(28px,5vw,72px)]">
+        <div className="flex flex-col gap-[18px]">
+          <span className="sc-eyebrow">Why this exists</span>
+          <div className="sc-placeholder aspect-[4/5] w-full max-w-[300px]">founder portrait</div>
         </div>
+        <div className="flex max-w-[620px] flex-col gap-5 text-[clamp(17px,1.6vw,20px)] leading-[1.6]">
+          <p className="text-[clamp(24px,2.6vw,32px)] font-medium leading-[1.25] tracking-[-0.02em]">
+            For years I knew exactly what I wanted to change, and kept talking myself out of it.
+          </p>
+          <p className="text-ink-muted">
+            I tried the books, the journals, the subliminal tracks. The subliminal ones asked me to trust messages I
+            couldn&rsquo;t hear, and I never could.
+          </p>
+          <p className="text-ink-muted">
+            What helped was the opposite: hearing, plainly and often, the sentences I wanted to believe, in a calm voice,
+            as if they were already mine. SleepCode is that, made carefully and openly, for anyone working on something
+            that matters to them.
+          </p>
+          <p className="text-[15px]">The founder</p>
+        </div>
+      </section>
+
+      <section id="pricing" className="sc-band sc-section flex scroll-mt-4 flex-col gap-9">
+        <div className="flex flex-col gap-[14px]">
+          <span className="sc-eyebrow">Pricing</span>
+          <h2 className="sc-h-section">Plain pricing.</h2>
+        </div>
+        <PricingPlans />
       </section>
     </>
   );

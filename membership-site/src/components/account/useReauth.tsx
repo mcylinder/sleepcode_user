@@ -81,7 +81,7 @@ export function useReauth() {
       <div className="text-center">
         <div className="sc-eyebrow--muted">Security</div>
         <div className="mt-2 text-[19px] font-semibold">Confirm it&apos;s you</div>
-        <p className="mt-2 text-[13px] text-fg-muted">For your security, please sign in again to continue.</p>
+        <p className="mt-2 text-[15px] text-ink-muted">For your security, please sign in again to continue.</p>
       </div>
 
       <StatusText status={error ? { type: 'error', text: error } : null} className="text-center" />
@@ -112,7 +112,7 @@ export function useReauth() {
       )}
 
       {socials.length > 0 && (
-        <div className="border-t border-line">
+        <div className="border-t border-hairline">
           {socials.map((provider) => (
             <button
               key={provider.id}
@@ -120,7 +120,7 @@ export function useReauth() {
               onClick={() => run(() => reauthenticateWithPopup(user, createProvider(provider.id as SocialProviderId)))}
               className="sc-row flex w-full items-center gap-3 text-left text-[15px] font-medium disabled:opacity-50"
             >
-              <ProviderIcon id={provider.id} className="h-4 w-4 text-fg" />
+              <ProviderIcon id={provider.id} className="h-4 w-4 text-ink" />
               Continue with {provider.label}
             </button>
           ))}

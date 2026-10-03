@@ -4,12 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReauth } from '@/components/account/useReauth';
-import Link from 'next/link';
 import AppShell from '@/components/ui/AppShell';
 import { AccountSection, ExpandableRow } from '@/components/account/Section';
-import IdentityBlock from '@/components/account/IdentityBlock';
 import MembershipSection from '@/components/account/MembershipSection';
-import PreferencesSection from '@/components/account/PreferencesSection';
+import DefaultsSection from '@/components/account/DefaultsSection';
+import VerifyEmailNotice from '@/components/account/VerifyEmailNotice';
 import EmailPanel from '@/components/account/EmailPanel';
 import PasswordPanel from '@/components/account/PasswordPanel';
 import SignInMethodsPanel from '@/components/account/SignInMethodsPanel';
@@ -44,6 +43,7 @@ export default function AccountPage() {
 
   const toggle = (row: Row) => setOpenRow((current) => (current === row ? null : row));
   const methodCount = currentUser.providerData.length;
+  const hasPassword = currentUser.providerData.some((p) => p.providerId === 'password');
 
   async function handleLogout() {
     await logout().catch(() => undefined);
@@ -51,52 +51,48 @@ export default function AccountPage() {
   }
 
   return (
-    <AppShell
-      active="account"
-      topbar={
-        <div className="flex justify-center">
-          <div className="sc-eyebrow--muted">SleepCode</div>
-        </div>
-      }
-    >
-      <div className="wide:max-w-[560px]">
-        <IdentityBlock />
-        <MembershipSection justCheckedOut={justCheckedOut} />
-        <PreferencesSection />
+    <AppShell active="account" maxWidth={720}>
+      <div className="flex flex-col gap-[38px]">
+        <h1 className="sc-h-app">Account</h1>
 
-        <AccountSection title="Account">
-          <ExpandableRow label="Change Email" open={openRow === 'email'} onToggle={() => toggle('email')}>
+        <MembershipSection justCheckedOut={justCheckedOut} />
+        <DefaultsSection />
+
+        <AccountSection title="Sign-in">
+          <ExpandableRow
+            label={currentUser.email ?? 'No email on file'}
+            action="Edit"
+            open={openRow === 'email'}
+            onToggle={() => toggle('email')}
+          >
             <EmailPanel withRecentLogin={withRecentLogin} />
           </ExpandableRow>
-          <ExpandableRow label="Password" open={openRow === 'password'} onToggle={() => toggle('password')}>
-            <PasswordPanel withRecentLogin={withRecentLogin} />
-          </ExpandableRow>
+          <VerifyEmailNotice />
+          {hasPassword && (
+            <ExpandableRow label="Password" open={openRow === 'password'} onToggle={() => toggle('password')}>
+              <PasswordPanel withRecentLogin={withRecentLogin} />
+            </ExpandableRow>
+          )}
           <ExpandableRow
-            label="Sign-in Methods"
+            label="Sign-in methods"
             value={`${methodCount} connected`}
             open={openRow === 'methods'}
             onToggle={() => toggle('methods')}
           >
             <SignInMethodsPanel withRecentLogin={withRecentLogin} />
           </ExpandableRow>
-          <ExpandableRow label="Delete Account" open={openRow === 'delete'} onToggle={() => toggle('delete')}>
-            <DeleteAccountPanel reauthenticate={reauthenticate} />
-          </ExpandableRow>
           <button
+            type="button"
             onClick={handleLogout}
-            className="w-full py-4 text-left text-[15px] font-medium text-fg-muted hover:text-fg wide:py-[15px] wide:text-[14px]"
+            className="border-t border-hairline py-4 text-left text-[16px] text-ink-muted"
           >
-            Log Out
+            Log out
           </button>
         </AccountSection>
 
-        <div className="mt-[34px] flex items-center justify-between pb-5">
-          <span className="sc-eyebrow--muted text-[10px]">SleepCode</span>
-          <span className="text-[11px] text-fg-faint">
-            <Link href="/privacy" className="hover:text-fg-muted">Privacy</Link> &middot;{' '}
-            <Link href="/terms" className="hover:text-fg-muted">Terms</Link>
-          </span>
-        </div>
+        <ExpandableRow label="Delete account" quiet open={openRow === 'delete'} onToggle={() => toggle('delete')}>
+          <DeleteAccountPanel reauthenticate={reauthenticate} />
+        </ExpandableRow>
       </div>
 
       {dialog}

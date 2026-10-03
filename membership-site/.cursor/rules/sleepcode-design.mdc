@@ -1,0 +1,14 @@
+---
+description: SleepCode "Consult" reskin — visual rules. Tokens live in src/app/globals.css.
+globs: ["**/*.{tsx,jsx,ts,js,vue,svelte,css,scss}"]
+alwaysApply: false
+---
+- Site palette: bg #ddd3c5, bg-alt #d5c9b9, ink #2c2620, body #3d352d, muted #5e5247, accent #2f6f6c, on-accent #f1ebe2, hairline rgba(44,38,32,.14).
+- Player palette: #233230 (paused) → #0f1615 (playing, 2.6s ease), fg #e7e1d6, muted #a9b3ae, accent #7fb8b1, sheet #1c2827, night shade #000.
+- Fonts: Hanken Grotesk for everything; Space Mono ONLY for numbers (timers, countdown, indices, dates, repeat counts, %).
+- No card chrome: no boxed cards, no shadows, no left accent borders. Group with 1px hairline rows + whitespace.
+- Buttons: pills (radius 999px). Primary = accent bg; secondary = 1.5px ink outline. Touch targets ≥ 44px.
+- Never show user's name. Never show session durations or "time left" outside the player countdown.
+- Player: optional length (H 0–10, M 0/10/20/30/40/50) → H:MM countdown; repeat 1×/2×/4×; label "Instruction" not "Voice"; Night shade overlay; rings glow in sequence only while playing.
+- Motion = dimming lights: slow opacity fades, no bounce. Respect prefers-reduced-motion.
+- Cross-dissolve into player: #233230 layer fades in 0.9s → navigate → fades out 1.4s.

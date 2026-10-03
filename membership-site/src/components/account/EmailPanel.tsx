@@ -26,10 +26,10 @@ export default function EmailPanel({
 
   if (!hasPassword) {
     return (
-      <p className="text-[13px] leading-relaxed text-fg-muted">
+      <p className="text-[15px] leading-[1.6] text-ink-muted">
         {emailSource
-          ? `Your email comes from your ${PROVIDER_LABELS[emailSource.providerId]} sign-in. Set a password below to manage it here.`
-          : 'Set a password below to manage your email here.'}
+          ? `Your email comes from your ${PROVIDER_LABELS[emailSource.providerId]} sign-in. To change it, update it with ${PROVIDER_LABELS[emailSource.providerId]}.`
+          : 'Your email comes from the account you sign in with. To change it, update it there.'}
       </p>
     );
   }
@@ -53,8 +53,8 @@ export default function EmailPanel({
 
   return (
     <form onSubmit={changeEmail} className="flex flex-col gap-4">
-      <p className="text-[13px] text-fg-muted">
-        Currently <span className="text-fg">{user.email}</span>
+      <p className="text-[15px] text-ink-muted">
+        Currently <span className="text-ink">{user.email}</span>
         {user.emailVerified ? ' \u00b7 verified' : ''}
       </p>
       <div>

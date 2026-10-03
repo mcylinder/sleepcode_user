@@ -7,12 +7,13 @@ The SleepCode website: marketing pages, accounts, a paid membership, and the in-
 - **Accounts:** Firebase Auth with email/password, Google, Apple, and Facebook. Password reset, email verification, and linking several sign-in methods to one account.
 - **Membership (SleepCode+):** one paid tier, $7/month or $49/year, sold on this site with Stripe Checkout. Members manage billing in the Stripe Customer Portal.
 - **Free and members-only sessions:** sessions flagged `free` in `src/data/sessions.json` are open to every signed-in user. All others need a membership. The server enforces this when it signs audio URLs.
-- **Account page:** membership status, profile, sign-in methods, password, and account deletion.
-- **Player:** `/application` (Home) lists the sessions. Each session is a folder of short statement clips plus a pulse track, loaded into memory and played in lockstep on a loop, with a voice/pulse blend, repeat count (1x/2x/4x), session timer, and Night Shade.
+- **Account page:** membership status and upgrade, player defaults (repeats, blend), email, password, sign-in methods, and account deletion.
+- **Player:** `/application` (Home) lists the sessions. Each session is a folder of short statement clips plus a pulse track, loaded into memory and played in lockstep on a loop, with an instruction/pulse blend, repeat count (1×/2×/4×), an optional session length (up to 10:50, fades out and pauses at the end), and Night shade. Blend and repeat are shared with Account > Defaults.
+- **Content pages:** FAQ, pricing, about, `/how-to-listen`, legal pages, and a journal (`/journal`, not linked or indexed yet; posts live in `src/data/journal.ts`).
 
 ## Design system
 
-The visual design comes from the design handoff (`../handoff/`). Tokens and shared patterns (colors, Space Grotesk / Space Mono, hairline rows, the single `--signal` accent, tab bar / side-nav, bottom sheet) live in `src/app/globals.css` and are exposed to Tailwind in `tailwind.config.ts` (`bg-bg`, `text-fg-muted`, `border-line`, the `wide:` 900px breakpoint, and so on). Check new UI against the handoff README's "Hard rules" before shipping.
+The "Consult" reskin: a warm sand palette with a deep teal accent for the site, and a dark player. Tokens and shared patterns (colors, Hanken Grotesk with Space Mono for numbers only, hairline rows, pill buttons, bottom sheets, rings) live in `src/app/globals.css` and are exposed to Tailwind in `tailwind.config.ts` (`bg-bg`, `text-ink-muted`, `border-hairline`, `bg-p-bg` for the player, the `wide:` 900px breakpoint, and so on). The condensed rules are in `.cursor/rules/sleepcode-design.mdc`: no cards or shadows, never show the user's name or session durations, and respect `prefers-reduced-motion`.
 
 ## Tech stack
 

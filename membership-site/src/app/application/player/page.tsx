@@ -1,30 +1,34 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMembership } from '@/hooks/useMembership';
-import { findSession, isLocked, saveLastSession, type Session } from '@/lib/catalog';
+import { findSession, isLocked, saveLastPlayed, type Session } from '@/lib/catalog';
 import { authedFetch, RequestError } from '@/lib/authedFetch';
 import { buildPlayPlan, type SessionManifest } from '@/lib/audio/playPlan';
 import { SessionEngine } from '@/lib/audio/SessionEngine';
 import { StayAwake } from '@/lib/audio/StayAwake';
 import {
   DEFAULT_PREFS,
+  LENGTH_HOURS,
+  LENGTH_MINUTES,
   REPEAT_OPTIONS,
-  TIMER_PRESETS,
-  formatDuration,
+  engineBalance,
+  formatHoursMinutes,
   loadPlayerPrefs,
   savePlayerPrefs,
   type PlayerPrefs,
   type RepeatCount,
 } from '@/lib/playerPrefs';
-import BackHeader from '@/components/ui/BackHeader';
-import Sheet from '@/components/ui/Sheet';
-import { HEAD_PATH } from '@/components/ui/icons';
+import BlendSlider from '@/components/ui/BlendSlider';
+import Rings from '@/components/ui/Rings';
+import Sheet, { SheetHeader } from '@/components/ui/Sheet';
+import { NightShadeIcon, PauseIcon, PlayIcon, StopwatchIcon } from '@/components/ui/icons';
 
 const FADE_OUT_SECONDS = 8;
-const DEFAULT_SHEET_MINUTES = 180;
+const DEFAULT_SHEET_MINUTES = 60;
 
 interface SignedMedia {
   baseUrl: string;
@@ -68,6 +72,26 @@ export default function PlayerPage() {
   return <Player session={session} />;
 }
 
+// Mirrors the player background onto <html> and <body> so overscroll and safe areas match.
+function usePageBackground(color: string) {
+  useEffect(() => {
+    const targets = [document.documentElement, document.body];
+    const previous = targets.map((el) => [el.style.background, el.style.transition] as const);
+    targets.forEach((el) => (el.style.transition = 'background 2.6s ease'));
+    return () => {
+      targets.forEach((el, i) => {
+        el.style.background = previous[i][0];
+        el.style.transition = previous[i][1];
+      });
+    };
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.style.background = color;
+    document.body.style.background = color;
+  }, [color]);
+}
+
 function Player({ session }: { session: Session }) {
   const router = useRouter();
   const engineRef = useRef<SessionEngine | null>(null);
@@ -76,11 +100,16 @@ function Player({ session }: { session: Session }) {
   const [attempt, setAttempt] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [prefs, setPrefs] = useState<PlayerPrefs>(DEFAULT_PREFS);
-  const [remainingMs, setRemainingMs] = useState<number | null>(null);
-  const [ended, setEnded] = useState(false);
+  // Session length in seconds; 0 = plays until you stop.
+  const [lengthSec, setLengthSec] = useState(0);
+  const [remainingSec, setRemainingSec] = useState(0);
+  const [ending, setEnding] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [draftMinutes, setDraftMinutes] = useState(DEFAULT_SHEET_MINUTES);
-  const [nightShade, setNightShade] = useState(false);
+  const [draftH, setDraftH] = useState(1);
+  const [draftM, setDraftM] = useState(0);
+  const [shadeOn, setShadeOn] = useState(false);
+
+  usePageBackground(playing ? 'var(--p-bg-playing)' : 'var(--p-bg)');
 
   useEffect(() => {
     const engine = new SessionEngine();
@@ -91,8 +120,11 @@ function Player({ session }: { session: Session }) {
 
     const saved = loadPlayerPrefs();
     setPrefs(saved);
-    setRemainingMs(saved.timerMinutes ? saved.timerMinutes * 60_000 : null);
-    engine.setBalance(saved.blend);
+    if (saved.lengthMinutes) {
+      setLengthSec(saved.lengthMinutes * 60);
+      setRemainingSec(saved.lengthMinutes * 60);
+    }
+    engine.setBalance(engineBalance(saved.instruction));
     engine.setRepeat(saved.repeat);
 
     const onVisibility = () => {
@@ -128,7 +160,7 @@ function Player({ session }: { session: Session }) {
           if (!cancelled) setLoad({ kind: 'loading', loaded, total });
         });
         if (cancelled) return;
-        saveLastSession(session);
+        saveLastPlayed(session);
         setLoad({ kind: 'ready' });
       } catch (error) {
         if (cancelled) return;
@@ -148,25 +180,36 @@ function Player({ session }: { session: Session }) {
     };
   }, [session, attempt, router]);
 
-  const timerActive = remainingMs !== null;
+  // Count down only while playing with a length set. Measured against the clock so a
+  // throttled timer doesn't drift.
+  const counting = playing && lengthSec > 0 && !ending;
   useEffect(() => {
-    if (!playing || !timerActive) return;
+    if (!counting) return;
     let last = performance.now();
     const id = setInterval(() => {
       const now = performance.now();
-      const elapsed = now - last;
+      const elapsed = (now - last) / 1000;
       last = now;
-      setRemainingMs((ms) => (ms === null ? null : Math.max(0, ms - elapsed)));
-    }, 250);
+      setRemainingSec((sec) => Math.max(0, sec - elapsed));
+    }, 1000);
     return () => clearInterval(id);
-  }, [playing, timerActive]);
+  }, [counting]);
 
   useEffect(() => {
-    if (remainingMs === 0 && playing) {
-      engineRef.current?.fadeOutAndStop(FADE_OUT_SECONDS);
-      setEnded(true);
+    if (counting && remainingSec <= 0) {
+      setEnding(true);
+      engineRef.current?.fadeOutAndPause(FADE_OUT_SECONDS);
     }
-  }, [remainingMs, playing]);
+  }, [counting, remainingSec]);
+
+  // Once the end-of-length fade has paused playback, the length is spent.
+  useEffect(() => {
+    if (!playing && ending) {
+      setEnding(false);
+      setLengthSec(0);
+      setRemainingSec(0);
+    }
+  }, [playing, ending]);
 
   useEffect(() => {
     if (!playing) wakeRef.current?.disable();
@@ -178,10 +221,9 @@ function Player({ session }: { session: Session }) {
     savePlayerPrefs(next);
   };
 
-  const setBlend = (value: number) => {
-    const blend = Math.min(100, Math.max(0, Math.round(value)));
-    engineRef.current?.setBalance(blend);
-    updatePrefs({ blend });
+  const setInstruction = (instruction: number) => {
+    engineRef.current?.setBalance(engineBalance(instruction));
+    updatePrefs({ instruction });
   };
 
   const setRepeat = (repeat: RepeatCount) => {
@@ -189,11 +231,27 @@ function Player({ session }: { session: Session }) {
     updatePrefs({ repeat });
   };
 
-  const applyTimer = (minutes: number | null) => {
-    updatePrefs({ timerMinutes: minutes });
-    setRemainingMs(minutes ? minutes * 60_000 : null);
-    setEnded(false);
+  const cancelEnding = () => {
+    if (!ending) return;
+    setEnding(false);
+    if (engineRef.current?.playing) void engineRef.current.play();
+  };
+
+  const applyLength = (minutes: number) => {
+    cancelEnding();
+    setLengthSec(minutes * 60);
+    setRemainingSec(minutes * 60);
+    updatePrefs({ lengthMinutes: minutes > 0 ? minutes : null });
     setSheetOpen(false);
+  };
+
+  const openSheet = () => {
+    let minutes = prefs.lengthMinutes ?? DEFAULT_SHEET_MINUTES;
+    if (lengthSec > 0) minutes = Math.ceil(remainingSec / 60);
+    const hours = Math.min(10, Math.floor(minutes / 60));
+    setDraftH(hours);
+    setDraftM(Math.min(50, Math.round((minutes % 60) / 10) * 10));
+    setSheetOpen(true);
   };
 
   const togglePlay = async () => {
@@ -203,354 +261,230 @@ function Player({ session }: { session: Session }) {
       await engine.pause();
       return;
     }
-    if (remainingMs === 0 && prefs.timerMinutes) setRemainingMs(prefs.timerMinutes * 60_000);
-    setEnded(false);
     wakeRef.current?.enable();
     await engine.play();
   };
 
-  const totalMs = prefs.timerMinutes ? prefs.timerMinutes * 60_000 : 0;
-  const progress = totalMs && remainingMs !== null ? ((totalMs - remainingMs) / totalMs) * 100 : 0;
   const ready = load.kind === 'ready';
-  const presets = TIMER_PRESETS.includes(draftMinutes)
-    ? TIMER_PRESETS
-    : [...TIMER_PRESETS, draftMinutes].sort((a, b) => a - b);
+  const hasLength = lengthSec > 0;
+  const progress = hasLength ? 100 - (remainingSec / lengthSec) * 100 : 0;
+  const draftMinutes = draftH * 60 + draftM;
 
-  let status: ReactNode = null;
+  let status: ReactNode;
   if (load.kind === 'loading') {
     status = load.total ? `Loading ${load.loaded} of ${load.total}` : 'Preparing session\u2026';
   } else if (load.kind === 'error') {
     status = (
       <>
         {load.message}{' '}
-        <button type="button" onClick={() => setAttempt((n) => n + 1)} className="sc-link">
+        <button type="button" onClick={() => setAttempt((n) => n + 1)} className="font-semibold text-p-fg underline underline-offset-4">
           Try again
         </button>
       </>
     );
-  } else if (ended) {
-    status = 'Session complete';
+  } else if (ending) {
+    status = `Fading out \u00b7 ${session.theme}`;
+  } else if (playing) {
+    status = hasLength ? `Playing \u00b7 ${session.theme}` : 'Playing \u00b7 until you stop';
+  } else {
+    status = hasLength ? `Paused \u00b7 ${session.theme}` : `${session.theme} \u00b7 ready when you are`;
   }
 
   return (
-    <main className="sc-frame">
-      {nightShade && (
+    <main
+      className="flex min-h-screen min-h-[100dvh] flex-col text-p-fg"
+      style={{ background: playing ? 'var(--p-bg-playing)' : 'var(--p-bg)', transition: 'background 2.6s ease' }}
+    >
+      <div className="flex items-center justify-between gap-3 px-[clamp(22px,4vw,48px)] pb-[18px] pt-[calc(18px+env(safe-area-inset-top,0px))] text-[15px] text-p-muted">
+        <Link href="/application" className="flex min-h-[44px] items-center">&lsaquo; Back</Link>
         <button
           type="button"
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black pb-10"
-          onClick={() => setNightShade(false)}
-          aria-label="Exit Night Shade"
+          onClick={() => setShadeOn(true)}
+          className="flex min-h-[44px] items-center gap-2 rounded-full border border-p-chip-border px-4 text-[14px] font-medium text-p-fg"
         >
-          <span className="text-[12px] text-fg-faint opacity-60">Tap anywhere to exit Night Shade</span>
+          <NightShadeIcon />
+          Night shade
         </button>
-      )}
+      </div>
 
-      <BackHeader href="/application" />
+      <div className="mx-auto box-border flex w-full max-w-[520px] flex-1 flex-col items-center justify-center gap-[clamp(16px,2.2vw,26px)] px-[clamp(26px,4vw,48px)] pb-[calc(30px+env(safe-area-inset-bottom,0px))]">
+        <div className="w-[min(60vw,280px)]">
+          <Rings color="var(--p-accent)" glowing={playing} restOpacity={0.26} />
+        </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center wide:py-10">
-        <div className="mx-auto flex w-full max-w-[420px] flex-1 flex-col items-center justify-center gap-[22px] px-8 py-6">
-          <div className="text-center">
-            <div className="sc-eyebrow--muted">Tonight</div>
-            <h1 className="mt-2 text-[25px] font-semibold">{session.title}</h1>
-          </div>
+        <div className="flex flex-col gap-[6px] text-center">
+          <h1 className="text-[clamp(26px,3vw,32px)] font-medium tracking-[-0.02em]">{session.title}</h1>
+          <p className="text-[14px] text-p-muted" role="status">{status}</p>
+        </div>
 
-          <Orb progress={progress} playing={playing} />
-
-          <p className="-mt-2 min-h-[18px] text-center text-[12px] text-fg-faint" role="status">
-            {status}
-          </p>
-
-          <div className="flex w-full max-w-[268px] flex-col gap-[9px]">
-            <div className="flex justify-between">
-              <span className="sc-eyebrow--muted text-[10px]">Instruction</span>
-              <span className="sc-eyebrow--muted text-[10px]">Pulses</span>
+        <div className="flex min-h-[52px] w-full flex-col justify-center">
+          {hasLength ? (
+            <div className="flex flex-col gap-[10px]">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="flex items-baseline gap-2">
+                  <span className="font-mono text-[26px] text-p-fg">
+                    {formatHoursMinutes(Math.ceil(remainingSec / 60))}
+                  </span>
+                  <span className="text-[13px] text-p-muted">left</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={openSheet}
+                  className="py-2 text-[14px] font-medium text-p-muted underline underline-offset-4"
+                >
+                  Change
+                </button>
+              </div>
+              <div className="h-[2px] rounded-sm bg-p-track">
+                <div
+                  className="h-[2px] rounded-sm bg-p-accent"
+                  style={{ width: `${progress}%`, transition: 'width 1s linear' }}
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setBlend(prefs.blend - 5)}
-                disabled={prefs.blend <= 0}
-                aria-label="More instruction"
-                className="flex-shrink-0"
-              >
-                <VoiceIcon />
-              </button>
-              <HairlineSlider label="Instruction to pulse blend" value={prefs.blend} min={0} max={100} step={5} onChange={setBlend} />
-              <button
-                type="button"
-                onClick={() => setBlend(prefs.blend + 5)}
-                disabled={prefs.blend >= 100}
-                aria-label="More pulse"
-                className="flex-shrink-0"
-              >
-                <svg width="26" height="17" viewBox="0 0 22 14" fill="var(--signal)" aria-hidden="true">
-                  <rect x="1" y="3" width="5" height="8" rx="1" opacity="0.45" />
-                  <rect x="9" y="0" width="5" height="14" rx="1" />
-                  <rect x="17" y="3" width="5" height="8" rx="1" opacity="0.45" />
-                </svg>
-              </button>
-            </div>
-          </div>
+          ) : (
+            <button
+              type="button"
+              onClick={openSheet}
+              className="flex min-h-[44px] items-center gap-[9px] self-center rounded-full border border-[rgba(231,225,214,0.24)] px-5 text-[15px] font-medium text-p-fg"
+            >
+              <StopwatchIcon />
+              Set session length
+            </button>
+          )}
+        </div>
 
-          <div className="mt-[10px] flex w-full max-w-[268px] flex-col gap-[9px]">
-            <span className="sc-eyebrow--muted text-[10px]">Repeat Each Instruction</span>
-            <div className="flex gap-2" role="radiogroup" aria-label="Repeat each instruction">
-              {REPEAT_OPTIONS.map((count) => (
+        <button
+          type="button"
+          onClick={togglePlay}
+          disabled={!ready}
+          aria-label={playing ? 'Pause' : 'Play'}
+          className="grid h-[72px] w-[72px] flex-none place-items-center rounded-full border-[1.5px] border-p-accent text-p-fg disabled:opacity-40"
+        >
+          {playing ? <PauseIcon size={20} /> : <PlayIcon size={20} className="translate-x-[2px]" />}
+        </button>
+
+        <BlendSlider instruction={prefs.instruction} onChange={setInstruction} tone="player" />
+
+        <div className="flex w-full flex-col gap-[10px]">
+          <span className="text-[13px] text-p-muted" id="repeat-label">Repeat</span>
+          <div className="flex gap-[6px]" role="radiogroup" aria-labelledby="repeat-label">
+            {REPEAT_OPTIONS.map((count) => {
+              const selected = prefs.repeat === count;
+              return (
                 <button
                   key={count}
                   type="button"
                   role="radio"
-                  aria-checked={prefs.repeat === count}
+                  aria-checked={selected}
                   onClick={() => setRepeat(count)}
-                  className={`sc-chip flex-1 px-0 text-center ${prefs.repeat === count ? 'is-selected' : ''}`}
+                  className={`min-h-[40px] flex-1 rounded-full border font-mono text-[13px] ${
+                    selected ? 'border-p-accent bg-p-accent text-p-on-accent' : 'border-p-chip-border text-p-fg'
+                  }`}
                 >
                   {count}&times;
                 </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex w-full items-center justify-center gap-[34px] px-6 pb-14">
-          <div className="flex w-[72px] flex-col items-center gap-[9px]">
-            <span className="sc-eyebrow--muted text-[10px]">Session</span>
-            <button
-              type="button"
-              onClick={() => {
-                setDraftMinutes(prefs.timerMinutes ?? DEFAULT_SHEET_MINUTES);
-                setSheetOpen(true);
-              }}
-              aria-label="Session length"
-              className="inline-flex min-w-[52px] items-center justify-center rounded-2xl border border-line px-4 py-[7px]"
-            >
-              <span className="font-mono text-[12px] tracking-[0.02em] text-fg-muted tabular-nums">
-                {remainingMs === null ? 'Set' : `-${formatClock(remainingMs)}`}
-              </span>
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={togglePlay}
-            disabled={!ready}
-            aria-label={playing ? 'Pause' : 'Play'}
-            className="relative flex h-[58px] w-[58px] flex-shrink-0 items-center justify-center rounded-full transition-[transform,opacity] active:scale-[0.97] disabled:opacity-40"
-          >
-            <svg className="absolute inset-0" width="58" height="58" viewBox="0 0 58 58" aria-hidden="true">
-              <circle cx="29" cy="29" r="27" fill="none" stroke="var(--line)" strokeWidth="1.4" />
-            </svg>
-            {playing ? (
-              <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true">
-                <rect x="3" y="2" width="4" height="14" rx="1" fill="var(--fg)" />
-                <rect x="11" y="2" width="4" height="14" rx="1" fill="var(--fg)" />
-              </svg>
-            ) : (
-              <svg width="14" height="16" viewBox="0 0 18 18" fill="var(--fg)" className="ml-[2px]" aria-hidden="true">
-                <path d="M4 2 L16 9 L4 16 Z" />
-              </svg>
-            )}
-          </button>
-
-          <div className="flex w-[72px] flex-col items-center gap-[9px]">
-            <span className="sc-eyebrow--muted whitespace-nowrap text-[10px]">Night Shade</span>
-            <button
-              type="button"
-              onClick={() => setNightShade(true)}
-              aria-label="Night Shade"
-              className="relative flex h-10 w-10 items-center justify-center rounded-full"
-            >
-              <svg className="absolute inset-0" width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
-                <circle cx="20" cy="20" r="18" fill="none" stroke="var(--line)" strokeWidth="1.2" />
-              </svg>
-              <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="var(--fg-faint)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M14.2 11.8A6 6 0 1 1 8.2 5.8a4.7 4.7 0 0 0 6 6Z" />
-              </svg>
-            </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} label="Session length">
-        <div className="text-center">
-          <div className="sc-eyebrow--muted">Session Length</div>
-          <div className="mt-2 font-mono text-[26px] text-fg">
-            {Math.floor(draftMinutes / 60)}h {String(draftMinutes % 60).padStart(2, '0')}m
-          </div>
+      <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} label="Session length" tone="player">
+        <SheetHeader title="Session length" onCancel={() => setSheetOpen(false)} tone="player" />
+        <div className="flex items-baseline gap-3">
+          <span className="font-mono text-[44px] tracking-[-0.02em]">{formatHoursMinutes(draftMinutes)}</span>
+          <span className="text-[14px] text-p-muted">
+            {draftMinutes === 0 ? 'choose a length' : 'hours : minutes'}
+          </span>
         </div>
-        <div className="flex flex-wrap justify-center gap-[9px]">
-          {presets.map((minutes) => (
-            <button
-              key={minutes}
-              type="button"
-              onClick={() => setDraftMinutes(minutes)}
-              className={`sc-chip ${draftMinutes === minutes ? 'is-selected' : ''}`}
-            >
-              {formatDuration(minutes)}
-            </button>
-          ))}
-        </div>
-        <button type="button" className="sc-cta-filled" onClick={() => applyTimer(draftMinutes)}>
-          Set
-        </button>
-        {prefs.timerMinutes !== null && (
-          <button type="button" onClick={() => applyTimer(null)} className="sc-textbtn sc-textbtn--muted -mt-2 self-center">
-            No timer
+        <ChipGrid
+          label="Hours"
+          options={LENGTH_HOURS}
+          value={draftH}
+          format={(h) => String(h)}
+          onChange={setDraftH}
+        />
+        <ChipGrid
+          label="Minutes"
+          options={LENGTH_MINUTES}
+          value={draftM}
+          format={(m) => String(m).padStart(2, '0')}
+          onChange={setDraftM}
+        />
+        <div className="flex justify-end pt-1">
+          <button
+            type="button"
+            onClick={() => applyLength(draftMinutes)}
+            disabled={draftMinutes === 0}
+            className="min-h-[48px] rounded-full bg-p-accent px-[26px] text-[15px] font-semibold text-p-on-accent disabled:opacity-40"
+          >
+            Set length
           </button>
-        )}
+        </div>
       </Sheet>
+
+      <button
+        type="button"
+        onClick={() => setShadeOn(false)}
+        aria-hidden={!shadeOn}
+        tabIndex={shadeOn ? 0 : -1}
+        aria-label="Wake screen"
+        className="fixed inset-0 z-50 flex items-end justify-center bg-black pb-10"
+        style={{ opacity: shadeOn ? 1 : 0, pointerEvents: shadeOn ? 'auto' : 'none', transition: 'opacity 2.4s ease' }}
+      >
+        <span className="text-[13px] text-[#2a2a2a]">Tap to wake</span>
+      </button>
     </main>
   );
 }
 
-function formatClock(ms: number): string {
-  const total = Math.ceil(ms / 1000);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-}
-
-function PlayerMessage({ text }: { text: string }) {
-  return (
-    <main className="sc-frame items-center justify-center">
-      <p className="sc-eyebrow--muted">{text}</p>
-    </main>
-  );
-}
-
-// Three slow-orbiting gradient blobs inside the dial, with the elapsed share of the session
-// timer drawn as an arc. Blob motion pauses with playback.
-function Orb({ progress, playing }: { progress: number; playing: boolean }) {
-  const blobs = [
-    { id: 'blob1', color: 'var(--blob-1)', peak: 0.5, mid: 0.15, cx: 88, cy: 96, className: 'pl-core1' },
-    { id: 'blob2', color: 'var(--blob-2)', peak: 0.55, mid: 0.17, cx: 134, cy: 100, className: 'pl-core2' },
-    { id: 'blob3', color: 'var(--blob-3)', peak: 0.5, mid: 0.16, cx: 108, cy: 138, className: 'pl-core3' },
-  ];
-  return (
-    <div className={`relative flex h-[188px] w-[188px] items-center justify-center ${playing ? '' : 'pl-orb-paused'}`}>
-      <svg width="188" height="188" viewBox="0 0 220 220" aria-hidden="true">
-        <defs>
-          <clipPath id="dialClip"><circle cx="110" cy="110" r="86" /></clipPath>
-          {blobs.map((blob) => (
-            <radialGradient key={blob.id} id={blob.id} cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={blob.color} stopOpacity={blob.peak} />
-              <stop offset="60%" stopColor={blob.color} stopOpacity={blob.mid} />
-              <stop offset="100%" stopColor={blob.color} stopOpacity="0" />
-            </radialGradient>
-          ))}
-        </defs>
-        <g clipPath="url(#dialClip)">
-          <circle cx="110" cy="110" r="86" fill="var(--bg)" />
-          {blobs.map((blob) => (
-            <g key={blob.id} className={blob.className}>
-              <circle cx={blob.cx} cy={blob.cy} r="95" fill={`url(#${blob.id})`} />
-            </g>
-          ))}
-        </g>
-        <circle cx="110" cy="110" r="86" fill="none" stroke="var(--fg-faint)" strokeWidth="1.6" opacity="0.55" />
-        {progress > 0 && (
-          <circle
-            cx="110"
-            cy="110"
-            r="86"
-            fill="none"
-            stroke="var(--signal)"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            pathLength={100}
-            strokeDasharray={`${progress} 100`}
-            transform="rotate(-90 110 110)"
-          />
-        )}
-      </svg>
-    </div>
-  );
-}
-
-function VoiceIcon() {
-  const rings = [
-    { r: 40, width: 2.6, opacity: 0.22 },
-    { r: 32, width: 2.6, opacity: 0.32 },
-    { r: 25, width: 2.6, opacity: 0.45 },
-    { r: 18, width: 2.8, opacity: 0.6 },
-    { r: 11, width: 3, opacity: 0.78 },
-  ];
-  return (
-    <svg width="34" height="39" viewBox="-3 -3 106 122" fill="none" stroke="var(--signal)" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <defs>
-        <clipPath id="headClipVoice"><path d={HEAD_PATH} /></clipPath>
-      </defs>
-      <path d={HEAD_PATH} strokeWidth="3.6" />
-      <g clipPath="url(#headClipVoice)">
-        {rings.map((ring) => (
-          <circle key={ring.r} cx="50" cy="38" r={ring.r} strokeWidth={ring.width} opacity={ring.opacity} />
-        ))}
-        <circle cx="50" cy="38" r="3.2" fill="var(--signal)" stroke="none" />
-      </g>
-    </svg>
-  );
-}
-
-// Thin rail with a --signal fill and ring thumb. Drag anywhere on the track, or use arrow keys.
-function HairlineSlider({
+function ChipGrid({
   label,
+  options,
   value,
-  min,
-  max,
-  step,
-  disabled = false,
+  format,
   onChange,
 }: {
   label: string;
+  options: number[];
   value: number;
-  min: number;
-  max: number;
-  step: number;
-  disabled?: boolean;
-  onChange: (value: number) => void;
+  format: (option: number) => string;
+  onChange: (option: number) => void;
 }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const span = max - min;
-  const pct = span > 0 ? ((value - min) / span) * 100 : 0;
-
-  const setFromClientX = (clientX: number) => {
-    const rect = trackRef.current?.getBoundingClientRect();
-    if (!rect || span <= 0) return;
-    const rel = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    onChange(min + rel * span);
-  };
-
   return (
-    <div
-      ref={trackRef}
-      role="slider"
-      tabIndex={disabled ? -1 : 0}
-      aria-label={label}
-      aria-valuemin={min}
-      aria-valuemax={max}
-      aria-valuenow={Math.round(value)}
-      aria-disabled={disabled}
-      className={`relative flex h-[22px] flex-1 cursor-pointer touch-none items-center outline-none ${disabled ? 'pointer-events-none opacity-50' : ''}`}
-      onPointerDown={(e) => {
-        e.currentTarget.setPointerCapture(e.pointerId);
-        setFromClientX(e.clientX);
-      }}
-      onPointerMove={(e) => {
-        if (e.currentTarget.hasPointerCapture(e.pointerId)) setFromClientX(e.clientX);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') onChange(Math.max(min, Math.round(value) - step));
-        else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') onChange(Math.min(max, Math.round(value) + step));
-        else return;
-        e.preventDefault();
-      }}
-    >
-      <div className="absolute inset-x-0 h-[2px] rounded-[1px] bg-line opacity-45" />
-      <div className="absolute left-0 h-[2px] rounded-[1px] bg-signal" style={{ width: `${pct}%` }} />
-      <div
-        className="absolute h-[14px] w-[14px] -translate-x-1/2 rounded-full border-2 border-signal bg-bg"
-        style={{ left: `${pct}%` }}
-      />
+    <div className="flex flex-col gap-[10px]">
+      <span className="text-[13px] text-p-muted">{label}</span>
+      <div className="grid grid-cols-6 gap-[6px]" role="radiogroup" aria-label={label}>
+        {options.map((option) => {
+          const selected = option === value;
+          return (
+            <button
+              key={option}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(option)}
+              className={`min-h-[44px] rounded-[12px] border font-mono text-[14px] ${
+                selected
+                  ? 'border-p-accent bg-p-accent text-p-on-accent'
+                  : 'border-[rgba(231,225,214,0.16)] text-p-fg'
+              }`}
+            >
+              {format(option)}
+            </button>
+          );
+        })}
+      </div>
     </div>
+  );
+}
+
+function PlayerMessage({ text }: { text: string }) {
+  usePageBackground('var(--p-bg)');
+  return (
+    <main className="flex min-h-screen min-h-[100dvh] items-center justify-center bg-p-bg">
+      <p className="text-[14px] text-p-muted">{text}</p>
+    </main>
   );
 }

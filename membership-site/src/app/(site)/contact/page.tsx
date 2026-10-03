@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import ArticleLayout from '@/components/site/ArticleLayout';
+import { CONTACT_EMAIL } from '@/lib/site';
 import StatusText from '@/components/ui/StatusText';
 
 const DETAILS = [
-  { label: 'Email', value: <a href="mailto:contact@sleepcoding.me" className="sc-link">contact@sleepcoding.me</a> },
+  { label: 'Email', value: <a href={`mailto:${CONTACT_EMAIL}`} className="sc-link">{CONTACT_EMAIL}</a> },
   { label: 'Phone', value: <a href="tel:207-358-9026" className="sc-link">207-358-9026</a> },
   { label: 'Mail', value: 'PO BOX 2803, South Portland, ME 04116' },
   { label: 'Response', value: 'Usually within 72 hours' },
@@ -61,13 +62,13 @@ export default function ContactPage() {
       <dl>
         {DETAILS.map((item) => (
           <div key={item.label} className="sc-row flex items-baseline gap-4">
-            <dt className="sc-label w-[84px] flex-shrink-0">{item.label}</dt>
-            <dd className="text-[14px] text-fg">{item.value}</dd>
+            <dt className="sc-label w-[84px] flex-shrink-0 text-[14px]">{item.label}</dt>
+            <dd className="text-[16px] text-ink">{item.value}</dd>
           </div>
         ))}
       </dl>
 
-      <div className="sc-eyebrow mt-10">Send a Message</div>
+      <div className="sc-eyebrow mt-12">Send a message</div>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-6 wide:max-w-[560px]">
         <div>
@@ -82,11 +83,11 @@ export default function ContactPage() {
           <label htmlFor="subject" className="sc-label">Subject</label>
           <select id="subject" name="subject" required value={formData.subject} onChange={handleChange} className="sc-input">
             <option value="">Choose one</option>
-            <option value="general">General Inquiry</option>
-            <option value="technical">Technical Support</option>
-            <option value="billing">Billing Question</option>
-            <option value="feature">Feature Request</option>
-            <option value="bug">Bug Report</option>
+            <option value="general">General inquiry</option>
+            <option value="technical">Technical support</option>
+            <option value="billing">Billing question</option>
+            <option value="feature">Feature request</option>
+            <option value="bug">Bug report</option>
             <option value="other">Other</option>
           </select>
         </div>
@@ -106,8 +107,8 @@ export default function ContactPage() {
         />
 
         <div>
-          <button type="submit" disabled={isSubmitting} className="sc-cta">
-            {isSubmitting ? 'Sending…' : 'Send Message'}
+          <button type="submit" disabled={isSubmitting} className="sc-btn">
+            {isSubmitting ? 'Sending…' : 'Send message'}
           </button>
         </div>
       </form>

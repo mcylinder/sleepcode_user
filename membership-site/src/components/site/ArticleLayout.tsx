@@ -1,4 +1,4 @@
-// Long-form reading layout: the measure is capped and does not widen past 900px.
+// General-info template: an intro block (max 760px) over a reading column (max 680px).
 export default function ArticleLayout({
   eyebrow,
   title,
@@ -13,22 +13,14 @@ export default function ArticleLayout({
   children: React.ReactNode;
 }) {
   return (
-    <article className="mx-auto w-full max-w-[700px]">
-      <header className="px-[30px] pt-[34px] wide:px-[60px] wide:pt-[50px]">
-        <div className="sc-eyebrow">{eyebrow}</div>
-        <h1 className="mt-[10px] text-[25px] font-semibold leading-[1.3] wide:mt-3 wide:max-w-[560px] wide:text-[34px] wide:leading-[1.25]">
-          {title}
-        </h1>
-        {dek && (
-          <p className="mt-[10px] text-[14px] leading-[1.5] text-fg-muted wide:mt-3 wide:max-w-[480px] wide:text-[15px] wide:leading-[1.55]">
-            {dek}
-          </p>
-        )}
-        <div className="mt-4 border-b border-line pb-[22px] text-[12px] text-fg-faint wide:mt-[18px] wide:pb-[26px]">
-          {byline}
-        </div>
+    <article className="sc-px pb-[var(--pad-section)]">
+      <header className="flex max-w-[760px] flex-col gap-[18px] pb-[clamp(32px,4vw,48px)] pt-[clamp(28px,5vw,72px)]">
+        <span className="sc-eyebrow">{eyebrow}</span>
+        <h1 className="sc-h-page">{title}</h1>
+        {dek && <p className="sc-lead">{dek}</p>}
+        {byline && <span className="text-[15px] text-ink-muted">{byline}</span>}
       </header>
-      <div className="px-[30px] pt-6 wide:px-[60px] wide:pt-[30px]">{children}</div>
+      <div className="max-w-[680px]">{children}</div>
     </article>
   );
 }

@@ -1,24 +1,42 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { HexLogo } from '@/components/ui/icons';
+import Logo from '@/components/ui/Logo';
+
+// Journal stays out of the nav until real posts exist.
+const NAV = [
+  { href: '/#how-it-works', label: 'How it works', match: null },
+  { href: '/pricing', label: 'Pricing', match: '/pricing' },
+  { href: '/faq', label: 'FAQ', match: '/faq' },
+];
 
 export default function SiteHeader() {
   const { currentUser } = useAuth();
+  const pathname = usePathname();
 
   return (
-    <header className="mx-auto flex w-full max-w-[1060px] items-center justify-between px-[26px] pt-[26px] wide:px-[60px] wide:pt-[34px]">
-      <Link href="/" className="flex items-center gap-2">
-        <HexLogo />
-        <span className="sc-eyebrow--muted">SleepCode</span>
-      </Link>
-      <nav className="flex items-center gap-5 text-[12px] text-fg-muted">
-        <Link href="/pricing" className="hover:text-fg">Pricing</Link>
+    <header className="sc-px flex items-center justify-between gap-4 py-[22px]">
+      <Logo />
+      <nav className="flex items-center gap-[26px] text-[15px] text-ink-muted" aria-label="Site">
+        {NAV.map((item) => {
+          const active = item.match !== null && pathname.startsWith(item.match);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? 'page' : undefined}
+              className={`hidden md:inline ${active ? 'font-semibold text-accent' : ''}`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
         {currentUser ? (
-          <Link href="/application" className="hover:text-fg">Open SleepCode</Link>
+          <Link href="/application" className="font-medium text-ink">Application</Link>
         ) : (
-          <Link href="/login" className="hover:text-fg">Log in</Link>
+          <Link href="/login" className="font-medium text-ink">Log in</Link>
         )}
       </nav>
     </header>

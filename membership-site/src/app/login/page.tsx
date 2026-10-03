@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import ProviderIcon from '@/components/ProviderIcon';
-import BackHeader from '@/components/ui/BackHeader';
+import Logo from '@/components/ui/Logo';
 import StatusText from '@/components/ui/StatusText';
 import { ChevronRight } from '@/components/ui/icons';
 import SiteFooter from '@/components/site/SiteFooter';
+import { FEATURED_FREE_SESSION } from '@/lib/catalog';
 import { SOCIAL_PROVIDERS, type SocialProviderId } from '@/lib/authProviders';
 import { authErrorCode, authErrorMessage } from '@/lib/authErrors';
 
@@ -17,7 +18,7 @@ const DEFAULT_DESTINATION = '/application';
 
 const HEADINGS: Record<Mode, { title: string; sub: string }> = {
   signin: { title: 'Welcome back.', sub: 'Log in to pick up where you left off.' },
-  signup: { title: 'Create your account.', sub: 'Free accounts include the free sessions. No card needed.' },
+  signup: { title: 'Create your account.', sub: `A free account includes ${FEATURED_FREE_SESSION?.title ?? 'the free session'}. No card needed.` },
   reset: { title: 'Reset your password.', sub: 'We\u2019ll email you a link to choose a new one.' },
 };
 
@@ -114,17 +115,19 @@ export default function LoginPage() {
 
   return (
     <div className="sc-frame">
-      <BackHeader href="/" />
+      <header className="sc-px py-[22px]">
+        <Logo />
+      </header>
 
-      <main className="mx-auto w-full max-w-[400px] flex-1 px-[30px] pt-10 wide:pt-[60px]">
-        <div className="sc-eyebrow--muted">{mode === 'signup' ? 'Sign Up' : mode === 'reset' ? 'Password' : 'Log In'}</div>
-        <h1 className="mt-[6px] text-[22px] font-semibold wide:text-[26px]">{heading.title}</h1>
-        <p className="mt-2 text-[13px] leading-relaxed text-fg-muted">{heading.sub}</p>
+      <main className="mx-auto w-full max-w-[460px] flex-1 px-[var(--pad-x)] pb-[var(--pad-section)] pt-[clamp(20px,4vw,56px)]">
+        <div className="sc-eyebrow">{mode === 'signup' ? 'Sign up' : mode === 'reset' ? 'Password' : 'Log in'}</div>
+        <h1 className="sc-h-app mt-[14px]">{heading.title}</h1>
+        <p className="mt-3 text-[17px] leading-[1.6] text-ink-muted">{heading.sub}</p>
 
         <div className="mt-6 flex flex-col gap-3">
           {pendingLink && (
-            <p className="text-[13px] leading-relaxed text-fg-muted">
-              <span className="text-fg">{pendingLink.email ?? 'That email'}</span> already has a SleepCode account that
+            <p className="text-[15px] leading-[1.6] text-ink-muted">
+              <span className="text-ink">{pendingLink.email ?? 'That email'}</span> already has a SleepCode account that
               uses a different sign-in method. Sign in the way you did before, and {pendingLink.providerLabel} will be
               connected automatically.
             </p>
@@ -135,23 +138,23 @@ export default function LoginPage() {
 
         {mode !== 'reset' && (
           <>
-            <div className="mt-4 border-t border-line">
+            <div className="mt-4 border-b border-hairline">
               {SOCIAL_PROVIDERS.map((provider) => (
                 <button
                   key={provider.id}
                   onClick={() => handleProviderSignIn(provider.id)}
                   disabled={loading}
-                  className="sc-row sc-row--between w-full text-left text-[15px] font-medium disabled:opacity-50"
+                  className="sc-row sc-row--between min-h-[52px] w-full text-left text-[16px] font-medium disabled:opacity-50"
                 >
                   <span className="flex items-center gap-3">
-                    <ProviderIcon id={provider.id} className="h-4 w-4 text-fg" />
+                    <ProviderIcon id={provider.id} className="h-4 w-4 text-ink" />
                     Continue with {provider.label}
                   </span>
-                  <ChevronRight />
+                  <ChevronRight className="text-ink-muted" />
                 </button>
               ))}
             </div>
-            <div className="sc-eyebrow--muted mt-8">Or use your email</div>
+            <div className="sc-eyebrow sc-eyebrow--muted mt-8">Or use your email</div>
           </>
         )}
 
@@ -186,25 +189,25 @@ export default function LoginPage() {
                 placeholder={mode === 'signup' ? 'Password (at least 6 characters)' : 'Password'}
               />
               {mode === 'signin' && (
-                <button type="button" onClick={() => switchMode('reset')} className="sc-textbtn sc-textbtn--muted mt-3 text-[12px]">
+                <button type="button" onClick={() => switchMode('reset')} className="sc-textbtn sc-textbtn--muted mt-3 min-h-[44px] text-[14px]">
                   Forgot password?
                 </button>
               )}
             </div>
           )}
 
-          <button type="submit" disabled={loading} className="sc-cta mt-2 w-full">
+          <button type="submit" disabled={loading} className="sc-btn mt-2 min-h-[48px] w-full">
             {loading
               ? 'One moment\u2026'
               : mode === 'signup'
-                ? 'Create Account'
+                ? 'Create account'
                 : mode === 'reset'
-                  ? 'Send Reset Link'
-                  : 'Log In'}
+                  ? 'Send reset link'
+                  : 'Log in'}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-[13px] text-fg-muted">
+        <div className="mt-6 text-center text-[15px] text-ink-muted">
           {mode === 'reset' ? (
             <button onClick={() => switchMode('signin')} disabled={loading} className="sc-textbtn">
               Back to log in
