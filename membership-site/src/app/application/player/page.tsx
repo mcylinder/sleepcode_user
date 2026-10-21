@@ -25,6 +25,7 @@ import {
 import BlendSlider from '@/components/ui/BlendSlider';
 import Rings from '@/components/ui/Rings';
 import Sheet, { SheetHeader } from '@/components/ui/Sheet';
+import VolumeKnob from '@/components/ui/VolumeKnob';
 import { NightShadeIcon, PauseIcon, PlayIcon, StopwatchIcon } from '@/components/ui/icons';
 
 const FADE_OUT_SECONDS = 8;
@@ -125,6 +126,7 @@ function Player({ session }: { session: Session }) {
       setRemainingSec(saved.lengthMinutes * 60);
     }
     engine.setBalance(engineBalance(saved.instruction));
+    engine.setVolume(saved.volume / 100);
     engine.setRepeat(saved.repeat);
 
     const onVisibility = () => {
@@ -229,6 +231,11 @@ function Player({ session }: { session: Session }) {
   const setRepeat = (repeat: RepeatCount) => {
     engineRef.current?.setRepeat(repeat);
     updatePrefs({ repeat });
+  };
+
+  const setVolume = (volume: number) => {
+    engineRef.current?.setVolume(volume / 100);
+    updatePrefs({ volume });
   };
 
   const cancelEnding = () => {
@@ -378,26 +385,39 @@ function Player({ session }: { session: Session }) {
 
         <BlendSlider instruction={prefs.instruction} onChange={setInstruction} tone="player" />
 
-        <div className="flex w-full flex-col gap-[10px]">
-          <span className="text-[13px] text-p-muted" id="repeat-label">Repeat</span>
-          <div className="flex gap-[6px]" role="radiogroup" aria-labelledby="repeat-label">
-            {REPEAT_OPTIONS.map((count) => {
-              const selected = prefs.repeat === count;
-              return (
-                <button
-                  key={count}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setRepeat(count)}
-                  className={`min-h-[40px] flex-1 rounded-full border font-mono text-[13px] ${
-                    selected ? 'border-p-accent bg-p-accent text-p-on-accent' : 'border-p-chip-border text-p-fg'
-                  }`}
-                >
-                  {count}&times;
-                </button>
-              );
-            })}
+        <div className="grid w-full grid-cols-2 items-end gap-4">
+          <div className="flex flex-col gap-[10px]">
+            <span className="text-[13px] text-p-muted" id="repeat-label">Repeat</span>
+            <div className="flex gap-[6px]" role="radiogroup" aria-labelledby="repeat-label">
+              {REPEAT_OPTIONS.map((count) => {
+                const selected = prefs.repeat === count;
+                return (
+                  <button
+                    key={count}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setRepeat(count)}
+                    className={`min-h-[44px] flex-1 rounded-full border font-mono text-[13px] ${
+                      selected ? 'border-p-accent bg-p-accent text-p-on-accent' : 'border-p-chip-border text-p-fg'
+                    }`}
+                  >
+                    {count}&times;
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-[6px] justify-self-end">
+            <span className="relative text-[13px] text-p-muted">
+              <span className="invisible" aria-hidden="true">
+                Volume <span className="font-mono">100%</span>
+              </span>
+              <span className="absolute inset-0">
+                Volume <span className="font-mono tabular-nums">{prefs.volume}%</span>
+              </span>
+            </span>
+            <VolumeKnob value={prefs.volume} onChange={setVolume} />
           </div>
         </div>
       </div>
