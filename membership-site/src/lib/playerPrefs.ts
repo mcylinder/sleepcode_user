@@ -9,12 +9,14 @@ const MAX_LENGTH_MINUTES = 10 * 60 + 50;
 export interface PlayerPrefs {
   // Instruction share, 0-100. Pulse is the remainder.
   instruction: number;
+  // Overall level, 0-100.
+  volume: number;
   repeat: RepeatCount;
   // Last session length chosen; null = no end time.
   lengthMinutes: number | null;
 }
 
-export const DEFAULT_PREFS: PlayerPrefs = { instruction: 60, repeat: 2, lengthMinutes: null };
+export const DEFAULT_PREFS: PlayerPrefs = { instruction: 60, volume: 80, repeat: 2, lengthMinutes: null };
 
 const PREFS_KEY = 'sleepcode_player_prefs';
 
@@ -32,11 +34,13 @@ export function loadPlayerPrefs(): PlayerPrefs {
       typeof raw.instruction === 'number' ? raw.instruction : typeof raw.blend === 'number' ? 100 - raw.blend : null;
     const instruction =
       instructionRaw === null ? DEFAULT_PREFS.instruction : Math.min(100, Math.max(0, Math.round(instructionRaw)));
+    const volume =
+      typeof raw.volume === 'number' ? Math.min(100, Math.max(0, Math.round(raw.volume))) : DEFAULT_PREFS.volume;
     const repeat = REPEAT_OPTIONS.includes(raw.repeat as RepeatCount) ? (raw.repeat as RepeatCount) : DEFAULT_PREFS.repeat;
     const lengthRaw = raw.lengthMinutes ?? raw.timerMinutes;
     const lengthMinutes =
       typeof lengthRaw === 'number' && lengthRaw > 0 ? Math.min(MAX_LENGTH_MINUTES, Math.round(lengthRaw)) : null;
-    return { instruction, repeat, lengthMinutes };
+    return { instruction, volume, repeat, lengthMinutes };
   } catch {
     return DEFAULT_PREFS;
   }

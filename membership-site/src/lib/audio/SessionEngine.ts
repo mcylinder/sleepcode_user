@@ -29,8 +29,9 @@ async function decodeUrl(ctx: BaseAudioContext, url: string): Promise<AudioBuffe
   return downmixToMono(ctx, decoded);
 }
 
-// Plays instruction clips and the pulse in lockstep: each clip starts together with a fresh
-// copy of the pulse, both cut to the shorter length, scheduled gaplessly and looped.
+// Plays each statement with one pulse.m4a underneath the voice, then a pulse-only gap (two beats
+// already in that file) before the next play — including between 2×/4× repeats of the same line.
+// The pulse file already contains two beats, so one play = two pulses.
 export class SessionEngine {
   playing = false;
   ready = false;
@@ -43,9 +44,12 @@ export class SessionEngine {
   private clips: AudioBuffer[] = [];
   private pulse: AudioBuffer | null = null;
   private balance = 50;
+  // Master level 0-1. Fade-out ramps to 0; cancelFade / play restore this.
+  private volume = 1;
   private repeat = 1;
   private clipIndex = 0;
   private pass = 0;
+  private pendingGap = false;
   private nextWhen = 0;
   private schedulerId: ReturnType<typeof setInterval> | null = null;
   private fadeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -57,6 +61,7 @@ export class SessionEngine {
     if (this.ctx) return this.ctx;
     const ctx = new (audioContextClass())();
     this.master = ctx.createGain();
+    this.master.gain.value = this.volume;
     this.instructionGain = ctx.createGain();
     this.pulseGain = ctx.createGain();
     this.instructionGain.connect(this.master);
@@ -93,6 +98,7 @@ export class SessionEngine {
     this.clips = buffers;
     this.clipIndex = 0;
     this.pass = 0;
+    this.pendingGap = false;
     this.ready = this.clips.length > 0 && !!this.pulse;
   }
 
@@ -100,6 +106,15 @@ export class SessionEngine {
   setBalance(value: number): void {
     this.balance = Math.min(100, Math.max(0, value));
     this.applyMix();
+  }
+
+  // Overall level 0-1. Does not change the instruction/pulse blend.
+  setVolume(value: number): void {
+    this.volume = Math.min(1, Math.max(0, value));
+    if (this.fadeTimer || !this.ctx || !this.master) return;
+    const now = this.ctx.currentTime;
+    this.master.gain.cancelScheduledValues(now);
+    this.master.gain.setTargetAtTime(this.volume, now, 0.03);
   }
 
   // Takes effect from the next clip boundary.
@@ -142,6 +157,7 @@ export class SessionEngine {
     this.sources.clear();
     this.clipIndex = 0;
     this.pass = 0;
+    this.pendingGap = false;
     this.nextWhen = 0;
     this.setPlaying(false);
     if (this.ctx?.state === 'running') this.ctx.suspend().catch(() => {});
@@ -161,7 +177,7 @@ export class SessionEngine {
   }
 
   // Like fadeOutAndStop, but keeps the position so play() picks up where it left off.
-  // play() restores full volume.
+  // play() restores the set volume.
   fadeOutAndPause(seconds: number): void {
     if (!this.ctx || !this.master || !this.playing) return;
     const gain = this.master.gain;
@@ -218,7 +234,7 @@ export class SessionEngine {
     this.fadeTimer = null;
     if (this.ctx && this.master) {
       this.master.gain.cancelScheduledValues(this.ctx.currentTime);
-      this.master.gain.value = 1;
+      this.master.gain.value = this.volume;
     }
   }
 
@@ -230,20 +246,40 @@ export class SessionEngine {
   private advance(): void {
     this.pass = 0;
     this.clipIndex = (this.clipIndex + 1) % Math.max(1, this.clips.length);
+    this.pendingGap = true;
   }
 
   private tick(): void {
     const ctx = this.ctx;
     if (!this.playing || !ctx || !this.ready || !this.pulse) return;
+    const pulseDur = this.pulse.duration;
+    if (pulseDur <= 0) return;
+
     while (this.nextWhen < ctx.currentTime + LOOKAHEAD_SEC) {
+      if (this.pendingGap) {
+        // One pulse.m4a = two beats already; do not play it twice.
+        this.startSource(this.pulse, this.pulseGain!, this.nextWhen, pulseDur);
+        this.nextWhen += pulseDur;
+        this.pendingGap = false;
+        continue;
+      }
+
       const clip = this.clips[this.clipIndex];
-      const duration = Math.min(clip.duration, this.pulse.duration);
-      if (duration <= 0) return;
-      this.startSource(clip, this.instructionGain!, this.nextWhen, duration);
-      this.startSource(this.pulse, this.pulseGain!, this.nextWhen, duration);
-      this.nextWhen += duration;
+      const voiceDur = clip.duration;
+      if (voiceDur > 0) {
+        this.startSource(clip, this.instructionGain!, this.nextWhen, voiceDur);
+      }
+      // One pulse under the statement, cut off when the voice ends so it doesn't spill into the gap.
+      if (voiceDur > 0) {
+        this.startSource(this.pulse, this.pulseGain!, this.nextWhen, Math.min(pulseDur, voiceDur));
+      } else {
+        this.startSource(this.pulse, this.pulseGain!, this.nextWhen, pulseDur);
+      }
+      this.nextWhen += Math.max(voiceDur, 0);
       this.pass += 1;
+      // Gap after every play so 2×/4× are not stacked back-to-back.
       if (this.pass >= this.repeat) this.advance();
+      else this.pendingGap = true;
     }
   }
 

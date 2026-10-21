@@ -19,7 +19,7 @@ function cloudfrontBase64(input: Buffer): string {
 }
 
 // Signs a custom policy with a wildcard resource, so one query string grants access to
-// every file under `prefix` (for example "session/optimism-monologue/") until it expires.
+// every file under `prefix` (for example "session/optimism-monologue-v4/") until it expires.
 export function signPrefix(prefix: string, ttlSeconds: number): SignedPrefix {
   const domain = requireEnv('CLOUDFRONT_DOMAIN');
   const keyPairId = requireEnv('CLOUDFRONT_KEY_PAIR_ID');
