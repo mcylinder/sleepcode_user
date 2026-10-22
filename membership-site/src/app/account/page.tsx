@@ -86,7 +86,7 @@ export default function AccountPage() {
             onClick={handleLogout}
             className="border-t border-hairline py-4 text-left text-[16px] text-ink-muted"
           >
-            Log out
+            Sign out
           </button>
         </AccountSection>
 

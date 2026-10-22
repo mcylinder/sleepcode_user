@@ -63,7 +63,7 @@ export default function VolumeKnob({
       aria-valuemax={100}
       aria-valuenow={volume}
       aria-valuetext={`${volume}%`}
-      className="relative h-[64px] w-[64px] flex-none touch-none outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-p-accent"
+      className="relative h-[52px] w-[52px] flex-none touch-none outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-p-accent [@media(min-height:760px)]:h-[48px] [@media(min-height:760px)]:w-[48px]"
       onPointerDown={(e) => {
         dragValue.current = volume;
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -86,7 +86,7 @@ export default function VolumeKnob({
         style={{ transform: `rotate(${turn}deg)` }}
         aria-hidden="true"
       >
-        <span className="absolute bottom-0 left-1/2 h-[22px] w-px -translate-x-1/2 bg-p-on-accent" />
+        <span className="absolute bottom-0 left-1/2 h-[18px] w-px -translate-x-1/2 bg-p-on-accent" />
       </div>
     </div>
   );

@@ -11,7 +11,22 @@ export interface Session {
 
 export const SESSIONS: Session[] = sessionsData;
 
-export const THEMES: string[] = Array.from(new Set(SESSIONS.map((session) => session.theme).filter(Boolean)));
+// Fixed filter order for the library (beta).
+export const THEMES: string[] = ['Optimism', 'Gratitude', 'Calm', 'Confidence', 'Focus'];
+
+// Display name: "Open Door · Optimism".
+export function sessionLabel(session: Session): string {
+  return `${session.title} \u00b7 ${session.theme}`;
+}
+
+// Beta: non-free sessions are listed as coming soon (no price, no upgrade).
+export function isComingSoon(session: Session): boolean {
+  return !session.free;
+}
+
+export function scriptHref(session: Session): string {
+  return `/application/script?session=${encodeURIComponent(session.id)}`;
+}
 
 // The session the marketing pages offer to play for free.
 export const FEATURED_FREE_SESSION: Session | null = SESSIONS.find((session) => session.free) ?? null;

@@ -6,6 +6,17 @@ export class RequestError extends Error {
   }
 }
 
+async function readJson<T>(response: Response): Promise<T> {
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new RequestError(
+      (data as { error?: string }).error || 'Something went wrong. Please try again.',
+      response.status,
+    );
+  }
+  return data as T;
+}
+
 export async function authedFetch<T = unknown>(
   url: string,
   body?: unknown,
@@ -24,12 +35,18 @@ export async function authedFetch<T = unknown>(
     body: JSON.stringify(body ?? {}),
   });
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new RequestError(
-      (data as { error?: string }).error || 'Something went wrong. Please try again.',
-      response.status,
-    );
-  }
-  return data as T;
+  return readJson<T>(response);
+}
+
+// Signs a session folder. Free sessions work signed out; paid still need a bearer token.
+export async function fetchSessionMedia(sessionId: string): Promise<{ baseUrl: string; query: string }> {
+  const user = auth?.currentUser;
+  if (user) return authedFetch('/api/media/session', { sessionId });
+
+  const response = await fetch('/api/media/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId }),
+  });
+  return readJson(response);
 }

@@ -20,11 +20,13 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: 'SleepCode — Supraliminal audio for specific goals',
   description:
-    'One calm voice, speaking in the first person over a slow pulse, says clearly and often how you\u2019d like to think about a goal. You hear every word.',
+    'Supraliminal means nothing is hidden. Pick a goal, press play as you drift off, and one calm voice speaks clear statements about it, set to a steady pulse.',
 }
 
 export const viewport: Viewport = {
   themeColor: '#ddd3c5',
+  // Default for sand pages; the player overrides this client-side while mounted.
+  colorScheme: 'light',
 }
 
 export default function RootLayout({

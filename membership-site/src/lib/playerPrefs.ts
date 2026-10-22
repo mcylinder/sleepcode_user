@@ -16,7 +16,8 @@ export interface PlayerPrefs {
   lengthMinutes: number | null;
 }
 
-export const DEFAULT_PREFS: PlayerPrefs = { instruction: 60, volume: 80, repeat: 2, lengthMinutes: null };
+// Single default for signed-in and signed-out (Instruction 76 / Pulse 24).
+export const DEFAULT_PREFS: PlayerPrefs = { instruction: 76, volume: 80, repeat: 2, lengthMinutes: null };
 
 const PREFS_KEY = 'sleepcode_player_prefs';
 

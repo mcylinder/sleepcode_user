@@ -1,11 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { useMembership } from '@/hooks/useMembership';
 import { useBilling } from '@/lib/useBilling';
-import { FEATURED_FREE_SESSION, MEMBER_ONLY_COUNT, moreSessionsLabel } from '@/lib/catalog';
-import { PRICES, type BillingInterval } from '@/lib/membership';
-import BillingToggle from '@/components/ui/BillingToggle';
+import { FEATURED_FREE_SESSION, sessionLabel } from '@/lib/catalog';
+import { PRICES } from '@/lib/membership';
 import StatusText from '@/components/ui/StatusText';
 import { AccountSection, formatDate } from './Section';
 
@@ -27,14 +25,15 @@ const Note = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[15px] leading-[1.6] text-ink-muted">{children}</p>
 );
 
+// Beta: free plan only (no upgrade CTA). Existing SleepCode+ members can still manage billing.
 export default function MembershipSection({ justCheckedOut }: { justCheckedOut: boolean }) {
   const { membership, isMember, loading } = useMembership();
-  const { busy, error, startCheckout, openPortal } = useBilling();
-  const [interval, setBillingInterval] = useState<BillingInterval>('year');
+  const { busy, error, openPortal } = useBilling();
 
   const hasPaymentProblem = !!membership && PAYMENT_PROBLEM_STATUSES.includes(membership.status);
   const hasBillingHistory = !!membership && membership.status !== 'none';
   const errorText = error && <StatusText status={{ type: 'error', text: error }} />;
+  const freeLabel = FEATURED_FREE_SESSION ? sessionLabel(FEATURED_FREE_SESSION) : 'Open Door · Optimism';
 
   let body: React.ReactNode;
   if (loading) {
@@ -79,22 +78,13 @@ export default function MembershipSection({ justCheckedOut }: { justCheckedOut: 
       </PlanRow>
     );
   } else {
-    const price = PRICES[interval];
     body = (
-      <PlanRow name="Free plan" detail={FEATURED_FREE_SESSION ? `${FEATURED_FREE_SESSION.title} included` : undefined}>
+      <PlanRow name="Free plan" detail={freeLabel}>
         {justCheckedOut ? (
           <Note>Thanks! We&rsquo;re confirming your payment. This updates in a few seconds.</Note>
         ) : (
-          <Note>
-            Add {moreSessionsLabel(MEMBER_ONLY_COUNT)} for {price.amount} {price.label}. {price.note}
-          </Note>
+          <Note>{freeLabel} is included. More sessions are coming soon.</Note>
         )}
-        <div className="flex flex-wrap items-center gap-[14px]">
-          <BillingToggle value={interval} onChange={setBillingInterval} />
-          <button type="button" onClick={() => startCheckout(interval)} disabled={busy} className="sc-btn">
-            {busy ? 'Opening checkout\u2026' : 'Upgrade to SleepCode+'}
-          </button>
-        </div>
         {hasBillingHistory && (
           <button type="button" onClick={openPortal} disabled={busy} className="sc-textbtn sc-textbtn--muted self-start text-[14px]">
             View past invoices

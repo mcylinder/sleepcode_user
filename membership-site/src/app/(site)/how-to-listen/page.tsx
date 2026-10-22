@@ -14,12 +14,12 @@ const SECTIONS = [
   {
     id: 'find-your-blend',
     title: 'Find your blend',
-    body: 'The Instruction and Pulse slider sets how the voice sits against the pulse. Start around 60/40 and adjust until the words are easy to follow.',
+    body: 'The Instruction / Pulse slider sets how the voice sits against the pulse. Start with the voice clearly on top, then adjust until the words are easy to follow.',
   },
   {
     id: 'repeat-or-set-a-length',
     title: 'Repeat or set a length',
-    body: 'Choose 1\u00d7, 2\u00d7 or 4\u00d7 repeats, or set a session length in hours and minutes. The countdown appears once a length is set.',
+    body: 'Choose whether each statement plays once, twice or four times (1\u00d7, 2\u00d7, 4\u00d7). Set a session length in hours and minutes, up to 10 hours. The countdown appears once a length is set.',
   },
   {
     id: 'keep-the-volume-low',

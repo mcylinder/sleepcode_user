@@ -30,7 +30,7 @@ export default function DefaultsSection() {
   return (
     <AccountSection title="Defaults">
       <ExpandableRow
-        label="Default repeats"
+        label="Each statement"
         value={`${prefs.repeat}\u00d7`}
         open={open === 'repeat'}
         onToggle={() => toggle('repeat')}
@@ -51,7 +51,7 @@ export default function DefaultsSection() {
         </div>
       </ExpandableRow>
       <ExpandableRow
-        label="Instruction / pulse blend"
+        label="Instruction / Pulse"
         value={`${prefs.instruction} / ${100 - prefs.instruction}`}
         open={open === 'blend'}
         onToggle={() => toggle('blend')}

@@ -8,7 +8,6 @@ import Logo from '@/components/ui/Logo';
 import StatusText from '@/components/ui/StatusText';
 import { ChevronRight } from '@/components/ui/icons';
 import SiteFooter from '@/components/site/SiteFooter';
-import { FEATURED_FREE_SESSION } from '@/lib/catalog';
 import { SOCIAL_PROVIDERS, type SocialProviderId } from '@/lib/authProviders';
 import { authErrorCode, authErrorMessage } from '@/lib/authErrors';
 
@@ -17,8 +16,11 @@ type Mode = 'signin' | 'signup' | 'reset';
 const DEFAULT_DESTINATION = '/application';
 
 const HEADINGS: Record<Mode, { title: string; sub: string }> = {
-  signin: { title: 'Welcome back.', sub: 'Log in to pick up where you left off.' },
-  signup: { title: 'Create your account.', sub: `A free account includes ${FEATURED_FREE_SESSION?.title ?? 'the free session'}. No card needed.` },
+  signin: { title: 'Welcome back.', sub: 'Sign in to pick up where you left off.' },
+  signup: {
+    title: 'Create your account.',
+    sub: 'Free, no card needed. Keep your settings and progress wherever you listen.',
+  },
   reset: { title: 'Reset your password.', sub: 'We\u2019ll email you a link to choose a new one.' },
 };
 
@@ -124,7 +126,7 @@ export default function LoginPage() {
       </header>
 
       <main className="mx-auto w-full max-w-[460px] flex-1 px-[var(--pad-x)] pb-[var(--pad-section)] pt-[clamp(20px,4vw,56px)]">
-        <div className="sc-eyebrow">{mode === 'signup' ? 'Sign up' : mode === 'reset' ? 'Password' : 'Log in'}</div>
+        <div className="sc-eyebrow">{mode === 'signup' ? 'Sign up' : mode === 'reset' ? 'Password' : 'Sign in'}</div>
         <h1 className="sc-h-app mt-[14px]">{heading.title}</h1>
         <p className="mt-3 text-[17px] leading-[1.6] text-ink-muted">{heading.sub}</p>
 
@@ -209,19 +211,19 @@ export default function LoginPage() {
                 ? 'Create account'
                 : mode === 'reset'
                   ? 'Send reset link'
-                  : 'Log in'}
+                  : 'Sign in'}
           </button>
         </form>
 
         <div className="mt-6 text-center text-[15px] text-ink-muted">
           {mode === 'reset' ? (
             <button onClick={() => switchMode('signin')} disabled={loading} className="sc-textbtn">
-              Back to log in
+              Back to sign in
             </button>
           ) : mode === 'signup' ? (
             <>
               Already have an account?{' '}
-              <button onClick={() => switchMode('signin')} disabled={loading} className="sc-textbtn">Log in</button>
+              <button onClick={() => switchMode('signin')} disabled={loading} className="sc-textbtn">Sign in</button>
             </>
           ) : (
             <>

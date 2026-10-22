@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import Rings from '@/components/ui/Rings';
 import HeroCta from '@/components/site/HeroCta';
-import PricingPlans from '@/components/site/PricingPlans';
+import HomeSessions from '@/components/site/HomeSessions';
+import { FEATURED_FREE_SESSION, scriptHref } from '@/lib/catalog';
 
 const STEPS = [
   {
@@ -10,15 +11,25 @@ const STEPS = [
   },
   {
     title: 'Hear it in the first person.',
-    body: 'Each line is written in the first person (for example, \u201cI finish what I start\u201d), so it feels like your own internal dialogue rather than an instruction.',
+    body: 'Each statement is phrased with "I" ("I finish what I start") so you hear it as a statement about yourself, not a command to follow.',
   },
   {
-    title: 'Listen, and repeat.',
-    body: 'A slow 111 Hz tone pulses with each statement. It gives you a subtle, hypnotic focal point that helps you absorb the statements as you drift from conscious to asleep. Adjust the balance to match how active your mind is as you fall asleep.',
+    title: 'Follow the pulse.',
+    body: 'A steady pulse gives your attention somewhere to rest, so the statements land without you analyzing them. Each one is followed by a short pause.',
   },
 ];
 
+const SAMPLE_LINES = [
+  'I wake up glad to be here.',
+  'I choose my first thought.',
+  'Good things can happen today.',
+  'I let a bad mood pass.',
+  'When something goes wrong, I recover.',
+];
+
 export default function LandingPage() {
+  const free = FEATURED_FREE_SESSION;
+
   return (
     <>
       <section className="sc-px grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] items-center gap-[clamp(32px,5vw,72px)] pb-[clamp(48px,8vw,110px)] pt-[clamp(28px,6vw,80px)]">
@@ -26,8 +37,8 @@ export default function LandingPage() {
           <span className="sc-eyebrow">Supraliminal audio for specific goals</span>
           <h1 className="sc-h-hero">Attitudes are habits. Habits can be recoded.</h1>
           <p className="max-w-[30em] text-[clamp(17px,1.5vw,19px)] leading-[1.6] text-ink-muted">
-            SleepCode sessions are supraliminal: one calm voice, speaking in the first person over a slow pulse, says
-            clearly and often how you&rsquo;d like to think about a goal. You hear every word.
+            Supraliminal means nothing is hidden. Pick a goal, press play as you drift off, and one calm voice speaks
+            clear statements about it, set to a steady pulse.
           </p>
           <HeroCta />
         </div>
@@ -40,6 +51,10 @@ export default function LandingPage() {
         <div className="flex max-w-[640px] flex-col gap-[14px]">
           <span className="sc-eyebrow">How it works</span>
           <h2 className="sc-h-section">Simple to use. Clear about what it is.</h2>
+          <p className="text-[17px] leading-[1.6] text-ink-muted">
+            SleepCode isn&rsquo;t a sleep aid. You listen as you fall asleep because that&rsquo;s when your mind is
+            quietest. The goal is the one you choose.
+          </p>
         </div>
         <ol className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-x-10">
           {STEPS.map((step, i) => (
@@ -57,35 +72,29 @@ export default function LandingPage() {
 
       <section className="sc-section grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] items-start gap-[clamp(28px,5vw,72px)]">
         <div className="flex flex-col gap-[18px]">
-          <span className="sc-eyebrow">Why this exists</span>
-          <div className="sc-placeholder aspect-[4/5] w-full max-w-[300px]">founder portrait</div>
+          <span className="sc-eyebrow">A sample</span>
+          <h2 className="sc-h-section">Every word, in plain sight.</h2>
         </div>
-        <div className="flex max-w-[620px] flex-col gap-5 text-[clamp(17px,1.6vw,20px)] leading-[1.6]">
-          <p className="text-[clamp(24px,2.6vw,32px)] font-medium leading-[1.25] tracking-[-0.02em]">
-          I always knew. I just kept talking myself out of it.
-          </p>
-          <p className="text-ink-muted">
-            I tried the books, the journals, the subliminal tracks. The subliminal ones asked me to trust messages I
-            couldn&rsquo;t hear, and I never could.
-          </p>
-          <p className="text-ink-muted">
-          I tried many different approaches, and one worked best: hearing, plainly and often, the sentences I wanted
-            to believe, in a calm voice, as if they were already mine. SleepCode is that, made carefully and openly,
-            for anyone working on something that matters to them.
-          </p>
-          <p className="text-[15px]">- Peter D.</p>
+        <div className="flex max-w-[620px] flex-col gap-5">
+          <ul className="flex flex-col gap-3 text-[clamp(17px,1.6vw,20px)] leading-[1.55] text-ink-body">
+            {SAMPLE_LINES.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          {free && (
+            <Link href={scriptHref(free)} className="sc-link self-start text-[16px]">
+              Read the full script
+            </Link>
+          )}
         </div>
       </section>
 
-      <section id="pricing" className="sc-band sc-section flex scroll-mt-4 flex-col gap-9">
+      <section id="sessions" className="sc-band sc-section flex scroll-mt-4 flex-col gap-9">
         <div className="flex flex-col gap-[14px]">
-          <span className="sc-eyebrow">Pricing</span>
-          <h2 className="sc-h-section">Plain pricing.</h2>
+          <span className="sc-eyebrow">Sessions</span>
+          <h2 className="sc-h-section">One free session now. More on the way.</h2>
         </div>
-        <PricingPlans />
-        <Link href="/pricing" className="sc-link self-start text-[16px]">
-          See pricing details and questions
-        </Link>
+        <HomeSessions />
       </section>
     </>
   );
