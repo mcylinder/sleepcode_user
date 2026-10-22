@@ -14,7 +14,7 @@ const SECTIONS = [
   {
     id: 'find-your-blend',
     title: 'Find your blend',
-    body: 'The Instruction / Pulse slider sets how the voice sits against the pulse. Start with the voice clearly on top, then adjust until the words are easy to follow.',
+    body: 'The pulse is a soft 111 Hz tone, timed to the cadence of the statements. The Instruction / Pulse slider sets how the voice sits against it. Start with the voice clearly on top, then adjust until the words are easy to follow.',
   },
   {
     id: 'repeat-or-set-a-length',

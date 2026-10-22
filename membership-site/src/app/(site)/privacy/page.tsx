@@ -7,7 +7,7 @@ export default function PrivacyPage() {
     <ArticleLayout eyebrow="Privacy" title="Privacy Policy" byline={`Effective ${LEGAL_EFFECTIVE_DATE}`}>
       <div className="sc-prose">
         <p>
-          This Privacy Policy explains how Sleep Coder LLC (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects,
+          This Privacy Policy explains how Peter DuCharme, doing business as SleepCode (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects,
           uses, and protects information when you use SleepCode at sleepcoding.me (the &quot;Service&quot;).
         </p>
         <p>

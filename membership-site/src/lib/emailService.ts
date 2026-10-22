@@ -138,7 +138,7 @@ export async function sendConfirmationEmail(_userEmail: string, _userName: strin
                 <p>Best regards,<br>The SleepCode Team</p>
                 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">
-                  <p>Sleep Coder LLC<br>
+                  <p>SleepCode<br>
                   PO Box 442<br>
                   South Wellfleet, MA 02663</p>
                 </div>

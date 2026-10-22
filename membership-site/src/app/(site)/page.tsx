@@ -15,7 +15,7 @@ const STEPS = [
   },
   {
     title: 'Follow the pulse.',
-    body: 'A steady pulse gives your attention somewhere to rest, so the statements land without you analyzing them. Each one is followed by a short pause.',
+    body: 'A soft 111 Hz pulse, matched to the rhythm of the statements, gives your attention somewhere to rest, so they land without you analyzing them. Each statement is followed by a short pause.',
   },
 ];
 

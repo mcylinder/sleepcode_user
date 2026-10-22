@@ -27,19 +27,23 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'How is that different from subliminal audio?',
-        a: 'Subliminal tracks hide messages below hearing. We think you should be able to hear, check and choose every sentence, so ours are spoken plainly.',
+        a: 'Subliminal tracks hide messages below hearing. We think you should be able to hear, read and check every sentence, so ours are spoken plainly.',
+      },
+      {
+        q: 'What is the pulse?',
+        a: 'The pulse is a soft 111 Hz tone. Its rhythm is matched to the cadence of the statements, so each one arrives on a steady beat. The repetition is designed to be gently hypnotic, giving your attention somewhere to rest so the words can be absorbed rather than analyzed.',
       },
       {
         q: 'Is SleepCode a sleep aid?',
-        a: 'No. It isn\u2019t designed to help you fall asleep, and it doesn\u2019t treat sleep problems. Bedtime is simply when most people listen: as you drift off, your mind is quiet enough to hear the statements without arguing back.',
+        a: 'No. It isn\u2019t designed to help you fall asleep, and it doesn\u2019t treat sleep problems. Bedtime is simply when most people listen: as you drift off, your mind is quiet enough to hear the statements with fewer distractions.',
       },
       {
         q: 'Does it work?',
-        a: 'Repetition shapes how we talk to ourselves. We can\u2019t promise results. Try Open Door free for a few weeks and judge for yourself.',
+        a: `Attitudes are habits, and habits can change with gentle, steady repetition. SleepCode gives you the same clear statements night after night, so a new way of thinking has room to settle in. Everyone\u2019s experience is different. ${FREE_LABEL} is free, so give it a few weeks and see how it feels for you.`,
       },
       {
-        q: 'Is the voice real or AI?',
-        a: 'It\u2019s a synthesized voice, chosen and directed for clarity and calm. We use it so the delivery stays even across hours of audio. Every statement is written by a person.',
+        q: 'Whose voice is it?',
+        a: 'The voice is made with a text-to-speech system, chosen and directed for clarity and calm, so the delivery stays even across hours of listening. Every statement is written, edited and listened to by a person before it\u2019s added to a session.',
       },
       {
         q: 'How often should I listen?',
@@ -47,7 +51,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'Can I listen as I fall asleep?',
-        a: 'Yes. Set a session length so it stops on its own, and use Night shade to turn the screen fully black. Sleep is when you listen, not what the session is for.',
+        a: 'Yes. Set a session length so it stops on its own, and use Night shade to turn the screen fully black. Falling asleep is simply a good time to listen; the session itself is about your goal.',
       },
       {
         q: 'Can I use headphones?',

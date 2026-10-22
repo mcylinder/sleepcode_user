@@ -7,8 +7,8 @@ export default function TermsPage() {
     <ArticleLayout eyebrow="Terms" title="Terms & Conditions" byline={`Effective ${LEGAL_EFFECTIVE_DATE}`}>
       <div className="sc-prose">
         <p>
-          These Terms &amp; Conditions (&quot;Terms&quot;) are an agreement between you and Sleep Coder LLC, a limited
-          liability company organized under the laws of the State of Maine, United States (&quot;we,&quot; &quot;us,&quot;
+          These Terms &amp; Conditions (&quot;Terms&quot;) are an agreement between you and Peter DuCharme, an individual doing business as SleepCode in
+          Massachusetts, United States (&quot;we,&quot; &quot;us,&quot;
           or &quot;our&quot;). They govern your use of SleepCode at sleepcoding.me (the &quot;Service&quot;).
         </p>
         <p>By using the Service, you agree to these Terms. If you don&rsquo;t agree, please don&rsquo;t use the Service.</p>
@@ -68,7 +68,7 @@ export default function TermsPage() {
         <section>
           <h2>5. Intellectual Property</h2>
           <p>
-            The Service, including its software, audio, scripts, text, designs, and trademarks, is owned by Sleep Coder LLC
+            The Service, including its software, audio, scripts, text, designs, and trademarks, is owned by Peter DuCharme
             and protected by intellectual property laws. Using the Service doesn&rsquo;t give you ownership of any of it.
           </p>
         </section>
@@ -112,8 +112,8 @@ export default function TermsPage() {
         <section>
           <h2>9. Governing Law</h2>
           <p>
-            These Terms are governed by the laws of the United States and the State of Maine, without regard to
-            conflict-of-law rules. Disputes will be resolved in the state or federal courts located in Maine.
+            These Terms are governed by the laws of the Commonwealth of Massachusetts and applicable United States law, without regard to
+            conflict-of-law rules. Disputes will be resolved in the state or federal courts located in Massachusetts.
           </p>
         </section>
 

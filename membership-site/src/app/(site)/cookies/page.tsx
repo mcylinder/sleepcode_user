@@ -7,7 +7,7 @@ export default function CookiesPage() {
     <ArticleLayout eyebrow="Cookies" title="Cookie Policy" byline={`Effective ${LEGAL_EFFECTIVE_DATE}`}>
       <div className="sc-prose">
         <p>
-          This Cookie Policy explains how Sleep Coder LLC (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) uses cookies and
+          This Cookie Policy explains how Peter DuCharme, doing business as SleepCode (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) uses cookies and
           similar browser storage on sleepcoding.me (the &quot;Service&quot;).
         </p>
         <p>
