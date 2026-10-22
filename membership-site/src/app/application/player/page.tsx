@@ -434,7 +434,7 @@ function Player({ session }: { session: Session }) {
           <h1 className="text-[clamp(24px,2.8vw,30px)] font-medium tracking-[-0.02em]">{label}</h1>
           <p className="text-[14px] text-p-muted" role="status">{status}</p>
           <Link href={scriptHref(session)} className="self-center pt-0.5 text-[13px] text-p-muted underline underline-offset-4">
-            Read the script
+            Read every statement
           </Link>
         </div>
 

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Rings from '@/components/ui/Rings';
 import HeroCta from '@/components/site/HeroCta';
 import HomeSessions from '@/components/site/HomeSessions';
-import { FEATURED_FREE_SESSION, scriptHref } from '@/lib/catalog';
+import HomeSample from '@/components/site/HomeSample';
 
 const STEPS = [
   {
@@ -19,17 +19,8 @@ const STEPS = [
   },
 ];
 
-const SAMPLE_LINES = [
-  'I wake up glad to be here.',
-  'I choose my first thought.',
-  'Good things can happen today.',
-  'I let a bad mood pass.',
-  'When something goes wrong, I recover.',
-];
 
 export default function LandingPage() {
-  const free = FEATURED_FREE_SESSION;
-
   return (
     <>
       <section className="sc-px grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] items-center gap-[clamp(32px,5vw,72px)] pb-[clamp(48px,8vw,110px)] pt-[clamp(28px,6vw,80px)]">
@@ -70,24 +61,7 @@ export default function LandingPage() {
         </Link>
       </section>
 
-      <section className="sc-section grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] items-start gap-[clamp(28px,5vw,72px)]">
-        <div className="flex flex-col gap-[18px]">
-          <span className="sc-eyebrow">A sample</span>
-          <h2 className="sc-h-section">Every word, in plain sight.</h2>
-        </div>
-        <div className="flex max-w-[620px] flex-col gap-5">
-          <ul className="flex flex-col gap-3 text-[clamp(17px,1.6vw,20px)] leading-[1.55] text-ink-body">
-            {SAMPLE_LINES.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-          {free && (
-            <Link href={scriptHref(free)} className="sc-link self-start text-[16px]">
-              Read the full script
-            </Link>
-          )}
-        </div>
-      </section>
+      <HomeSample />
 
       <section id="sessions" className="sc-band sc-section flex scroll-mt-4 flex-col gap-9">
         <div className="flex flex-col gap-[14px]">

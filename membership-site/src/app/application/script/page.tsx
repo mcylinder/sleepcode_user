@@ -54,7 +54,7 @@ function ScriptBody() {
       <main className="sc-frame sc-px py-10">
         <Logo />
         <div className="mx-auto mt-12 flex max-w-[640px] flex-col gap-4">
-          <h1 className="sc-h-page">Script</h1>
+          <h1 className="sc-h-page">Statements</h1>
           <p className="text-[15px] text-ink-muted">That session wasn&rsquo;t found.</p>
           <Link href="/" className="sc-link self-start">
             Back home
@@ -73,16 +73,16 @@ function ScriptBody() {
       </div>
       <div className="sc-px mx-auto flex w-full max-w-[720px] flex-1 flex-col gap-8 pb-[var(--pad-section)]">
         <div className="flex flex-col gap-2">
-          <span className="sc-eyebrow">Script</span>
+          <span className="sc-eyebrow">Statements</span>
           <h1 className="sc-h-page">{sessionLabel(session)}</h1>
           <p className="sc-lead">
             {script.kind === 'ready'
               ? `Every word spoken in this session: ${count} statements in ${script.concepts.length} groups. Each group says one idea a few different ways, and the session moves through them in a shuffled order.`
               : script.kind === 'locked'
-                ? 'This script will be available when the session is.'
+                ? 'These statements will be available when the session is.'
                 : script.kind === 'loading'
-                  ? 'Loading the script…'
-                  : 'Every word spoken in this session will appear here. The full script is coming soon.'}
+                  ? 'Loading the statements…'
+                  : 'Every statement spoken in this session will appear here soon.'}
           </p>
         </div>
 

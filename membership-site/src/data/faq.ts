@@ -59,7 +59,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'Can I read what\u2019s said?',
-        a: 'Yes. Every session\u2019s full script is linked from the library. Nothing is spoken that isn\u2019t written there.',
+        a: 'Yes. Every session lists every statement it speaks. Find the link in the library or the player. Nothing is spoken that isn\u2019t written there.',
       },
       {
         q: 'Do I need to download an app?',
