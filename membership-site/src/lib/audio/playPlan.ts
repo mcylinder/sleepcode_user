@@ -2,11 +2,48 @@ export interface ManifestStatement {
   filename?: string;
   concept_id?: number;
   variant_id?: number;
+  // The exact words spoken in this file. Shown on the script page.
+  text?: string;
+}
+
+export interface ManifestConcept {
+  id: number;
+  // Optional short label for the concept, shown as a heading on the script page.
+  title?: string;
 }
 
 export interface SessionManifest {
   statements?: ManifestStatement[];
+  concepts?: ManifestConcept[];
   pulse?: { path?: string };
+}
+
+export interface ScriptConcept {
+  id: number;
+  title?: string;
+  lines: string[];
+}
+
+// Script page: every statement's text, grouped by concept (in concept order), variants in order.
+// Returns [] when the manifest has no text yet.
+export function buildScript(manifest: SessionManifest): ScriptConcept[] {
+  const titles = new Map((manifest.concepts ?? []).map((c) => [c.id, c.title]));
+  const byConcept = new Map<number, { variant: number; text: string }[]>();
+  for (const statement of manifest.statements ?? []) {
+    const ids = conceptVariantOf(statement);
+    const text = statement.text?.trim();
+    if (!ids || !text) continue;
+    const lines = byConcept.get(ids.concept) ?? [];
+    lines.push({ variant: ids.variant, text });
+    byConcept.set(ids.concept, lines);
+  }
+  return [...byConcept.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([id, lines]) => ({
+      id,
+      title: titles.get(id),
+      lines: lines.sort((a, b) => a.variant - b.variant).map((l) => l.text),
+    }));
 }
 
 export interface PlayPlan {
