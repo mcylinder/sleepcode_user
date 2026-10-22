@@ -112,7 +112,7 @@ export default function HomePage() {
                       <span>{soon ? 'Coming soon' : 'Free'}</span>
                       {!soon && (
                         <Link href={scriptHref(session)} className="sc-link">
-                          Read every statement
+                          Read the transcript
                         </Link>
                       )}
                     </span>

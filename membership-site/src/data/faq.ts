@@ -47,7 +47,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'How often should I listen?',
-        a: 'Daily works best, because repetition does the work. In the player you can hear each statement more than once, or set a session length and let it run.',
+        a: 'Most nights works best. Repetition is how the statements become familiar. In the player you can hear each statement more than once, or set a session length and let it run.',
       },
       {
         q: 'Can I listen as I fall asleep?',
@@ -63,7 +63,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'Can I read what\u2019s said?',
-        a: 'Yes. Every session lists every statement it speaks. Find the link in the library or the player. Nothing is spoken that isn\u2019t written there.',
+        a: 'Yes. Every session has a full transcript. Find it in the library or the player. Nothing is spoken that isn\u2019t written there.',
       },
       {
         q: 'Do I need to download an app?',

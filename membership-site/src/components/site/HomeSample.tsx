@@ -48,7 +48,7 @@ export default function HomeSample() {
           ))}
         </ul>
         <Link href={scriptHref(free)} className="sc-link self-start text-[16px]">
-          Read every statement
+          Read the transcript
         </Link>
       </div>
     </section>

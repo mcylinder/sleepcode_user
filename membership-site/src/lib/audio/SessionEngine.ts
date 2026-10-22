@@ -3,6 +3,9 @@ import type { PlayPlan } from './playPlan';
 const LOOKAHEAD_SEC = 0.2;
 const SCHEDULE_INTERVAL_MS = 50;
 const LOAD_CONCURRENCY = 6;
+// Softens buffer start/stop so cutting the under-voice pulse and starting the gap pulse
+// don't click at the boundary.
+const SOURCE_FADE_SEC = 0.012;
 
 function audioContextClass(): typeof AudioContext {
   const legacy = (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -54,6 +57,7 @@ export class SessionEngine {
   private schedulerId: ReturnType<typeof setInterval> | null = null;
   private fadeTimer: ReturnType<typeof setTimeout> | null = null;
   private sources = new Set<AudioBufferSourceNode>();
+  private envelopes = new Set<GainNode>();
   private loadId = 0;
   private disposed = false;
 
@@ -155,6 +159,14 @@ export class SessionEngine {
       }
     }
     this.sources.clear();
+    for (const env of this.envelopes) {
+      try {
+        env.disconnect();
+      } catch {
+        // Already disconnected.
+      }
+    }
+    this.envelopes.clear();
     this.clipIndex = 0;
     this.pass = 0;
     this.pendingGap = false;
@@ -284,11 +296,32 @@ export class SessionEngine {
   }
 
   private startSource(buffer: AudioBuffer, destination: AudioNode, when: number, duration: number): void {
-    const source = this.ctx!.createBufferSource();
+    if (duration <= 0) return;
+    const ctx = this.ctx!;
+    const source = ctx.createBufferSource();
+    const env = ctx.createGain();
     source.buffer = buffer;
-    source.connect(destination);
+    source.connect(env);
+    env.connect(destination);
+
+    const fade = Math.min(SOURCE_FADE_SEC, duration / 2);
+    const end = when + duration;
+    env.gain.setValueAtTime(0, when);
+    env.gain.linearRampToValueAtTime(1, when + fade);
+    env.gain.setValueAtTime(1, end - fade);
+    env.gain.linearRampToValueAtTime(0, end);
+
     source.start(when, 0, duration);
     this.sources.add(source);
-    source.onended = () => this.sources.delete(source);
+    this.envelopes.add(env);
+    source.onended = () => {
+      this.sources.delete(source);
+      try {
+        env.disconnect();
+      } catch {
+        // Already disconnected.
+      }
+      this.envelopes.delete(env);
+    };
   }
 }

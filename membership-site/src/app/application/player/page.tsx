@@ -4,9 +4,9 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { findSession, isComingSoon, playerHref, saveLastPlayed, scriptHref, sessionLabel, type Session } from '@/lib/catalog';
+import { findSession, isComingSoon, playerHref, saveLastPlayed, sessionLabel, type Session } from '@/lib/catalog';
 import { fetchSessionMedia, RequestError } from '@/lib/authedFetch';
-import { buildPlayPlan, type SessionManifest } from '@/lib/audio/playPlan';
+import { buildPlayPlan, buildScript, type ScriptConcept, type SessionManifest } from '@/lib/audio/playPlan';
 import { SessionEngine } from '@/lib/audio/SessionEngine';
 import { StayAwake } from '@/lib/audio/StayAwake';
 import {
@@ -36,8 +36,9 @@ import Rings from '@/components/ui/Rings';
 import Sheet, { SheetHeader } from '@/components/ui/Sheet';
 import VolumeKnob from '@/components/ui/VolumeKnob';
 import PlayerIntro from '@/components/ui/PlayerIntro';
+import StatementsOverlay from '@/components/ui/StatementsOverlay';
 import SaveSettingsPrompt from '@/components/ui/SaveSettingsPrompt';
-import { NightShadeIcon, PauseIcon, PlayIcon, StopwatchIcon } from '@/components/ui/icons';
+import { NightShadeIcon, PauseIcon, PlayIcon, StatementsIcon, StopwatchIcon } from '@/components/ui/icons';
 
 const FADE_OUT_SECONDS = 8;
 const DEFAULT_SHEET_MINUTES = 60;
@@ -140,6 +141,8 @@ function Player({ session }: { session: Session }) {
   const [draftM, setDraftM] = useState(0);
   const [shadeOn, setShadeOn] = useState(false);
   const [introOpen, setIntroOpen] = useState(false);
+  const [statementsOpen, setStatementsOpen] = useState(false);
+  const [script, setScript] = useState<ScriptConcept[]>([]);
   const [promptPending, setPromptPending] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
   const wasEnding = useRef(false);
@@ -200,7 +203,9 @@ function Player({ session }: { session: Session }) {
         const fileUrl = (name: string) => `${signed.baseUrl}${encodeURIComponent(name)}?${signed.query}`;
         const response = await fetch(fileUrl('manifest.json'));
         if (!response.ok) throw new Error('This session\u2019s audio isn\u2019t available yet.');
-        const plan = buildPlayPlan((await response.json()) as SessionManifest, fileUrl);
+        const manifest = (await response.json()) as SessionManifest;
+        const plan = buildPlayPlan(manifest, fileUrl);
+        if (!cancelled) setScript(buildScript(manifest));
         if (!plan.statementUrls.length) throw new Error('This session\u2019s audio isn\u2019t available yet.');
         if (cancelled) return;
 
@@ -256,7 +261,7 @@ function Player({ session }: { session: Session }) {
 
   // After a finished session (or a pending mid-session leave), offer account once idle.
   useEffect(() => {
-    if (currentUser || !promptPending || shadeOn || playing || introOpen || sheetOpen) return;
+    if (currentUser || !promptPending || shadeOn || playing || introOpen || sheetOpen || statementsOpen) return;
     if (!canShowAccountPrompt()) {
       setPromptPending(false);
       clearAccountPromptPending();
@@ -266,7 +271,7 @@ function Player({ session }: { session: Session }) {
     markAccountPromptShownThisVisit();
     setPromptOpen(true);
     setPromptPending(false);
-  }, [currentUser, promptPending, shadeOn, playing, introOpen, sheetOpen]);
+  }, [currentUser, promptPending, shadeOn, playing, introOpen, sheetOpen, statementsOpen]);
 
   useEffect(() => {
     if (ending) wasEnding.current = true;
@@ -405,6 +410,18 @@ function Player({ session }: { session: Session }) {
       <div className="flex items-center justify-between gap-3 px-[clamp(22px,4vw,48px)] pb-3 pt-[calc(12px+env(safe-area-inset-top,0px))] text-[15px] text-p-muted [@media(min-height:760px)]:pb-2 [@media(min-height:760px)]:pt-[calc(8px+env(safe-area-inset-top,0px))]">
         <Link href="/application" className="flex min-h-[44px] items-center">&lsaquo; Back</Link>
         <div className="flex items-center gap-2">
+          {script.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setStatementsOpen(true)}
+              aria-label="Transcript"
+              title="Transcript"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-full border border-p-chip-border px-3 text-[14px] font-medium text-p-fg sm:px-4"
+            >
+              <StatementsIcon />
+              <span className="hidden sm:inline">Transcript</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setIntroOpen(true)}
@@ -433,9 +450,6 @@ function Player({ session }: { session: Session }) {
         <div className="flex flex-col gap-1 text-center">
           <h1 className="text-[clamp(24px,2.8vw,30px)] font-medium tracking-[-0.02em]">{label}</h1>
           <p className="text-[14px] text-p-muted" role="status">{status}</p>
-          <Link href={scriptHref(session)} className="self-center pt-0.5 text-[13px] text-p-muted underline underline-offset-4">
-            Read every statement
-          </Link>
         </div>
 
         <div className="flex min-h-[44px] w-full flex-col justify-center">
@@ -559,8 +573,14 @@ function Player({ session }: { session: Session }) {
       </Sheet>
 
       <PlayerIntro open={introOpen} onClose={() => setIntroOpen(false)} />
+      <StatementsOverlay
+        open={statementsOpen && !shadeOn}
+        onClose={() => setStatementsOpen(false)}
+        title={label}
+        concepts={script}
+      />
       <SaveSettingsPrompt
-        open={promptOpen && !shadeOn && !introOpen}
+        open={promptOpen && !shadeOn && !introOpen && !statementsOpen}
         onClose={() => setPromptOpen(false)}
         nextHref={playerHref(session)}
       />
