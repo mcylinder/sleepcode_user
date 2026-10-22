@@ -7,8 +7,7 @@ import StatusText from '@/components/ui/StatusText';
 
 const DETAILS = [
   { label: 'Email', value: <a href={`mailto:${CONTACT_EMAIL}`} className="sc-link">{CONTACT_EMAIL}</a> },
-  { label: 'Phone', value: <a href="tel:207-358-9026" className="sc-link">207-358-9026</a> },
-  { label: 'Mail', value: 'PO BOX 2803, South Portland, ME 04116' },
+  { label: 'Mail', value: 'PO Box 442, South Wellfleet, MA 02663' },
   { label: 'Response', value: 'Usually within 72 hours' },
 ];
 
