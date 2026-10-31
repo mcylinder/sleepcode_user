@@ -3,9 +3,10 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { findSession, sessionLabel, type Session } from '@/lib/catalog';
+import { findSession, mediaVoiceId, sessionLabel, type Session } from '@/lib/catalog';
 import { fetchSessionMedia } from '@/lib/authedFetch';
 import { buildScript, type ScriptConcept, type SessionManifest } from '@/lib/audio/playPlan';
+import { loadPlayerPrefs } from '@/lib/playerPrefs';
 import PlayLink from '@/components/ui/PlayLink';
 import Logo from '@/components/ui/Logo';
 
@@ -25,7 +26,9 @@ function useScript(session: Session | null): ScriptState {
     setState({ kind: 'loading' });
     (async () => {
       try {
-        const signed = await fetchSessionMedia(session.id);
+        const voiceId = mediaVoiceId(loadPlayerPrefs().voiceId);
+        if (!voiceId) throw new Error('voice');
+        const signed = await fetchSessionMedia(session.id, voiceId);
         const response = await fetch(`${signed.baseUrl}manifest.json?${signed.query}`);
         if (!response.ok) throw new Error('manifest');
         const concepts = buildScript((await response.json()) as SessionManifest);

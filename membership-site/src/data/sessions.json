@@ -1,37 +1,604 @@
-[
-  {
-    "id": "optimism-monologue-v4",
-    "title": "Open Door",
-    "theme": "Optimism",
-    "description": "For a more hopeful default: expecting good things and recovering quickly when they don't happen.",
-    "free": true
-  },
-  {
-    "id": "quiet-abundance",
-    "title": "Quiet Abundance",
-    "theme": "Gratitude",
-    "description": "",
-    "free": false
-  },
-  {
-    "id": "loosening-the-grip",
-    "title": "Loosening the Grip",
-    "theme": "Calm",
-    "description": "",
-    "free": false
-  },
-  {
-    "id": "steady-ground",
-    "title": "Steady Ground",
-    "theme": "Confidence",
-    "description": "",
-    "free": false
-  },
-  {
-    "id": "clear-signal",
-    "title": "Clear Signal",
-    "theme": "Focus",
-    "description": "",
-    "free": false
-  }
-]
+{
+  "voices": [
+    {
+      "id": "VU16byTywsWv5JpI8rbc",
+      "name": "Owen",
+      "description": "A calm, soothing, magnetic narrative American male voice."
+    },
+    {
+      "id": "xj6rsvbnWE73bxN6ODvj",
+      "name": "Clara",
+      "description": "A warm, clear, authoritative American female voice"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "fresh-start",
+      "title": "Fresh Start",
+      "theme": "Mindset",
+      "description": "Beginning again after a setback",
+      "free": true
+    },
+    {
+      "id": "let-it-in",
+      "title": "Let It In",
+      "theme": "Mindset",
+      "description": "Feeling safe to welcome good thoughts",
+      "free": true
+    },
+    {
+      "id": "light-touch",
+      "title": "Light Touch",
+      "theme": "Mindset",
+      "description": "Taking life a little less seriously",
+      "free": true
+    },
+    {
+      "id": "open-door",
+      "title": "Open Door",
+      "theme": "Mindset",
+      "description": "Expecting good things and recovering quickly when they don't happen",
+      "free": true
+    },
+    {
+      "id": "quiet-abundance",
+      "title": "Quiet Abundance",
+      "theme": "Mindset",
+      "description": "Noticing what is already good",
+      "free": true
+    },
+    {
+      "id": "wide-angle",
+      "title": "Wide Angle",
+      "theme": "Mindset",
+      "description": "Keeping small problems small",
+      "free": true
+    },
+    {
+      "id": "clear-signal",
+      "title": "Clear Signal",
+      "theme": "Drive",
+      "description": "Staying on one task and coming back when I drift",
+      "free": true
+    },
+    {
+      "id": "daily-practice",
+      "title": "Daily Practice",
+      "theme": "Drive",
+      "description": "Showing up for my habits every day",
+      "free": true
+    },
+    {
+      "id": "first-step",
+      "title": "First Step",
+      "theme": "Drive",
+      "description": "Starting instead of putting things off",
+      "free": true
+    },
+    {
+      "id": "last-mile",
+      "title": "Last Mile",
+      "theme": "Drive",
+      "description": "Finishing what I start",
+      "free": true
+    },
+    {
+      "id": "open-studio",
+      "title": "Open Studio",
+      "theme": "Drive",
+      "description": "Making things and trying ideas freely",
+      "free": true
+    },
+    {
+      "id": "sharp-edge",
+      "title": "Sharp Edge",
+      "theme": "Drive",
+      "description": "Making a choice and moving on",
+      "free": true
+    },
+    {
+      "id": "center-stage",
+      "title": "Center Stage",
+      "theme": "Self",
+      "description": "Feeling at ease in front of others",
+      "free": true
+    },
+    {
+      "id": "front-foot",
+      "title": "Front Foot",
+      "theme": "Self",
+      "description": "Doing the hard thing anyway",
+      "free": true
+    },
+    {
+      "id": "inner-ally",
+      "title": "Inner Ally",
+      "theme": "Self",
+      "description": "Treating myself with respect",
+      "free": true
+    },
+    {
+      "id": "own-voice",
+      "title": "Own Voice",
+      "theme": "Self",
+      "description": "Saying what I think and setting limits",
+      "free": true
+    },
+    {
+      "id": "room-to-grow",
+      "title": "Room to Grow",
+      "theme": "Self",
+      "description": "Being kind to myself after a mistake",
+      "free": true
+    },
+    {
+      "id": "steady-ground",
+      "title": "Steady Ground",
+      "theme": "Self",
+      "description": "Trusting my own judgment and ability",
+      "free": true
+    },
+    {
+      "id": "the-presentation",
+      "title": "The Presentation",
+      "theme": "Self",
+      "description": "Speaking with ease in front of a group",
+      "free": true
+    },
+    {
+      "id": "the-toast",
+      "title": "The Toast",
+      "theme": "Self",
+      "description": "Raising a glass and speaking from the heart",
+      "free": true
+    },
+    {
+      "id": "clean-slate",
+      "title": "Clean Slate",
+      "theme": "Ease",
+      "description": "Releasing past mistakes and grudges",
+      "free": true
+    },
+    {
+      "id": "driving",
+      "title": "Driving",
+      "theme": "Ease",
+      "description": "Staying relaxed behind the wheel",
+      "free": true
+    },
+    {
+      "id": "exams",
+      "title": "Exams",
+      "theme": "Ease",
+      "description": "Staying clear and calm during a test",
+      "free": true
+    },
+    {
+      "id": "flying",
+      "title": "Flying",
+      "theme": "Ease",
+      "description": "Feeling at ease on a plane",
+      "free": true
+    },
+    {
+      "id": "good-enough",
+      "title": "Good Enough",
+      "theme": "Ease",
+      "description": "Doing my best without needing it perfect",
+      "free": true
+    },
+    {
+      "id": "hard-conversation",
+      "title": "Hard Conversation",
+      "theme": "Ease",
+      "description": "Staying calm and clear in a tough talk",
+      "free": true
+    },
+    {
+      "id": "loosening-the-grip",
+      "title": "Loosening the Grip",
+      "theme": "Ease",
+      "description": "Letting tension and worry ease",
+      "free": true
+    },
+    {
+      "id": "slow-tide",
+      "title": "Slow Tide",
+      "theme": "Ease",
+      "description": "Letting things take the time they take",
+      "free": true
+    },
+    {
+      "id": "soft-landing",
+      "title": "Soft Landing",
+      "theme": "Ease",
+      "description": "Handling change with ease",
+      "free": true
+    },
+    {
+      "id": "still-point",
+      "title": "Still Point",
+      "theme": "Ease",
+      "description": "Paying attention to right now",
+      "free": true
+    },
+    {
+      "id": "sunday-dread",
+      "title": "Sunday Dread",
+      "theme": "Ease",
+      "description": "Meeting the week ahead with ease",
+      "free": true
+    },
+    {
+      "id": "waiting-for-news",
+      "title": "Waiting for News",
+      "theme": "Ease",
+      "description": "Staying steady while I wait",
+      "free": true
+    },
+    {
+      "id": "weathering",
+      "title": "Weathering",
+      "theme": "Ease",
+      "description": "Staying steady when something hard happens",
+      "free": true
+    },
+    {
+      "id": "common-ground",
+      "title": "Common Ground",
+      "theme": "Connection",
+      "description": "Seeing the other person's side",
+      "free": true
+    },
+    {
+      "id": "dancing",
+      "title": "Dancing",
+      "theme": "Connection",
+      "description": "Moving freely and having fun on the dance floor",
+      "free": true
+    },
+    {
+      "id": "dinner-party",
+      "title": "Dinner Party",
+      "theme": "Connection",
+      "description": "Enjoying conversation around the table",
+      "free": true
+    },
+    {
+      "id": "first-date-part-1",
+      "title": "First Date",
+      "theme": "Connection",
+      "description": "Being relaxed and myself on a first date.",
+      "free": true
+    },
+    {
+      "id": "first-date-part-2",
+      "title": "First Date",
+      "theme": "Connection",
+      "description": "Easy conversation once we sit down.",
+      "free": true
+    },
+    {
+      "id": "first-date-part-3",
+      "title": "First Date",
+      "theme": "Connection",
+      "description": "Letting the real me show.",
+      "free": true
+    },
+    {
+      "id": "first-date-part-4",
+      "title": "First Date",
+      "theme": "Connection",
+      "description": "Letting the evening settle with calm and hope.",
+      "free": true
+    },
+    {
+      "id": "flirting-part-1",
+      "title": "Flirting",
+      "theme": "Connection",
+      "description": "Showing interest with ease and fun.",
+      "free": true
+    },
+    {
+      "id": "flirting-part-2",
+      "title": "Flirting",
+      "theme": "Connection",
+      "description": "Saying hello and getting the talk going.",
+      "free": true
+    },
+    {
+      "id": "flirting-part-3",
+      "title": "Flirting",
+      "theme": "Connection",
+      "description": "Keeping it fun, easy and warm.",
+      "free": true
+    },
+    {
+      "id": "meeting-the-family",
+      "title": "Meeting the Family",
+      "theme": "Connection",
+      "description": "Meeting my partner's family with warmth",
+      "free": true
+    },
+    {
+      "id": "open-hand",
+      "title": "Open Hand",
+      "theme": "Connection",
+      "description": "Giving time and attention freely",
+      "free": true
+    },
+    {
+      "id": "reaching-out",
+      "title": "Reaching Out",
+      "theme": "Connection",
+      "description": "Making and keeping friends",
+      "free": true
+    },
+    {
+      "id": "small-talk",
+      "title": "Small Talk",
+      "theme": "Connection",
+      "description": "Starting and enjoying easy conversation",
+      "free": true
+    },
+    {
+      "id": "the-party",
+      "title": "The Party",
+      "theme": "Connection",
+      "description": "Walking in and joining the fun",
+      "free": true
+    },
+    {
+      "id": "two-way-street",
+      "title": "Two-Way Street",
+      "theme": "Connection",
+      "description": "Listening fully before I answer",
+      "free": true
+    },
+    {
+      "id": "walking-in-alone",
+      "title": "Walking In Alone",
+      "theme": "Connection",
+      "description": "Entering a room alone with confidence",
+      "free": true
+    },
+    {
+      "id": "warm-welcome",
+      "title": "Warm Welcome",
+      "theme": "Connection",
+      "description": "Meeting people with warmth",
+      "free": true
+    },
+    {
+      "id": "at-home",
+      "title": "At Home",
+      "theme": "Body",
+      "description": "Feeling at home in my body",
+      "free": true
+    },
+    {
+      "id": "get-moving",
+      "title": "Get Moving",
+      "theme": "Body",
+      "description": "Enjoying moving my body",
+      "free": true
+    },
+    {
+      "id": "good-fuel",
+      "title": "Good Fuel",
+      "theme": "Body",
+      "description": "Choosing food that makes me feel good",
+      "free": true
+    },
+    {
+      "id": "morning-spark",
+      "title": "Morning Spark",
+      "theme": "Body",
+      "description": "Feeling energized for the day ahead",
+      "free": true
+    },
+    {
+      "id": "unplugged",
+      "title": "Unplugged",
+      "theme": "Body",
+      "description": "Putting the phone down and being here",
+      "free": true
+    },
+    {
+      "id": "asking-for-a-raise",
+      "title": "Asking for a Raise",
+      "theme": "Growth",
+      "description": "Asking for what my work is worth",
+      "free": true
+    },
+    {
+      "id": "even-keel",
+      "title": "Even Keel",
+      "theme": "Growth",
+      "description": "Feeling steady and clear about money",
+      "free": true
+    },
+    {
+      "id": "fast-learner",
+      "title": "Fast Learner",
+      "theme": "Growth",
+      "description": "Picking up new skills with ease",
+      "free": true
+    },
+    {
+      "id": "first-day",
+      "title": "First Day",
+      "theme": "Growth",
+      "description": "Starting a new job with ease",
+      "free": true
+    },
+    {
+      "id": "job-interview",
+      "title": "Job Interview",
+      "theme": "Growth",
+      "description": "Showing my best in an interview",
+      "free": true
+    },
+    {
+      "id": "launching-a-business-part-1",
+      "title": "Launching a Business",
+      "theme": "Growth",
+      "description": "Starting my business with courage.",
+      "free": true
+    },
+    {
+      "id": "launching-a-business-part-2",
+      "title": "Launching a Business",
+      "theme": "Growth",
+      "description": "Selling with confidence.",
+      "free": true
+    },
+    {
+      "id": "launching-a-business-part-3",
+      "title": "Launching a Business",
+      "theme": "Growth",
+      "description": "Being seen for what I make.",
+      "free": true
+    },
+    {
+      "id": "launching-a-business-part-4",
+      "title": "Launching a Business",
+      "theme": "Growth",
+      "description": "Staying strong when things get hard.",
+      "free": true
+    },
+    {
+      "id": "lead-on",
+      "title": "Lead On",
+      "theme": "Growth",
+      "description": "Leading with clarity and care",
+      "free": true
+    },
+    {
+      "id": "long-game",
+      "title": "Long Game",
+      "theme": "Growth",
+      "description": "Keeping going toward big goals",
+      "free": true
+    },
+    {
+      "id": "new-chapter",
+      "title": "New Chapter",
+      "theme": "Growth",
+      "description": "Moving toward work that fits me",
+      "free": true
+    },
+    {
+      "id": "open-question",
+      "title": "Open Question",
+      "theme": "Growth",
+      "description": "Wanting to learn and asking questions",
+      "free": true
+    },
+    {
+      "id": "the-pitch",
+      "title": "The Pitch",
+      "theme": "Growth",
+      "description": "Presenting my idea with conviction",
+      "free": true
+    },
+    {
+      "id": "cannabis-break",
+      "title": "Cannabis Break",
+      "theme": "Freedom",
+      "description": "Enjoying a clear head without cannabis",
+      "free": true
+    },
+    {
+      "id": "clear-mornings-part-1",
+      "title": "Clear Mornings",
+      "theme": "Freedom",
+      "description": "Enjoying life without alcohol.",
+      "free": true
+    },
+    {
+      "id": "clear-mornings-part-2",
+      "title": "Clear Mornings",
+      "theme": "Freedom",
+      "description": "Enjoying events alcohol-free.",
+      "free": true
+    },
+    {
+      "id": "drinking-less",
+      "title": "Drinking Less",
+      "theme": "Freedom",
+      "description": "Choosing to drink less, with ease",
+      "free": true
+    },
+    {
+      "id": "impulse-spending",
+      "title": "Impulse Spending",
+      "theme": "Freedom",
+      "description": "Pausing before I buy",
+      "free": true
+    },
+    {
+      "id": "late-night-scrolling",
+      "title": "Late-Night Scrolling",
+      "theme": "Freedom",
+      "description": "Putting the phone down at night",
+      "free": true
+    },
+    {
+      "id": "mindful-eating-part-1",
+      "title": "Mindful Eating",
+      "theme": "Freedom",
+      "description": "Enjoying food and eating when hungry.",
+      "free": true
+    },
+    {
+      "id": "mindful-eating-part-2",
+      "title": "Mindful Eating",
+      "theme": "Freedom",
+      "description": "Relaxing evenings after dinner.",
+      "free": true
+    },
+    {
+      "id": "mindful-eating-part-3",
+      "title": "Mindful Eating",
+      "theme": "Freedom",
+      "description": "Meeting stress with care.",
+      "free": true
+    },
+    {
+      "id": "mindful-eating-part-4",
+      "title": "Mindful Eating",
+      "theme": "Freedom",
+      "description": "Slowing down and savoring meals.",
+      "free": true
+    },
+    {
+      "id": "smoke-free-part-1",
+      "title": "Smoke-Free",
+      "theme": "Freedom",
+      "description": "Living free of tobacco.",
+      "free": true
+    },
+    {
+      "id": "smoke-free-part-2",
+      "title": "Smoke-Free",
+      "theme": "Freedom",
+      "description": "Building days that feel good.",
+      "free": true
+    },
+    {
+      "id": "vape-free-part-1",
+      "title": "Vape-Free",
+      "theme": "Freedom",
+      "description": "Living free of vaping.",
+      "free": true
+    },
+    {
+      "id": "vape-free-part-2",
+      "title": "Vape-Free",
+      "theme": "Freedom",
+      "description": "Riding out each urge.",
+      "free": true
+    }
+  ]
+}

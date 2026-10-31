@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import BlendSlider from '@/components/ui/BlendSlider';
+import VoicePicker from '@/components/ui/VoicePicker';
+import { VOICES, findVoice } from '@/lib/catalog';
 import {
   DEFAULT_PREFS,
   REPEAT_OPTIONS,
@@ -14,7 +16,7 @@ import { AccountSection, ExpandableRow } from './Section';
 // The same preferences the player saves; editing here changes what the player starts with.
 export default function DefaultsSection() {
   const [prefs, setPrefs] = useState<PlayerPrefs>(DEFAULT_PREFS);
-  const [open, setOpen] = useState<'repeat' | 'blend' | null>(null);
+  const [open, setOpen] = useState<'voice' | 'repeat' | 'blend' | null>(null);
 
   useEffect(() => {
     setPrefs(loadPlayerPrefs());
@@ -25,10 +27,24 @@ export default function DefaultsSection() {
     savePlayerPrefs(next);
     setPrefs(next);
   };
-  const toggle = (row: 'repeat' | 'blend') => setOpen((current) => (current === row ? null : row));
+  const toggle = (row: 'voice' | 'repeat' | 'blend') => setOpen((current) => (current === row ? null : row));
+  const voiceName = findVoice(prefs.voiceId)?.name ?? 'Not set';
 
   return (
     <AccountSection title="Defaults">
+      <ExpandableRow
+        label="Voice"
+        value={voiceName}
+        open={open === 'voice'}
+        onToggle={() => toggle('voice')}
+      >
+        <VoicePicker
+          voices={VOICES}
+          selectedId={prefs.voiceId}
+          onSelect={(voiceId) => update({ voiceId })}
+          tone="site"
+        />
+      </ExpandableRow>
       <ExpandableRow
         label="Each statement"
         value={`${prefs.repeat}\u00d7`}

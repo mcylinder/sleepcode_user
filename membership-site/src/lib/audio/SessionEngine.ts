@@ -12,24 +12,12 @@ function audioContextClass(): typeof AudioContext {
   return window.AudioContext ?? legacy;
 }
 
-function downmixToMono(ctx: BaseAudioContext, buffer: AudioBuffer): AudioBuffer {
-  if (buffer.numberOfChannels === 1) return buffer;
-  const mono = ctx.createBuffer(1, buffer.length, buffer.sampleRate);
-  const out = mono.getChannelData(0);
-  const channels = Array.from({ length: buffer.numberOfChannels }, (_, c) => buffer.getChannelData(c));
-  for (let i = 0; i < buffer.length; i += 1) {
-    let sum = 0;
-    for (const channel of channels) sum += channel[i];
-    out[i] = sum / channels.length;
-  }
-  return mono;
-}
-
 async function decodeUrl(ctx: BaseAudioContext, url: string): Promise<AudioBuffer> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Audio request failed (${response.status}).`);
-  const decoded = await ctx.decodeAudioData(await response.arrayBuffer());
-  return downmixToMono(ctx, decoded);
+  // Keep channel layout: stereo pulse (EMDR L/R) must not be downmixed to mono.
+  // Mono statement clips still play correctly on a stereo destination.
+  return ctx.decodeAudioData(await response.arrayBuffer());
 }
 
 // Plays each statement with one pulse.m4a underneath the voice, then a pulse-only gap (two beats
@@ -113,6 +101,7 @@ export class SessionEngine {
   }
 
   // Overall level 0-1. Does not change the instruction/pulse blend.
+  // During an end fade only the stored level updates; cancelFade restores it to the graph.
   setVolume(value: number): void {
     this.volume = Math.min(1, Math.max(0, value));
     if (this.fadeTimer || !this.ctx || !this.master) return;
@@ -150,23 +139,7 @@ export class SessionEngine {
   stop(): void {
     this.stopScheduler();
     this.cancelFade();
-    for (const source of this.sources) {
-      try {
-        source.stop();
-        source.disconnect();
-      } catch {
-        // Already stopped.
-      }
-    }
-    this.sources.clear();
-    for (const env of this.envelopes) {
-      try {
-        env.disconnect();
-      } catch {
-        // Already disconnected.
-      }
-    }
-    this.envelopes.clear();
+    this.clearSources();
     this.clipIndex = 0;
     this.pass = 0;
     this.pendingGap = false;
@@ -180,6 +153,8 @@ export class SessionEngine {
       this.stop();
       return;
     }
+    // Stop scheduling immediately so silent clips aren't queued under the fade.
+    this.stopScheduler();
     const gain = this.master.gain;
     const now = this.ctx.currentTime;
     gain.cancelScheduledValues(now);
@@ -188,10 +163,12 @@ export class SessionEngine {
     this.fadeTimer = setTimeout(() => this.stop(), seconds * 1000);
   }
 
-  // Like fadeOutAndStop, but keeps the position so play() picks up where it left off.
+  // Like fadeOutAndStop, but keeps playlist position so play() continues from the next clip.
   // play() restores the set volume.
   fadeOutAndPause(seconds: number): void {
     if (!this.ctx || !this.master || !this.playing) return;
+    // Stop scheduling immediately so silent clips aren't queued under the fade.
+    this.stopScheduler();
     const gain = this.master.gain;
     const now = this.ctx.currentTime;
     gain.cancelScheduledValues(now);
@@ -199,6 +176,9 @@ export class SessionEngine {
     gain.linearRampToValueAtTime(0, now + seconds);
     this.fadeTimer = setTimeout(() => {
       this.fadeTimer = null;
+      // Drop anything already queued so Play doesn't burst previously silent audio.
+      this.clearSources();
+      if (this.ctx) this.nextWhen = this.ctx.currentTime;
       void this.pause();
     }, seconds * 1000);
   }
@@ -253,6 +233,26 @@ export class SessionEngine {
   private stopScheduler(): void {
     if (this.schedulerId) clearInterval(this.schedulerId);
     this.schedulerId = null;
+  }
+
+  private clearSources(): void {
+    for (const source of this.sources) {
+      try {
+        source.stop();
+        source.disconnect();
+      } catch {
+        // Already stopped.
+      }
+    }
+    this.sources.clear();
+    for (const env of this.envelopes) {
+      try {
+        env.disconnect();
+      } catch {
+        // Already disconnected.
+      }
+    }
+    this.envelopes.clear();
   }
 
   private advance(): void {

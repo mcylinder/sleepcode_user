@@ -1,3 +1,5 @@
+import { resolveVoiceId } from '@/lib/catalog';
+
 export const REPEAT_OPTIONS = [1, 2, 4] as const;
 export type RepeatCount = (typeof REPEAT_OPTIONS)[number];
 
@@ -14,10 +16,18 @@ export interface PlayerPrefs {
   repeat: RepeatCount;
   // Last session length chosen; null = no end time.
   lengthMinutes: number | null;
+  // Global voice; null until the listener picks one.
+  voiceId: string | null;
 }
 
 // Single default for signed-in and signed-out (Instruction 76 / Pulse 24).
-export const DEFAULT_PREFS: PlayerPrefs = { instruction: 76, volume: 80, repeat: 2, lengthMinutes: null };
+export const DEFAULT_PREFS: PlayerPrefs = {
+  instruction: 76,
+  volume: 80,
+  repeat: 2,
+  lengthMinutes: null,
+  voiceId: null,
+};
 
 const PREFS_KEY = 'sleepcode_player_prefs';
 
@@ -41,7 +51,8 @@ export function loadPlayerPrefs(): PlayerPrefs {
     const lengthRaw = raw.lengthMinutes ?? raw.timerMinutes;
     const lengthMinutes =
       typeof lengthRaw === 'number' && lengthRaw > 0 ? Math.min(MAX_LENGTH_MINUTES, Math.round(lengthRaw)) : null;
-    return { instruction, volume, repeat, lengthMinutes };
+    const voiceId = resolveVoiceId(typeof raw.voiceId === 'string' ? raw.voiceId : null);
+    return { instruction, volume, repeat, lengthMinutes, voiceId };
   } catch {
     return DEFAULT_PREFS;
   }

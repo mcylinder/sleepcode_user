@@ -102,7 +102,7 @@ export const PRICING_FAQ: FaqGroup[] = [
       },
       {
         q: 'Is there a free trial?',
-        a: `There\u2019s no trial, and you don\u2019t need one. ${FREE_LABEL} is free with an account signup.`,
+        a: `There\u2019s no trial, and you don\u2019t need one. ${FREE_LABEL} is free, with no account needed.`,
       },
       {
         q: 'Can I switch between monthly and yearly?',

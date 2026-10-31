@@ -38,15 +38,19 @@ export async function authedFetch<T = unknown>(
   return readJson<T>(response);
 }
 
-// Signs a session folder. Free sessions work signed out; paid still need a bearer token.
-export async function fetchSessionMedia(sessionId: string): Promise<{ baseUrl: string; query: string }> {
+// Signs session/{voiceId}/{sessionId}/. Free sessions work signed out; paid still need a bearer token.
+export async function fetchSessionMedia(
+  sessionId: string,
+  voiceId: string,
+): Promise<{ baseUrl: string; query: string }> {
+  const body = { sessionId, voiceId };
   const user = auth?.currentUser;
-  if (user) return authedFetch('/api/media/session', { sessionId });
+  if (user) return authedFetch('/api/media/session', body);
 
   const response = await fetch('/api/media/session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId }),
+    body: JSON.stringify(body),
   });
   return readJson(response);
 }

@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FEATURED_FREE_SESSION, scriptHref } from '@/lib/catalog';
+import { FEATURED_FREE_SESSION, mediaVoiceId, scriptHref } from '@/lib/catalog';
 import { fetchSessionMedia } from '@/lib/authedFetch';
 import { buildScript, type SessionManifest } from '@/lib/audio/playPlan';
+import { loadPlayerPrefs } from '@/lib/playerPrefs';
 
 const SAMPLE_SIZE = 5;
 
@@ -19,7 +20,9 @@ export default function HomeSample() {
     let cancelled = false;
     (async () => {
       try {
-        const signed = await fetchSessionMedia(free.id);
+        const voiceId = mediaVoiceId(loadPlayerPrefs().voiceId);
+        if (!voiceId) return;
+        const signed = await fetchSessionMedia(free.id, voiceId);
         const response = await fetch(`${signed.baseUrl}manifest.json?${signed.query}`);
         if (!response.ok) return;
         const concepts = buildScript((await response.json()) as SessionManifest);

@@ -4,7 +4,15 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { findSession, isComingSoon, playerHref, saveLastPlayed, sessionLabel, type Session } from '@/lib/catalog';
+import {
+  VOICES,
+  findSession,
+  isComingSoon,
+  playerHref,
+  saveLastPlayed,
+  sessionLabel,
+  type Session,
+} from '@/lib/catalog';
 import { fetchSessionMedia, RequestError } from '@/lib/authedFetch';
 import { buildPlayPlan, buildScript, type ScriptConcept, type SessionManifest } from '@/lib/audio/playPlan';
 import { SessionEngine } from '@/lib/audio/SessionEngine';
@@ -24,6 +32,7 @@ import {
 import {
   canShowAccountPrompt,
   clearAccountPromptPending,
+  dismissAccountPrompt,
   hasAccountPromptPending,
   hasSeenPlayerIntro,
   markAccountPromptPending,
@@ -38,6 +47,7 @@ import VolumeKnob from '@/components/ui/VolumeKnob';
 import PlayerIntro from '@/components/ui/PlayerIntro';
 import StatementsOverlay from '@/components/ui/StatementsOverlay';
 import SaveSettingsPrompt from '@/components/ui/SaveSettingsPrompt';
+import VoicePicker from '@/components/ui/VoicePicker';
 import { NightShadeIcon, PauseIcon, PlayIcon, StatementsIcon, StopwatchIcon } from '@/components/ui/icons';
 
 const FADE_OUT_SECONDS = 8;
@@ -145,11 +155,14 @@ function Player({ session }: { session: Session }) {
   const [script, setScript] = useState<ScriptConcept[]>([]);
   const [promptPending, setPromptPending] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
+  const [voiceReady, setVoiceReady] = useState(false);
   const wasEnding = useRef(false);
   const listenedEnough = useRef(false);
   const lastPlayedSaved = useRef(false);
   const listenAccum = useRef(0);
   const sessionEndedCleanly = useRef(false);
+  const promptOpenRef = useRef(false);
+  promptOpenRef.current = promptOpen;
 
   usePageBackground(shadeOn ? '#000000' : playing ? 'var(--p-bg-playing)' : 'var(--p-bg)');
 
@@ -170,6 +183,7 @@ function Player({ session }: { session: Session }) {
 
     const saved = loadPlayerPrefs();
     setPrefs(saved);
+    setVoiceReady(Boolean(saved.voiceId));
     if (saved.lengthMinutes) {
       setLengthSec(saved.lengthMinutes * 60);
       setRemainingSec(saved.lengthMinutes * 60);
@@ -193,13 +207,14 @@ function Player({ session }: { session: Session }) {
 
   useEffect(() => {
     const engine = engineRef.current;
-    if (!engine) return;
+    const voiceId = prefs.voiceId;
+    if (!engine || !voiceReady || !voiceId) return;
     let cancelled = false;
     setLoad({ kind: 'loading', loaded: 0, total: 0 });
 
     (async () => {
       try {
-        const signed = await fetchSessionMedia(session.id);
+        const signed = await fetchSessionMedia(session.id, voiceId);
         const fileUrl = (name: string) => `${signed.baseUrl}${encodeURIComponent(name)}?${signed.query}`;
         const response = await fetch(fileUrl('manifest.json'));
         if (!response.ok) throw new Error('This session\u2019s audio isn\u2019t available yet.');
@@ -230,7 +245,14 @@ function Player({ session }: { session: Session }) {
     return () => {
       cancelled = true;
     };
-  }, [session, attempt, router]);
+  }, [session, attempt, router, voiceReady, prefs.voiceId]);
+
+  function chooseVoice(voiceId: string) {
+    const next = { ...loadPlayerPrefs(), voiceId };
+    savePlayerPrefs(next);
+    setPrefs(next);
+    setVoiceReady(true);
+  }
 
   // Count real listening time: last-played after 1 minute; pending account prompt if they leave mid-session.
   useEffect(() => {
@@ -273,6 +295,13 @@ function Player({ session }: { session: Session }) {
     setPromptPending(false);
   }, [currentUser, promptPending, shadeOn, playing, introOpen, sheetOpen, statementsOpen]);
 
+  // Leaving the player while the prompt is up counts as "Not now" (7-day dismiss).
+  useEffect(() => {
+    return () => {
+      if (promptOpenRef.current) dismissAccountPrompt();
+    };
+  }, []);
+
   useEffect(() => {
     if (ending) wasEnding.current = true;
   }, [ending]);
@@ -281,7 +310,7 @@ function Player({ session }: { session: Session }) {
     if (!playing && wasEnding.current) {
       wasEnding.current = false;
       sessionEndedCleanly.current = true;
-      if (!currentUser) setPromptPending(true);
+      if (!currentUser && listenedEnough.current) setPromptPending(true);
     }
   }, [playing, currentUser]);
 
@@ -381,7 +410,9 @@ function Player({ session }: { session: Session }) {
   const draftMinutes = draftH * 60 + draftM;
 
   let status: ReactNode;
-  if (load.kind === 'loading') {
+  if (!voiceReady) {
+    status = 'Choose a voice';
+  } else if (load.kind === 'loading') {
     status = load.total ? `Loading ${load.loaded} of ${load.total}` : 'Preparing session\u2026';
   } else if (load.kind === 'error') {
     status = (
@@ -572,15 +603,28 @@ function Player({ session }: { session: Session }) {
         </div>
       </Sheet>
 
-      <PlayerIntro open={introOpen} onClose={() => setIntroOpen(false)} />
+      <Sheet
+        open={!voiceReady}
+        onClose={() => router.replace('/application')}
+        label="Choose a voice"
+        tone="player"
+      >
+        <SheetHeader title="Choose a voice" onCancel={() => router.replace('/application')} tone="player" />
+        <p className="text-[14px] leading-snug text-p-muted">
+          This preference applies to every session. You can change it later in Account.
+        </p>
+        <VoicePicker voices={VOICES} selectedId={prefs.voiceId} onSelect={chooseVoice} tone="player" />
+      </Sheet>
+
+      <PlayerIntro open={introOpen && voiceReady} onClose={() => setIntroOpen(false)} />
       <StatementsOverlay
-        open={statementsOpen && !shadeOn}
+        open={statementsOpen && !shadeOn && voiceReady}
         onClose={() => setStatementsOpen(false)}
         title={label}
         concepts={script}
       />
       <SaveSettingsPrompt
-        open={promptOpen && !shadeOn && !introOpen && !statementsOpen}
+        open={promptOpen && !shadeOn && !introOpen && !statementsOpen && voiceReady}
         onClose={() => setPromptOpen(false)}
         nextHref={playerHref(session)}
       />
