@@ -131,20 +131,16 @@ export async function sendConfirmationEmail(_userEmail: string, _userName: strin
                 
                 <p>Dear ${userName},</p>
                 
-                <p>We have received your message and will get back to you within 24 hours during business days.</p>
+                <p>We have received your message. A person reads every message, and we usually reply within 72 hours.</p>
                 
-                <p>If you have any urgent questions, you can also reach us at:</p>
-                <ul>
-                  <li>Phone: 207-358-9026</li>
-                  <li>Email: contact@sleepcoding.me</li>
-                </ul>
+                <p>If you need to add anything, just reply to this email or write to contact@sleepcoding.me.</p>
                 
                 <p>Best regards,<br>The SleepCode Team</p>
                 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">
-                  <p>Sleep Coder LLC<br>
-                  PO BOX 2803<br>
-                  South Portland, ME 04116</p>
+                  <p>SleepCode<br>
+                  PO Box 442<br>
+                  South Wellfleet, MA 02663</p>
                 </div>
               </div>
             </body>

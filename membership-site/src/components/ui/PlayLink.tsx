@@ -1,12 +1,9 @@
 'use client';
 
-import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
 import { playerHref, type Session } from '@/lib/catalog';
 import { useDissolve } from './Dissolve';
 
-// A "play" entry point for a free session. Signed-in visitors dissolve straight into the
-// player; everyone else creates an account first and lands in the player afterwards.
+// Free-session play entry. Goes straight to the player — no account required.
 export default function PlayLink({
   session,
   className,
@@ -16,17 +13,8 @@ export default function PlayLink({
   className?: string;
   children: React.ReactNode;
 }) {
-  const { currentUser } = useAuth();
   const dissolveTo = useDissolve();
   const href = playerHref(session);
-
-  if (!currentUser) {
-    return (
-      <Link href={`/login?mode=signup&next=${encodeURIComponent(href)}`} className={className}>
-        {children}
-      </Link>
-    );
-  }
 
   return (
     <a

@@ -58,6 +58,18 @@ export async function requireUser(request: NextRequest): Promise<AuthedUser> {
   }
 }
 
+// Returns null when there is no (or an invalid) bearer token. Use for free-session routes.
+export async function optionalUser(request: NextRequest): Promise<AuthedUser | null> {
+  const header = request.headers.get('authorization') ?? '';
+  if (!header.startsWith('Bearer ')) return null;
+  try {
+    return await requireUser(request);
+  } catch (error) {
+    if (error instanceof HttpError && error.status === 401) return null;
+    throw error;
+  }
+}
+
 export function errorResponse(error: unknown, context: string) {
   if (error instanceof HttpError) {
     return NextResponse.json({ error: error.message }, { status: error.status });

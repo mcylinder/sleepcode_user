@@ -1,16 +1,20 @@
 import type { NextConfig } from "next";
+import path from "path";
+
+const appRoot = path.join(__dirname);
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  // Remove output: 'standalone' as it might cause issues with Vercel
-  // Handle trailing slashes
   trailingSlash: false,
-  // Ensure proper image optimization
   images: {
     unoptimized: false,
   },
-  // Allow cross-origin requests in development
-  allowedDevOrigins: ['192.168.86.23'],
+  // Pin the app root so Next doesn't pick a parent lockfile (breaks turbopack fonts).
+  outputFileTracingRoot: appRoot,
+  turbopack: {
+    root: appRoot,
+  },
+  // Local + LAN testing (phone on Wi-Fi, 127.0.0.1 vs localhost).
+  allowedDevOrigins: ['127.0.0.1', 'localhost', '192.168.86.220', '192.168.86.23'],
 };
 
 export default nextConfig;

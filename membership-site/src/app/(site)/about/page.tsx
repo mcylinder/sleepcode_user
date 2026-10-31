@@ -28,12 +28,9 @@ export default function AboutPage() {
         </p>
         <p>
           SleepCode works differently. Each session is a sequence of plain, first-person statements in one
-          instructor&rsquo;s voice, layered over a slow pulse. Every word is audible. You set the blend, choose how many
-          repeats or how long it runs, and listen.
-        </p>
-
-        <p className="sc-pullquote">
-          The sentence has to sound like it&rsquo;s yours before your mind will believe it enough to release.
+          instructor&rsquo;s voice, layered over a steady pulse. Every word is audible. You set Instruction / Pulse,
+          choose how many times each statement repeats or how long the session runs, and listen as you drift off.
+          SleepCode isn&rsquo;t a sleep aid; bedtime is simply when most people listen.
         </p>
 
         <h2>How we build it</h2>

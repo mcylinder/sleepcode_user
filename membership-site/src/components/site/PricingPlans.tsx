@@ -42,7 +42,7 @@ export default function PricingPlans({ resumeCheckout = false }: { resumeCheckou
         <span className="text-[44px] font-medium leading-tight tracking-[-0.03em]">$0</span>
         <p className="text-[16px] leading-[1.6] text-ink-muted">
           {free
-            ? `${free.title}, our most-played session.`
+            ? `${free.title} \u00b7 ${free.theme}, free to keep.`
             : 'A free session.'}
         </p>
         {free && (

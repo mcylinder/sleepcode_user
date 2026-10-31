@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import FaqList from '@/components/site/FaqList';
 import PricingPlans from '@/components/site/PricingPlans';
 import { PRICING_FAQ } from '@/data/faq';
 
 export const metadata: Metadata = { title: 'Pricing \u2014 SleepCode' };
 
+// Beta: free only. Set to true when paid plans return; until then /pricing goes to the home page.
+const PRICING_LIVE = false;
+
 export default function PricingPage() {
+  if (!PRICING_LIVE) redirect('/');
+
   return (
     <>
       <section className="sc-px flex max-w-[760px] flex-col gap-[18px] pb-[clamp(32px,4vw,48px)] pt-[clamp(28px,5vw,72px)]">

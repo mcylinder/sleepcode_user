@@ -1,222 +1,169 @@
 import ArticleLayout from '@/components/site/ArticleLayout';
 import LegalContact from '@/components/LegalContact';
+import { LEGAL_EFFECTIVE_DATE } from '@/lib/site';
 
 export default function PrivacyPage() {
   return (
-    <ArticleLayout eyebrow="Privacy" title="Privacy Policy" byline={`Effective ${new Date().toLocaleDateString()}`}>
-          <div className="sc-prose">
+    <ArticleLayout eyebrow="Privacy" title="Privacy Policy" byline={`Effective ${LEGAL_EFFECTIVE_DATE}`}>
+      <div className="sc-prose">
+        <p>
+          This Privacy Policy explains how Peter DuCharme, doing business as SleepCode (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects,
+          uses, and protects information when you use SleepCode at sleepcoding.me (the &quot;Service&quot;).
+        </p>
+        <p>
+          The short version: we collect as little as we can. You can listen to the free session without an account. We
+          don&rsquo;t run ads, we don&rsquo;t use analytics or third-party trackers, and we don&rsquo;t sell your data.
+        </p>
 
-            <p>
-              This Privacy Policy describes how Sleep Coder LLC (&quot;Company,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, stores, and protects your information when you access or use the SleepCode mobile application, the sleepcoding.me website, and related services (collectively, the &quot;Service&quot;).
-            </p>
-            
-            <p>
-              By using the Service, you acknowledge that you have read and understood this Privacy Policy.
-            </p>
+        <section>
+          <h2>1. Information We Collect</h2>
 
-            <section>
-              <h2>
-                1. Information We Collect
-              </h2>
-              
-              <h3>1.1 Personal Information Provided by You</h3>
-              <p>
-                Email address – required for account creation and login.
-              </p>
-              <p>
-                Name and payment information – processed for subscriptions, administered by RevenueCat in conjunction with Stripe, Apple App Store, and Google Play.
-              </p>
+          <h3>1.1 If you create an account</h3>
+          <ul>
+            <li>
+              <strong>Email address</strong>, used to sign you in and to contact you about your account.
+            </li>
+            <li>
+              <strong>Password</strong>, if you sign up with email. It is stored in hashed form by our authentication
+              provider. We never see it.
+            </li>
+            <li>
+              <strong>Name and profile photo</strong>, only if you sign in with Google, Apple, or Facebook and that
+              provider shares them.
+            </li>
+            <li>
+              <strong>Account records</strong>, such as when the account was created and whether your email is
+              verified.
+            </li>
+          </ul>
 
-              <h3>1.2 Content Data</h3>
-              <p>
-                Publicly available tracks – we collect aggregated usage data (e.g., which free instructions are accessed and how often).
-              </p>
-              <p>
-                Private instructions – no analytics or usage tracking is collected on private content.
-              </p>
+          <h3>1.2 If you contact us</h3>
+          <p>
+            When you use the contact form or email us, we receive your name, email address, and message so we can reply.
+          </p>
 
-              <h3>1.3 Automatically Collected Information</h3>
-              <p>
-                On the website, we use cookies to manage user sessions and basic analytics to identify weak points in the user interface.
-              </p>
-              <p>
-                No advertising cookies or third-party ad tracking are employed.
-              </p>
-              <p>
-                Within the app, we do not use analytics or advertising tracking tools.
-              </p>
-            </section>
+          <h3>1.3 Stored on your device</h3>
+          <p>
+            Your player settings (Instruction / Pulse balance, repeats, session length, and volume) and the last session
+            you played are saved in your browser&rsquo;s local storage. This lets the player remember your choices without
+            an account. It stays on your device, and you can clear it at any time in your browser settings.
+          </p>
 
-            <section>
-              <h2>
-                2. Purpose of Processing
-              </h2>
-              <p>
-                We process your information solely for the following purposes:
-              </p>
-              <ul>
-                <li>To provide authentication, account management, and subscription services.</li>
-                <li>To process subscription payments via RevenueCat, Stripe, Apple, and Google.</li>
-                <li>To maintain and improve the Service, including analyzing aggregated usage of publicly available tracks.</li>
-                <li>To ensure security and fraud prevention.</li>
-              </ul>
-              <p>
-                We do not use your data for marketing or advertising purposes.
-              </p>
-            </section>
+          <h3>1.4 Collected automatically</h3>
+          <p>
+            Like most websites, our hosting and audio-delivery providers keep standard server logs (for example, IP
+            address, browser type, and the time of a request) to deliver the Service and keep it secure. We don&rsquo;t
+            use these logs to build profiles of individual listeners.
+          </p>
 
-            <section>
-              <h2>
-                3. Sharing of Information
-              </h2>
-              <p>
-                We do not sell or rent your personal information.
-              </p>
-              <p>
-                We do not share information with advertisers or third-party marketers.
-              </p>
-              <p>
-                Information may be shared only with trusted service providers that are necessary to operate the Service, including:
-              </p>
-              <ul>
-                <li>Firebase (Google) – authentication, session management, and data storage.</li>
-                <li>RevenueCat / Stripe / Apple / Google – subscription and payment processing.</li>
-              </ul>
-              <p>
-                These providers are bound by contractual and legal obligations to safeguard your data.
-              </p>
-            </section>
+          <h3>1.5 Payments</h3>
+          <p>
+            SleepCode is currently free. If we offer paid plans, payments will be handled by Stripe. We never see or store
+            your full card details.
+          </p>
+        </section>
 
-            <section>
-              <h2>
-                4. Data Storage and Security
-              </h2>
-              <p>
-                User data is stored using Google Firebase authentication and database services.
-              </p>
-              <p>
-                Passwords and credentials are encrypted using Firebase&apos;s standard hashing and security protocols.
-              </p>
-              <p>
-                All communication with the Service is encrypted using HTTPS / SSL/TLS.
-              </p>
-              <p>
-                Private user-generated audio content is protected with encryption-based access controls.
-              </p>
-              <p>
-                Access to user data is restricted to authorized personnel only.
-              </p>
-            </section>
+        <section>
+          <h2>2. How We Use Information</h2>
+          <ul>
+            <li>To provide the Service, including signing you in and remembering your settings.</li>
+            <li>To reply to your messages and send essential account emails (such as email verification or password reset).</li>
+            <li>To keep the Service secure and prevent abuse.</li>
+          </ul>
+          <p>We do not use your information for advertising, and we don&rsquo;t send marketing email without your consent.</p>
+        </section>
 
-            <section>
-              <h2>
-                5. User Rights
-              </h2>
-              <p>
-                Depending on your jurisdiction, you may have the following rights:
-              </p>
-              <ul>
-                <li><strong>Access</strong> – request a copy of your personal data.</li>
-                <li><strong>Correction</strong> – request correction of inaccurate data.</li>
-                <li><strong>Deletion</strong> – request deletion of your account and associated data.</li>
-                <li><strong>Portability</strong> – request transfer of your data to another service provider.</li>
-                <li><strong>Opt-out</strong> – request to opt out of non-essential data processing.</li>
-              </ul>
-              <p>
-                Requests must be made via email to contact@sleepcoding.me.
-              </p>
-              <p>
-                We will confirm and execute deletion requests within 72 hours whenever technically feasible. A confirmation email will be sent upon completion.
-              </p>
-            </section>
+        <section>
+          <h2>3. Service Providers</h2>
+          <p>
+            We don&rsquo;t sell or rent personal information. We share it only with providers that are needed to run the
+            Service, and only for that purpose:
+          </p>
+          <ul>
+            <li>Google Firebase: sign-in and account storage.</li>
+            <li>Amazon Web Services: audio delivery (CloudFront) and email (SES).</li>
+            <li>Vercel: website hosting.</li>
+            <li>Stripe: payment processing, if paid plans are offered.</li>
+            <li>Google, Apple, or Facebook: only if you choose to sign in with them.</li>
+          </ul>
+        </section>
 
-            <section>
-              <h2>
-                6. Data Retention
-              </h2>
-              <p>
-                Account and subscription data is retained until you request deletion of your account.
-              </p>
-              <p>
-                <strong>User-generated content (private instructions):</strong>
-              </p>
-              <ul>
-                <li>If a subscription is canceled, content will be retained for five (5) years unless you specifically request immediate deletion at the time of cancellation.</li>
-                <li>If no request is made, content is automatically purged after five years.</li>
-              </ul>
-              <p>
-                Aggregated analytics regarding free/public instructions are retained indefinitely but are not linked to individual users.
-              </p>
-            </section>
+        <section>
+          <h2>4. Security</h2>
+          <p>
+            All connections to the Service use HTTPS. Passwords are hashed by our authentication provider. Session audio
+            is delivered through time-limited, signed links. Access to account data is limited to what&rsquo;s needed to run
+            the Service.
+          </p>
+        </section>
 
-            <section>
-              <h2>
-                7. Children&apos;s Privacy
-              </h2>
-              <p>
-                The Service is not directed to children under the age of 13, and we do not knowingly collect personal data from children under 13.
-              </p>
-              <p>
-                If we become aware that we have inadvertently collected such data, we will delete it promptly.
-              </p>
-            </section>
+        <section>
+          <h2>5. Your Choices and Rights</h2>
+          <ul>
+            <li>
+              <strong>Delete your account</strong> at any time in Account &rsaquo; Delete account. This removes your
+              account and its records.
+            </li>
+            <li>
+              <strong>Access or correct</strong> your information by emailing us.
+            </li>
+            <li>
+              <strong>Clear device data</strong> by clearing your browser&rsquo;s storage for sleepcoding.me.
+            </li>
+          </ul>
+          <p>Depending on where you live, you may have additional rights, described in section 8.</p>
+        </section>
 
-            <section>
-              <h2>
-                8. International Users
-              </h2>
-              
-              <h3>8.1 EU/UK Users (GDPR)</h3>
-              <p>
-                If you are located in the European Union or United Kingdom, you have additional rights under the GDPR, including:
-              </p>
-              <ul>
-                <li>Right to object to certain processing.</li>
-                <li>Right to lodge a complaint with a data protection authority.</li>
-              </ul>
-              <p>
-                The legal basis for our processing includes:
-              </p>
-              <ul>
-                <li>Performance of a contract (providing the Service).</li>
-                <li>Compliance with legal obligations.</li>
-                <li>Legitimate interests (service improvement and security).</li>
-              </ul>
+        <section>
+          <h2>6. Data Retention</h2>
+          <p>
+            We keep account information until you delete your account. Contact messages are kept as long as needed to
+            handle your request. Server logs are kept for a limited period by our providers.
+          </p>
+        </section>
 
-              <h3>8.2 California Users (CCPA)</h3>
-              <p>
-                If you are a California resident, you have the right to:
-              </p>
-              <ul>
-                <li>Request disclosure of the categories and specific pieces of data we collect.</li>
-                <li>Request deletion of your personal data.</li>
-                <li>Opt out of any &quot;sale&quot; of personal data.</li>
-              </ul>
-              <p>
-                We do not &quot;sell&quot; user data as defined by the CCPA. In the event of a company sale or transfer, user data may be transferred as part of the transaction, subject to notice and continued protection under this Privacy Policy.
-              </p>
-            </section>
+        <section>
+          <h2>7. Children</h2>
+          <p>
+            The Service is not directed to children under 13, and we do not knowingly collect personal information from
+            them. If we learn that we have, we will delete it.
+          </p>
+        </section>
 
-            <section>
-              <h2>
-                9. Data Transfers
-              </h2>
-              <p>
-                Your data may be processed and stored in the United States, where privacy laws may differ from those in your country of residence. By using the Service, you consent to such transfers.
-              </p>
-            </section>
+        <section>
+          <h2>8. Regional Rights</h2>
+          <h3>8.1 EU and UK</h3>
+          <p>
+            If you are in the European Union or United Kingdom, you have rights under the GDPR, including access,
+            correction, deletion, portability, objection, and the right to complain to a data protection authority. We
+            process your information to provide the Service you request (contract), to keep it secure (legitimate
+            interests), and to meet legal obligations.
+          </p>
+          <h3>8.2 California</h3>
+          <p>
+            California residents may request disclosure of the information we collect and its deletion. We do not
+            &quot;sell&quot; or &quot;share&quot; personal information as those terms are defined under California law.
+          </p>
+        </section>
 
-            <section>
-              <h2>
-                10. Changes to This Policy
-              </h2>
-              <p>
-                We may update this Privacy Policy from time to time. If material changes are made, we will notify you by email or through the Service. Continued use after such changes constitutes acceptance of the revised policy.
-              </p>
-            </section>
+        <section>
+          <h2>9. Data Transfers</h2>
+          <p>
+            Your information may be processed and stored in the United States, where privacy laws may differ from those
+            where you live.
+          </p>
+        </section>
 
-            <LegalContact />
-          </div>
+        <section>
+          <h2>10. Changes to This Policy</h2>
+          <p>
+            If we change this policy, we will update the effective date above. If the changes are significant, we will let
+            account holders know by email or in the Service.
+          </p>
+        </section>
+
+        <LegalContact />
+      </div>
     </ArticleLayout>
   );
-} 
+}

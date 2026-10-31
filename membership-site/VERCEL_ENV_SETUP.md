@@ -97,14 +97,14 @@ In the Meta for Developers app, add the OAuth redirect URI shown in the Firebase
 
 ### Catalog
 Sessions are listed in `src/data/sessions.json`, in display order. Each entry has:
-- `id`: the session's folder name in the media bucket (`session/{id}/`).
-- `title`, `theme`, `description`: shown on Home. `theme` also drives the theme filter.
-- `free`: `true` for any signed-in user, `false` for SleepCode+ members only. The server checks this before signing.
+- Top-level `voices`: `{ id, name, description }` — ElevenLabs ids used in S3 paths.
+- `sessions[]` entries: `id` is the session folder name under each voice; `title`, `theme`, `description`; `free` gates membership.
+- Audio path: `session/{voiceId}/{sessionId}/`.
 
 Changing the catalog means editing the file and deploying.
 
 ### Media bucket (S3 `slpcd-media` + CloudFront)
-Each session folder holds `manifest.json`, `pulse.m4a`, and the statement clips the manifest lists (`c01_v1.m4a`, `c01_v2.m4a`, ...). The bucket is private. CloudFront reads it through Origin Access Control, and the default behavior requires signed URLs (trusted key group).
+Each voice+session folder holds `manifest.json`, `pulse.m4a`, and the statement clips the manifest lists (`c01_v1.m4a`, `c01_v2.m4a`, ...). Example: `session/VU16byTywsWv5JpI8rbc/let-it-in/`. The bucket is private. CloudFront reads it through Origin Access Control, and the default behavior requires signed URLs (trusted key group).
 
 CORS comes from a CloudFront Function (`slpcd-cors`, runtime `cloudfront-js-2.0`) attached to the default behavior's **Viewer response** event:
 
