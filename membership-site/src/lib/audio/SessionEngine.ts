@@ -1,4 +1,11 @@
 import type { PlayPlan } from './playPlan';
+import {
+  createPulseWidthNode,
+  DEFAULT_PULSE_WIDTH,
+  normalizePulseWidth,
+  type PulseWidth,
+  type PulseWidthNode,
+} from './pulseWidth';
 
 const LOOKAHEAD_SEC = 0.2;
 const SCHEDULE_INTERVAL_MS = 50;
@@ -32,6 +39,8 @@ export class SessionEngine {
   private master: GainNode | null = null;
   private instructionGain: GainNode | null = null;
   private pulseGain: GainNode | null = null;
+  private pulseWidthNode: PulseWidthNode | null = null;
+  private pulseWidth: PulseWidth = DEFAULT_PULSE_WIDTH;
   private clips: AudioBuffer[] = [];
   private pulse: AudioBuffer | null = null;
   private balance = 50;
@@ -56,8 +65,10 @@ export class SessionEngine {
     this.master.gain.value = this.volume;
     this.instructionGain = ctx.createGain();
     this.pulseGain = ctx.createGain();
+    this.pulseWidthNode = createPulseWidthNode(ctx, this.pulseWidth);
     this.instructionGain.connect(this.master);
-    this.pulseGain.connect(this.master);
+    this.pulseGain.connect(this.pulseWidthNode.input);
+    this.pulseWidthNode.output.connect(this.master);
     this.master.connect(ctx.destination);
     this.ctx = ctx;
     this.applyMix(true);
@@ -98,6 +109,11 @@ export class SessionEngine {
   setBalance(value: number): void {
     this.balance = Math.min(100, Math.max(0, value));
     this.applyMix();
+  }
+
+  setPulseWidth(value: PulseWidth): void {
+    this.pulseWidth = normalizePulseWidth(value);
+    this.pulseWidthNode?.setWidth(this.pulseWidth);
   }
 
   // Overall level 0-1. Does not change the instruction/pulse blend.
@@ -192,6 +208,8 @@ export class SessionEngine {
     this.disposed = true;
     this.loadId += 1;
     this.stop();
+    this.pulseWidthNode?.dispose();
+    this.pulseWidthNode = null;
     this.ctx?.close().catch(() => {});
     this.ctx = null;
     this.clips = [];

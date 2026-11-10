@@ -1,3 +1,4 @@
+import { DEFAULT_PULSE_WIDTH, normalizePulseWidth, type PulseWidth } from '@/lib/audio/pulseWidth';
 import { resolveVoiceId } from '@/lib/catalog';
 
 export const REPEAT_OPTIONS = [1, 2, 4] as const;
@@ -18,6 +19,8 @@ export interface PlayerPrefs {
   lengthMinutes: number | null;
   // Global voice; null until the listener picks one.
   voiceId: string | null;
+  // Pulse stereo image: 0 Center … 100 Full. Default Narrow (33).
+  pulseWidth: PulseWidth;
 }
 
 // Single default for signed-in and signed-out (Instruction 76 / Pulse 24).
@@ -27,6 +30,7 @@ export const DEFAULT_PREFS: PlayerPrefs = {
   repeat: 2,
   lengthMinutes: null,
   voiceId: null,
+  pulseWidth: DEFAULT_PULSE_WIDTH,
 };
 
 const PREFS_KEY = 'sleepcode_player_prefs';
@@ -52,7 +56,8 @@ export function loadPlayerPrefs(): PlayerPrefs {
     const lengthMinutes =
       typeof lengthRaw === 'number' && lengthRaw > 0 ? Math.min(MAX_LENGTH_MINUTES, Math.round(lengthRaw)) : null;
     const voiceId = resolveVoiceId(typeof raw.voiceId === 'string' ? raw.voiceId : null);
-    return { instruction, volume, repeat, lengthMinutes, voiceId };
+    const pulseWidth = normalizePulseWidth(raw.pulseWidth);
+    return { instruction, volume, repeat, lengthMinutes, voiceId, pulseWidth };
   } catch {
     return DEFAULT_PREFS;
   }

@@ -15,8 +15,10 @@ import {
 } from '@/lib/catalog';
 import { fetchSessionMedia, RequestError } from '@/lib/authedFetch';
 import { buildPlayPlan, buildScript, type ScriptConcept, type SessionManifest } from '@/lib/audio/playPlan';
+import { PulseWidthPreview } from '@/lib/audio/PulseWidthPreview';
 import { SessionEngine } from '@/lib/audio/SessionEngine';
 import { StayAwake } from '@/lib/audio/StayAwake';
+import { pulseWidthLabel, type PulseWidth } from '@/lib/audio/pulseWidth';
 import {
   DEFAULT_PREFS,
   LENGTH_HOURS,
@@ -47,6 +49,7 @@ import VolumeKnob from '@/components/ui/VolumeKnob';
 import PlayerIntro from '@/components/ui/PlayerIntro';
 import StatementsOverlay from '@/components/ui/StatementsOverlay';
 import SaveSettingsPrompt from '@/components/ui/SaveSettingsPrompt';
+import PulseWidthPicker from '@/components/ui/PulseWidthPicker';
 import VoicePicker from '@/components/ui/VoicePicker';
 import { NightShadeIcon, PauseIcon, PlayIcon, StatementsIcon, StopwatchIcon } from '@/components/ui/icons';
 
@@ -138,6 +141,8 @@ function Player({ session }: { session: Session }) {
   const { currentUser } = useAuth();
   const engineRef = useRef<SessionEngine | null>(null);
   const wakeRef = useRef<StayAwake | null>(null);
+  const previewRef = useRef<PulseWidthPreview | null>(null);
+  const pulseUrlRef = useRef<string | null>(null);
   const [load, setLoad] = useState<LoadState>({ kind: 'loading', loaded: 0, total: 0 });
   const [attempt, setAttempt] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -147,6 +152,7 @@ function Player({ session }: { session: Session }) {
   const [remainingSec, setRemainingSec] = useState(0);
   const [ending, setEnding] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [widthSheetOpen, setWidthSheetOpen] = useState(false);
   const [draftH, setDraftH] = useState(1);
   const [draftM, setDraftM] = useState(0);
   const [shadeOn, setShadeOn] = useState(false);
@@ -191,6 +197,7 @@ function Player({ session }: { session: Session }) {
     engine.setBalance(engineBalance(saved.instruction));
     engine.setVolume(saved.volume / 100);
     engine.setRepeat(saved.repeat);
+    engine.setPulseWidth(saved.pulseWidth);
 
     const onVisibility = () => {
       if (document.visibilityState === 'visible') engine.resumeIfPlaying();
@@ -200,6 +207,8 @@ function Player({ session }: { session: Session }) {
       document.removeEventListener('visibilitychange', onVisibility);
       engine.dispose();
       wake.dispose();
+      previewRef.current?.dispose();
+      previewRef.current = null;
       engineRef.current = null;
       wakeRef.current = null;
     };
@@ -220,7 +229,10 @@ function Player({ session }: { session: Session }) {
         if (!response.ok) throw new Error('This session\u2019s audio isn\u2019t available yet.');
         const manifest = (await response.json()) as SessionManifest;
         const plan = buildPlayPlan(manifest, fileUrl);
-        if (!cancelled) setScript(buildScript(manifest));
+        if (!cancelled) {
+          setScript(buildScript(manifest));
+          pulseUrlRef.current = plan.pulseUrl;
+        }
         if (!plan.statementUrls.length) throw new Error('This session\u2019s audio isn\u2019t available yet.');
         if (cancelled) return;
 
@@ -283,7 +295,18 @@ function Player({ session }: { session: Session }) {
 
   // After a finished session (or a pending mid-session leave), offer account once idle.
   useEffect(() => {
-    if (currentUser || !promptPending || shadeOn || playing || introOpen || sheetOpen || statementsOpen) return;
+    if (
+      currentUser ||
+      !promptPending ||
+      shadeOn ||
+      playing ||
+      introOpen ||
+      sheetOpen ||
+      widthSheetOpen ||
+      statementsOpen
+    ) {
+      return;
+    }
     if (!canShowAccountPrompt()) {
       setPromptPending(false);
       clearAccountPromptPending();
@@ -293,7 +316,7 @@ function Player({ session }: { session: Session }) {
     markAccountPromptShownThisVisit();
     setPromptOpen(true);
     setPromptPending(false);
-  }, [currentUser, promptPending, shadeOn, playing, introOpen, sheetOpen, statementsOpen]);
+  }, [currentUser, promptPending, shadeOn, playing, introOpen, sheetOpen, widthSheetOpen, statementsOpen]);
 
   // Leaving the player while the prompt is up counts as "Not now" (7-day dismiss).
   useEffect(() => {
@@ -369,6 +392,35 @@ function Player({ session }: { session: Session }) {
     engineRef.current?.setVolume(volume / 100);
     updatePrefs({ volume });
   };
+
+  async function openWidthSheet() {
+    const engine = engineRef.current;
+    if (engine?.playing) await engine.pause();
+    setWidthSheetOpen(true);
+    const preview = previewRef.current ?? new PulseWidthPreview();
+    previewRef.current = preview;
+    preview.setPrefsVolume(prefs.volume, prefs.instruction);
+    preview.setWidth(prefs.pulseWidth);
+    const url = pulseUrlRef.current;
+    if (url) {
+      try {
+        await preview.start(url);
+      } catch {
+        // Sheet still usable without audio.
+      }
+    }
+  }
+
+  function closeWidthSheet() {
+    setWidthSheetOpen(false);
+    previewRef.current?.stop();
+  }
+
+  function chooseWidth(pulseWidth: PulseWidth) {
+    engineRef.current?.setPulseWidth(pulseWidth);
+    previewRef.current?.setWidth(pulseWidth);
+    updatePrefs({ pulseWidth });
+  }
 
   const cancelEnding = () => {
     if (!ending) return;
@@ -567,6 +619,15 @@ function Player({ session }: { session: Session }) {
             <VolumeKnob value={prefs.volume} onChange={setVolume} />
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => void openWidthSheet()}
+          className="flex min-h-[44px] w-full items-center justify-between rounded-full border border-p-chip-border px-4 text-[14px] text-p-fg"
+        >
+          <span className="text-p-muted">Pulse width</span>
+          <span className="font-semibold">{pulseWidthLabel(prefs.pulseWidth)}</span>
+        </button>
       </div>
 
       <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} label="Session length" tone="player">
@@ -614,6 +675,14 @@ function Player({ session }: { session: Session }) {
           This preference applies to every session. You can change it later in Account.
         </p>
         <VoicePicker voices={VOICES} selectedId={prefs.voiceId} onSelect={chooseVoice} tone="player" />
+      </Sheet>
+
+      <Sheet open={widthSheetOpen} onClose={closeWidthSheet} label="Pulse width" tone="player">
+        <SheetHeader title="Pulse width" onCancel={closeWidthSheet} tone="player" />
+        <p className="text-[14px] leading-snug text-p-muted">
+          How wide the pulse feels between your ears. Applies to every session.
+        </p>
+        <PulseWidthPicker selected={prefs.pulseWidth} onSelect={chooseWidth} tone="player" />
       </Sheet>
 
       <PlayerIntro open={introOpen && voiceReady} onClose={() => setIntroOpen(false)} />
