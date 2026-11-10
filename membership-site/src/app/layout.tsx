@@ -20,7 +20,7 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: 'SleepCode — Supraliminal audio for specific goals',
   description:
-    'Supraliminal means nothing is hidden. Pick a goal, press play as you drift off, and one calm voice speaks clear statements about it, set to a steady pulse.',
+    'Supraliminal means nothing is hidden. Pick a goal, press play as you drift off, and one calm voice speaks clear affirmations about it, set to a steady pulse.',
 }
 
 export const viewport: Viewport = {

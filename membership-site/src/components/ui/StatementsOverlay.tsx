@@ -5,7 +5,7 @@ import type { ScriptConcept } from '@/lib/audio/playPlan';
 
 const num = (n: number) => String(n).padStart(2, '0');
 
-// In-player list of every statement (from the session's manifest). Audio keeps playing.
+// In-player list of every affirmation (from the session's manifest). Audio keeps playing.
 // Esc, the Close button, or a tap outside the panel dismisses it.
 export default function StatementsOverlay({
   open,
@@ -49,7 +49,7 @@ export default function StatementsOverlay({
               Transcript
             </h2>
             <p className="text-[13px] text-p-muted">
-              {title} &middot; {count} statements, played in a shuffled order
+              {title} &middot; {count} affirmations, played in a shuffled order
             </p>
           </div>
           <button

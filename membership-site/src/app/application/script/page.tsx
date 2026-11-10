@@ -80,7 +80,7 @@ function ScriptBody() {
           <h1 className="sc-h-page">{sessionLabel(session)}</h1>
           <p className="sc-lead">
             {script.kind === 'ready'
-              ? `Every word spoken in this session: ${count} statements in ${script.concepts.length} groups. Each group says one idea a few different ways, and the session moves through them in a shuffled order.`
+              ? `Every word spoken in this session: ${count} affirmations in ${script.concepts.length} groups. Each group says one idea a few different ways, and the session moves through them in a shuffled order.`
               : script.kind === 'locked'
                 ? 'This transcript will be available when the session is.'
                 : script.kind === 'loading'

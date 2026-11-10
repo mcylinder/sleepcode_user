@@ -11,11 +11,11 @@ const STEPS = [
   },
   {
     title: 'Hear it in the first person.',
-    body: 'Each statement is phrased with "I" ("I finish what I start") so you hear it as a statement about yourself, not a command to follow.',
+    body: 'Each affirmation is phrased with "I" ("I finish what I start") so you hear it as something about yourself, not a command to follow.',
   },
   {
     title: 'Follow the pulse.',
-    body: 'A soft 111 Hz pulse, matched to the rhythm of the statements, gives your attention somewhere to rest, so they land without you analyzing them. Each statement is followed by a short pause.',
+    body: 'A soft 111 Hz pulse, matched to the rhythm of the affirmations, gives your attention somewhere to rest, so they land without you analyzing them. Each affirmation is followed by a short pause.',
   },
 ];
 
@@ -29,7 +29,7 @@ export default function LandingPage() {
           <h1 className="sc-h-hero">Attitudes are habits. Habits can be recoded.</h1>
           <p className="max-w-[30em] text-[clamp(17px,1.5vw,19px)] leading-[1.6] text-ink-muted">
             Supraliminal means nothing is hidden. Pick a goal, press play as you drift off, and one calm voice speaks
-            clear statements about it, set to a steady pulse.
+            clear affirmations about it, set to a steady pulse.
           </p>
           <HeroCta />
         </div>

@@ -27,9 +27,9 @@ export default function AboutPage() {
           get evaluated. Hidden messages ask for trust you can&rsquo;t check.
         </p>
         <p>
-          SleepCode works differently. Each session is a sequence of plain, first-person statements in one
-          instructor&rsquo;s voice, layered over a steady pulse. Every word is audible. You set Instruction / Pulse,
-          choose how many times each statement repeats or how long the session runs, and listen as you drift off.
+          SleepCode works differently. Each session is a sequence of plain, first-person affirmations in one
+          instructor&rsquo;s voice, layered over a steady pulse. Every word is audible. You set how much voice you hear,
+          choose how many times each affirmation repeats or how long the session runs, and listen as you drift off.
           SleepCode isn&rsquo;t a sleep aid; bedtime is simply when most people listen.
         </p>
 
