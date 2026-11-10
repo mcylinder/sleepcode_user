@@ -12,14 +12,14 @@ const SECTIONS = [
     body: 'Pick the session closest to what you are working on and stay with it for a while. Switching often makes repetition harder.',
   },
   {
-    id: 'find-your-blend',
-    title: 'Find your blend',
-    body: 'The pulse is a soft 111 Hz tone, timed to the cadence of the statements. The Instruction / Pulse slider sets how the voice sits against it. Start with the voice clearly on top, then adjust until the words are easy to follow.',
+    id: 'set-the-voice',
+    title: 'Set the voice',
+    body: 'The pulse is a soft 111 Hz tone, timed to the cadence of the affirmations. The Voice control sets how much instruction you hear against the pulse. Start with the voice clearly on top, then adjust until the words are easy to follow.',
   },
   {
     id: 'repeat-or-set-a-length',
     title: 'Repeat or set a length',
-    body: 'Choose whether each statement plays once, twice or four times (1\u00d7, 2\u00d7, 4\u00d7). Set a session length in hours and minutes, up to 10 hours. The countdown appears once a length is set.',
+    body: 'Choose whether each affirmation plays once, twice or four times. Set a session length in hours and minutes, up to 10 hours.',
   },
   {
     id: 'keep-the-volume-low',

@@ -10,12 +10,12 @@ const TIPS = [
     body: 'Choose how long it runs, up to 10 hours. It stops on its own.',
   },
   {
-    title: 'Find your balance.',
-    body: 'Slide toward Instruction to hear the words more, toward Pulse to hear the beat more.',
+    title: 'Set the voice.',
+    body: 'Use the Voice tile to hear more instruction or more pulse.',
   },
   {
     title: 'Choose repeats.',
-    body: 'Hear each statement once, twice or four times.',
+    body: 'Hear each affirmation once, twice or four times.',
   },
   {
     title: 'Keep it low.',

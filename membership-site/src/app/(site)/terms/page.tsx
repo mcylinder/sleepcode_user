@@ -16,7 +16,7 @@ export default function TermsPage() {
         <section>
           <h2>1. The Service</h2>
           <p>
-            SleepCode provides supraliminal audio sessions: clearly audible, first-person statements about a chosen goal,
+            SleepCode provides supraliminal audio sessions: clearly audible, first-person affirmations about a chosen goal,
             spoken over a steady pulse. Sessions are meant to be played as you fall asleep, but SleepCode is not a sleep
             aid. See section 6.
           </p>

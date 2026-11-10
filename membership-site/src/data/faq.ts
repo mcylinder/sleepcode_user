@@ -31,23 +31,23 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'What is the pulse?',
-        a: 'The pulse is a soft 111 Hz tone. Its rhythm is matched to the cadence of the statements, so each one arrives on a steady beat. The repetition is designed to be gently hypnotic, giving your attention somewhere to rest so the words can be absorbed rather than analyzed.',
+        a: 'The pulse is a soft 111 Hz tone. Its rhythm is matched to the cadence of the affirmations, so each one arrives on a steady beat. The repetition is designed to be gently hypnotic, giving your attention somewhere to rest so the words can be absorbed rather than analyzed.',
       },
       {
         q: 'Is SleepCode a sleep aid?',
-        a: 'No. It isn\u2019t designed to help you fall asleep, and it doesn\u2019t treat sleep problems. Bedtime is simply when most people listen: as you drift off, your mind is quiet enough to hear the statements with fewer distractions.',
+        a: 'No. It isn\u2019t designed to help you fall asleep, and it doesn\u2019t treat sleep problems. Bedtime is simply when most people listen: as you drift off, your mind is quiet enough to hear the affirmations with fewer distractions.',
       },
       {
         q: 'Does it work?',
-        a: `Attitudes are habits, and habits can change with gentle, steady repetition. SleepCode gives you the same clear statements night after night, so a new way of thinking has room to settle in. Everyone\u2019s experience is different. ${FREE_LABEL} is free, so give it a few weeks and see how it feels for you.`,
+        a: `Attitudes are habits, and habits can change with gentle, steady repetition. SleepCode gives you the same clear affirmations night after night, so a new way of thinking has room to settle in. Everyone\u2019s experience is different. ${FREE_LABEL} is free, so give it a few weeks and see how it feels for you.`,
       },
       {
         q: 'Whose voice is it?',
-        a: 'The voice is made with a text-to-speech system, chosen and directed for clarity and calm, so the delivery stays even across hours of listening. Every statement is written, edited and listened to by a person before it\u2019s added to a session.',
+        a: 'The voice is made with a text-to-speech system, chosen and directed for clarity and calm, so the delivery stays even across hours of listening. Every affirmation is written, edited and listened to by a person before it\u2019s added to a session.',
       },
       {
         q: 'How often should I listen?',
-        a: 'Most nights works best. Repetition is how the statements become familiar. In the player you can hear each statement more than once, or set a session length and let it run.',
+        a: 'Most nights works best. Repetition is how the affirmations become familiar. In the player you can hear each affirmation more than once, or set a session length and let it run.',
       },
       {
         q: 'Can I listen as I fall asleep?',
