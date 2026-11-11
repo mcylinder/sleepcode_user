@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation';
 import FaqList from '@/components/site/FaqList';
 import PricingPlans from '@/components/site/PricingPlans';
 import { PRICING_FAQ } from '@/data/faq';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = { title: 'Pricing \u2014 SleepCode' };
+export const metadata: Metadata = pageMeta('Pricing', 'SleepCode plans when paid membership returns.');
 
 // Beta: free only. Set to true when paid plans return; until then /pricing goes to the home page.
 const PRICING_LIVE = false;

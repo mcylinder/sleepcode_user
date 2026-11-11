@@ -49,6 +49,12 @@ export default function AppShell({
           <Logo href="/" compact />
           <nav className="flex flex-col gap-4 text-[15px] text-ink-muted" aria-label="Main">
             {tabs.map((tab) => link(tab, ''))}
+            <Link href="/how-to-listen" className="text-ink-muted hover:text-ink">
+              How to listen
+            </Link>
+            <Link href="/faq" className="text-ink-muted hover:text-ink">
+              FAQ
+            </Link>
           </nav>
         </aside>
         <main className="flex min-w-0 flex-1 flex-col px-[clamp(22px,4vw,56px)] py-[clamp(26px,4vw,56px)]">

@@ -2,7 +2,6 @@
 
 import { useMembership } from '@/hooks/useMembership';
 import { useBilling } from '@/lib/useBilling';
-import { FEATURED_FREE_SESSION, sessionLabel } from '@/lib/catalog';
 import { PRICES } from '@/lib/membership';
 import StatusText from '@/components/ui/StatusText';
 import { AccountSection, formatDate } from './Section';
@@ -25,7 +24,7 @@ const Note = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[15px] leading-[1.6] text-ink-muted">{children}</p>
 );
 
-// Beta: free plan only (no upgrade CTA). Existing SleepCode+ members can still manage billing.
+// Beta: all sessions open (no upgrade CTA). Existing SleepCode+ members can still manage billing.
 export default function MembershipSection({ justCheckedOut }: { justCheckedOut: boolean }) {
   const { membership, isMember, loading } = useMembership();
   const { busy, error, openPortal } = useBilling();
@@ -33,7 +32,6 @@ export default function MembershipSection({ justCheckedOut }: { justCheckedOut: 
   const hasPaymentProblem = !!membership && PAYMENT_PROBLEM_STATUSES.includes(membership.status);
   const hasBillingHistory = !!membership && membership.status !== 'none';
   const errorText = error && <StatusText status={{ type: 'error', text: error }} />;
-  const freeLabel = FEATURED_FREE_SESSION ? sessionLabel(FEATURED_FREE_SESSION) : 'Open Door · Optimism';
 
   let body: React.ReactNode;
   if (loading) {
@@ -79,11 +77,11 @@ export default function MembershipSection({ justCheckedOut }: { justCheckedOut: 
     );
   } else {
     body = (
-      <PlanRow name="Free plan" detail={freeLabel}>
+      <PlanRow name="Beta" detail="All sessions open">
         {justCheckedOut ? (
           <Note>Thanks! We&rsquo;re confirming your payment. This updates in a few seconds.</Note>
         ) : (
-          <Note>{freeLabel} is included. More sessions are coming soon.</Note>
+          <Note>Every session is free during the beta.</Note>
         )}
         {hasBillingHistory && (
           <button type="button" onClick={openPortal} disabled={busy} className="sc-textbtn sc-textbtn--muted self-start text-[14px]">

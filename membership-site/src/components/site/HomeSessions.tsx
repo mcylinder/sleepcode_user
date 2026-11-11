@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FEATURED_FREE_SESSION, SESSIONS, isComingSoon, sessionLabel, type Session } from '@/lib/catalog';
+import { SESSIONS, isComingSoon, sessionLabel, type Session } from '@/lib/catalog';
 import PlayLink from '@/components/ui/PlayLink';
 
 const ROW = 'grid grid-cols-[30px_1fr_auto] items-start gap-[14px] border-t border-hairline py-[15px]';
@@ -18,17 +18,14 @@ function RowBody({ session, index }: { session: Session; index: number }) {
   );
 }
 
-// Beta home list: one free playable session (whole row plays), the rest marked Coming soon (no prices).
+// Beta home list: every free session row plays; coming-soon rows stay non-clickable.
 export default function HomeSessions() {
-  const free = FEATURED_FREE_SESSION;
-
   return (
     <div className="flex flex-col">
       {SESSIONS.map((session, i) => {
         const soon = isComingSoon(session);
-        const playable = !soon && free && session.id === free.id;
 
-        if (playable) {
+        if (!soon) {
           return (
             <PlayLink
               key={session.id}
@@ -46,7 +43,7 @@ export default function HomeSessions() {
         return (
           <div key={session.id} className={ROW}>
             <RowBody session={session} index={i} />
-            <span className="pt-[3px] text-[13px] text-ink-muted">{soon ? 'Coming soon' : 'Free'}</span>
+            <span className="pt-[3px] text-[13px] text-ink-muted">Coming soon</span>
           </div>
         );
       })}

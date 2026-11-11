@@ -1,25 +1,36 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = {
-  title: 'How to listen \u2014 SleepCode',
-  description: 'A few practical notes on getting the most from a SleepCode session.',
-};
+export const metadata: Metadata = pageMeta(
+  'How to listen',
+  'A few practical notes on getting the most from a SleepCode session.',
+);
 
 const SECTIONS = [
   {
     id: 'choose-one-goal',
     title: 'Choose one goal',
-    body: 'Pick the session closest to what you are working on and stay with it for a while. Switching often makes repetition harder.',
+    body: 'Pick the session closest to what you are working on and stay with it for a while. Repetition works best when you stay with one session for a few weeks.',
   },
   {
     id: 'set-the-voice',
     title: 'Set the voice',
-    body: 'The pulse is a soft 111 Hz tone, timed to the cadence of the affirmations. The Voice control sets how much instruction you hear against the pulse. Start with the voice clearly on top, then adjust until the words are easy to follow.',
+    body: 'The pulse is a soft 111 Hz tone, timed to the cadence of the affirmations. The Voice control sets how much voice you hear over the pulse. Start with the voice clearly on top, then adjust until the words are easy to follow.',
+  },
+  {
+    id: 'pulse-width',
+    title: 'Pulse width',
+    body: 'Pulse width spreads the pulse from the center to both ears; wider works best with headphones. Try Narrow or Wide until it feels steady rather than distracting.',
   },
   {
     id: 'repeat-or-set-a-length',
     title: 'Repeat or set a length',
     body: 'Choose whether each affirmation plays once, twice or four times. Set a session length in hours and minutes, up to 10 hours.',
+  },
+  {
+    id: 'nights-listened',
+    title: 'Nights listened',
+    body: 'The row of weekday dots under the title marks nights you listened for a few minutes. It is real listening history, not a streak badge.',
   },
   {
     id: 'keep-the-volume-low',
@@ -42,7 +53,7 @@ export default function HowToListenPage() {
         <span className="sc-eyebrow">Guide</span>
         <h1 className="sc-h-page">How to listen</h1>
         <p className="sc-lead">
-          A few practical notes on getting the most from a session. None of it is required. Use what fits your day.
+          A few practical notes on getting the most from a session. None of it is required. Use what fits your night.
         </p>
       </div>
 

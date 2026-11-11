@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReauth } from '@/components/account/useReauth';
@@ -53,7 +54,17 @@ export default function AccountPage() {
   return (
     <AppShell active="account" maxWidth={720}>
       <div className="flex flex-col gap-[38px]">
-        <h1 className="sc-h-app">Account</h1>
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h1 className="sc-h-app">Account</h1>
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-[14px]">
+            <Link href="/how-to-listen" className="sc-link">
+              How to listen
+            </Link>
+            <Link href="/faq" className="sc-link">
+              FAQ
+            </Link>
+          </div>
+        </div>
 
         <MembershipSection justCheckedOut={justCheckedOut} />
         <DefaultsSection />

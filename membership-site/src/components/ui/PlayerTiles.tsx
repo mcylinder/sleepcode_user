@@ -121,7 +121,7 @@ export default function PlayerTiles({
           className={tileClass(open === 'voice')}
         >
           <VoiceIcon size={18} className="text-p-accent" />
-          <span className="text-[13px] leading-none tabular-nums">{instruction}%</span>
+          <span className="text-[12px] leading-none tabular-nums">Voice {instruction}%</span>
         </button>
         <button
           type="button"
@@ -130,7 +130,7 @@ export default function PlayerTiles({
           className={tileClass(open === 'width')}
         >
           <PulseWidthGlyph width={pulseWidth} />
-          <span className="text-[13px] leading-none">{pulseWidthLabel(pulseWidth)}</span>
+          <span className="text-[12px] leading-none">Pulse: {pulseWidthLabel(pulseWidth)}</span>
         </button>
         <button
           type="button"
@@ -148,7 +148,7 @@ export default function PlayerTiles({
           className={tileClass(open === 'volume')}
         >
           <SpeakerIcon size={18} level={volume} />
-          <span className="text-[13px] leading-none tabular-nums">{volume}%</span>
+          <span className="text-[12px] leading-none tabular-nums">Volume {volume}%</span>
         </button>
       </div>
     </div>

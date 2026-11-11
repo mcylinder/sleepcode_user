@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 import FaqList from '@/components/site/FaqList';
 import { FAQ_GROUPS } from '@/data/faq';
-import { CONTACT_EMAIL } from '@/lib/site';
+import { CONTACT_EMAIL, pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = { title: 'FAQ \u2014 SleepCode' };
+export const metadata: Metadata = pageMeta(
+  'FAQ',
+  'Plain answers about SleepCode, listening, and what is free during the beta.',
+);
 
 export default function FAQPage() {
   return (

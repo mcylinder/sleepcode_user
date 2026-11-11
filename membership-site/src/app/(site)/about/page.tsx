@@ -1,8 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import ArticleLayout from '@/components/site/ArticleLayout';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = { title: 'About \u2014 SleepCode' };
+export const metadata: Metadata = pageMeta(
+  'About',
+  'SleepCode is an instrument for everyday habits of mind: plain affirmations over a steady pulse.',
+);
 
 const PRINCIPLES = [
   ['As little design as possible.', 'If a screen works without an element, the element doesn\u2019t belong.'],
@@ -17,8 +21,7 @@ export default function AboutPage() {
     <ArticleLayout
       eyebrow="About"
       title="An instrument, not an appliance."
-      dek="SleepCode is supraliminal audio for specific goals, built to get out of the way rather than be admired."
-     
+      dek="SleepCode is supraliminal audio for specific goals."
     >
       <div className="sc-prose">
         <p>
@@ -28,7 +31,7 @@ export default function AboutPage() {
         </p>
         <p>
           SleepCode works differently. Each session is a sequence of plain, first-person affirmations in one
-          instructor&rsquo;s voice, layered over a steady pulse. Every word is audible. You set how much voice you hear,
+          voice per session, layered over a steady pulse. Every word is audible. You set how much voice you hear,
           choose how many times each affirmation repeats or how long the session runs, and listen as you drift off.
           SleepCode isn&rsquo;t a sleep aid; bedtime is simply when most people listen.
         </p>

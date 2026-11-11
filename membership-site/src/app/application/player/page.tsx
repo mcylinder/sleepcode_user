@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   VOICES,
   findSession,
+  findVoice,
   isComingSoon,
   playerHref,
   saveLastPlayed,
@@ -51,6 +52,7 @@ import StatementsOverlay from '@/components/ui/StatementsOverlay';
 import SaveSettingsPrompt from '@/components/ui/SaveSettingsPrompt';
 import VoicePicker from '@/components/ui/VoicePicker';
 import { MoonIcon, PauseIcon, PlayIcon, StatementsIcon } from '@/components/ui/icons';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const LAST_PLAYED_AFTER_SEC = 60;
 const LISTEN_NIGHT_AFTER_SEC = 180;
@@ -140,6 +142,7 @@ function usePageBackground(color: string) {
 function Player({ session }: { session: Session }) {
   const router = useRouter();
   const { currentUser } = useAuth();
+  useDocumentTitle(sessionLabel(session));
   const engineRef = useRef<SessionEngine | null>(null);
   const wakeRef = useRef<StayAwake | null>(null);
   const previewRef = useRef<PulseWidthPreview | null>(null);
@@ -163,6 +166,7 @@ function Player({ session }: { session: Session }) {
   const [promptPending, setPromptPending] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
   const [voiceReady, setVoiceReady] = useState(false);
+  const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
   const wasEnding = useRef(false);
   const listenedEnough = useRef(false);
@@ -171,6 +175,7 @@ function Player({ session }: { session: Session }) {
   const listenAccum = useRef(0);
   const sessionEndedCleanly = useRef(false);
   const promptOpenRef = useRef(false);
+  const pendingVoiceNoticeRef = useRef<string | null>(null);
   promptOpenRef.current = promptOpen;
 
   usePageBackground(shadeOn ? '#000000' : playing ? 'var(--p-bg-playing)' : 'var(--p-bg)');
@@ -223,25 +228,37 @@ function Player({ session }: { session: Session }) {
     if (!engine || !voiceReady || !voiceId) return;
     let cancelled = false;
     setLoad({ kind: 'loading', loaded: 0, total: 0 });
+    const pendingNotice = pendingVoiceNoticeRef.current;
+    pendingVoiceNoticeRef.current = null;
+    setVoiceNotice(pendingNotice);
+
+    async function loadWithVoice(id: string) {
+      const signed = await fetchSessionMedia(session.id, id);
+      const fileUrl = (name: string) => `${signed.baseUrl}${encodeURIComponent(name)}?${signed.query}`;
+      const response = await fetch(fileUrl('manifest.json'));
+      if (!response.ok) throw new Error('This session\u2019s audio isn\u2019t available yet.');
+      const manifest = (await response.json()) as SessionManifest;
+      const plan = buildPlayPlan(manifest, fileUrl);
+      if (!plan.statementUrls.length) throw new Error('This session\u2019s audio isn\u2019t available yet.');
+      if (cancelled) return;
+      setScript(buildScript(manifest));
+      pulseUrlRef.current = plan.pulseUrl;
+      await engine!.load(plan, (loaded, total) => {
+        if (!cancelled) setLoad({ kind: 'loading', loaded, total });
+      });
+    }
+
+    function friendlyLoadError(error: unknown): string {
+      const raw = error instanceof Error ? error.message : '';
+      if (/failed to fetch|networkerror|load failed/i.test(raw)) {
+        return 'This session couldn\u2019t load. Please try again.';
+      }
+      return raw || 'This session couldn\u2019t load. Please try again.';
+    }
 
     (async () => {
       try {
-        const signed = await fetchSessionMedia(session.id, voiceId);
-        const fileUrl = (name: string) => `${signed.baseUrl}${encodeURIComponent(name)}?${signed.query}`;
-        const response = await fetch(fileUrl('manifest.json'));
-        if (!response.ok) throw new Error('This session\u2019s audio isn\u2019t available yet.');
-        const manifest = (await response.json()) as SessionManifest;
-        const plan = buildPlayPlan(manifest, fileUrl);
-        if (!cancelled) {
-          setScript(buildScript(manifest));
-          pulseUrlRef.current = plan.pulseUrl;
-        }
-        if (!plan.statementUrls.length) throw new Error('This session\u2019s audio isn\u2019t available yet.');
-        if (cancelled) return;
-
-        await engine.load(plan, (loaded, total) => {
-          if (!cancelled) setLoad({ kind: 'loading', loaded, total });
-        });
+        await loadWithVoice(voiceId);
         if (cancelled) return;
         setLoad({ kind: 'ready' });
       } catch (error) {
@@ -250,10 +267,31 @@ function Player({ session }: { session: Session }) {
           router.replace('/application');
           return;
         }
-        setLoad({
-          kind: 'error',
-          message: error instanceof Error ? error.message : 'This session couldn\u2019t load. Please try again.',
-        });
+
+        const fallback = VOICES.find((voice) => voice.id !== voiceId) ?? null;
+        if (fallback) {
+          try {
+            await loadWithVoice(fallback.id);
+            if (cancelled) return;
+            const failedName = findVoice(voiceId)?.name ?? 'that';
+            pendingVoiceNoticeRef.current =
+              `This session isn\u2019t ready in ${failedName}\u2019s voice yet. Playing ${fallback.name} instead.`;
+            const next = { ...loadPlayerPrefs(), voiceId: fallback.id };
+            savePlayerPrefs(next);
+            setPrefs(next);
+            return;
+          } catch (fallbackError) {
+            if (cancelled) return;
+            if (fallbackError instanceof RequestError && fallbackError.status === 403) {
+              router.replace('/application');
+              return;
+            }
+            setLoad({ kind: 'error', message: friendlyLoadError(fallbackError) });
+            return;
+          }
+        }
+
+        setLoad({ kind: 'error', message: friendlyLoadError(error) });
       }
     })();
 
@@ -263,6 +301,8 @@ function Player({ session }: { session: Session }) {
   }, [session, attempt, router, voiceReady, prefs.voiceId]);
 
   function chooseVoice(voiceId: string) {
+    pendingVoiceNoticeRef.current = null;
+    setVoiceNotice(null);
     const next = { ...loadPlayerPrefs(), voiceId };
     savePlayerPrefs(next);
     setPrefs(next);
@@ -500,6 +540,8 @@ function Player({ session }: { session: Session }) {
     );
   } else if (ending) {
     status = 'Fading out';
+  } else if (voiceNotice) {
+    status = voiceNotice;
   }
 
   const label = sessionLabel(session);

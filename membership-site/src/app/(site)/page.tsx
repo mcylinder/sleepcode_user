@@ -1,8 +1,15 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Rings from '@/components/ui/Rings';
 import HeroCta from '@/components/site/HeroCta';
 import HomeSessions from '@/components/site/HomeSessions';
 import HomeSample from '@/components/site/HomeSample';
+
+export const metadata: Metadata = {
+  title: {
+    absolute: 'SleepCode — Supraliminal audio for specific goals',
+  },
+};
 
 const STEPS = [
   {
@@ -15,7 +22,7 @@ const STEPS = [
   },
   {
     title: 'Follow the pulse.',
-    body: 'A soft 111 Hz pulse, matched to the rhythm of the affirmations, gives your attention somewhere to rest, so they land without you analyzing them. Each affirmation is followed by a short pause.',
+    body: 'A soft 111 Hz pulse, matched to the rhythm of the affirmations, gives your attention somewhere to rest, so the affirmations land without you analyzing them. Each affirmation is followed by a short pause.',
   },
 ];
 
@@ -66,7 +73,7 @@ export default function LandingPage() {
       <section id="sessions" className="sc-band sc-section flex scroll-mt-4 flex-col gap-9">
         <div className="flex flex-col gap-[14px]">
           <span className="sc-eyebrow">Sessions</span>
-          <h2 className="sc-h-section">One free session now. More on the way.</h2>
+          <h2 className="sc-h-section">Every session is free during the beta.</h2>
         </div>
         <HomeSessions />
       </section>
