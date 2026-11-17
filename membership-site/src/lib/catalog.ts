@@ -97,10 +97,29 @@ export function moreSessionsLabel(count: number): string {
 }
 
 const LAST_SESSION_KEY = 'sleepcode_last_session';
+const RECENT_SESSIONS_KEY = 'sleepcode_recent_sessions';
+const RECENT_KEEP = 5;
 
 export interface LastPlayed {
   session: Session;
   playedAt: Date | null;
+}
+
+type StoredPlay = { id?: string; at?: number };
+
+function parseStoredPlay(raw: string): StoredPlay | null {
+  try {
+    // Older entries stored only the session id.
+    return raw.startsWith('{') ? (JSON.parse(raw) as StoredPlay) : { id: raw };
+  } catch {
+    return null;
+  }
+}
+
+function entryFromStored(parsed: StoredPlay | null): LastPlayed | null {
+  const session = findSession(parsed?.id);
+  if (!session) return null;
+  return { session, playedAt: typeof parsed?.at === 'number' ? new Date(parsed.at) : null };
 }
 
 export function loadLastPlayed(): LastPlayed | null {
@@ -108,21 +127,55 @@ export function loadLastPlayed(): LastPlayed | null {
   try {
     const raw = localStorage.getItem(LAST_SESSION_KEY);
     if (!raw) return null;
-    // Older entries stored only the session id.
-    const parsed = raw.startsWith('{') ? (JSON.parse(raw) as { id?: string; at?: number }) : { id: raw };
-    const session = findSession(parsed.id);
-    if (!session) return null;
-    return { session, playedAt: typeof parsed.at === 'number' ? new Date(parsed.at) : null };
+    return entryFromStored(parseStoredPlay(raw));
   } catch {
     return null;
   }
 }
 
-export function saveLastPlayed(session: Session): void {
+/** Most-recent first, distinct sessions (up to RECENT_KEEP). Seeds from last-played if empty. */
+export function loadRecentlyPlayed(): LastPlayed[] {
+  if (typeof window === 'undefined') return [];
   try {
-    localStorage.setItem(LAST_SESSION_KEY, JSON.stringify({ id: session.id, at: Date.now() }));
+    const raw = localStorage.getItem(RECENT_SESSIONS_KEY);
+    const entries: LastPlayed[] = [];
+    if (raw) {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        for (const item of parsed) {
+          const entry = entryFromStored(item as StoredPlay);
+          if (entry && !entries.some((e) => e.session.id === entry.session.id)) {
+            entries.push(entry);
+          }
+        }
+      }
+    }
+    if (entries.length === 0) {
+      const last = loadLastPlayed();
+      if (last) entries.push(last);
+    }
+    return entries.slice(0, RECENT_KEEP);
+  } catch {
+    return [];
+  }
+}
+
+export function saveLastPlayed(session: Session): void {
+  const at = Date.now();
+  try {
+    localStorage.setItem(LAST_SESSION_KEY, JSON.stringify({ id: session.id, at }));
   } catch {
     // Storage unavailable; "Continue" just won't appear.
+  }
+  try {
+    const previous = loadRecentlyPlayed().filter((e) => e.session.id !== session.id);
+    const next = [{ id: session.id, at }, ...previous.map((e) => ({
+      id: e.session.id,
+      at: e.playedAt?.getTime(),
+    }))].slice(0, RECENT_KEEP);
+    localStorage.setItem(RECENT_SESSIONS_KEY, JSON.stringify(next));
+  } catch {
+    // Recently played list optional.
   }
 }
 

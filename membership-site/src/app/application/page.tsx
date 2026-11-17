@@ -7,6 +7,7 @@ import {
   SESSIONS,
   THEMES,
   loadLastPlayed,
+  loadRecentlyPlayed,
   needsMembership,
   playedAgo,
   playerHref,
@@ -18,15 +19,20 @@ import {
 import AppShell from '@/components/ui/AppShell';
 import { useDissolve } from '@/components/ui/Dissolve';
 import { PlayIcon } from '@/components/ui/icons';
+import ListenHistory from '@/components/ui/ListenHistory';
+import { useAuth } from '@/contexts/AuthContext';
 import { useMembership } from '@/hooks/useMembership';
 
 const ALL = 'All';
+const RECENT_SHOW = 3;
 
 function LibraryBody() {
   const dissolveTo = useDissolve();
   const searchParams = useSearchParams();
+  const { currentUser } = useAuth();
   const { isMember, loading: membershipLoading } = useMembership();
   const [lastPlayed, setLastPlayed] = useState<LastPlayed | null>(null);
+  const [recent, setRecent] = useState<LastPlayed[]>([]);
   const themeParam = searchParams.get('theme');
   const initialTheme = themeParam && THEMES.includes(themeParam) ? themeParam : ALL;
   const [theme, setTheme] = useState(initialTheme);
@@ -34,6 +40,7 @@ function LibraryBody() {
 
   useEffect(() => {
     setLastPlayed(loadLastPlayed());
+    setRecent(loadRecentlyPlayed());
   }, []);
 
   useEffect(() => {
@@ -57,6 +64,11 @@ function LibraryBody() {
   const continueSession =
     lastPlayed && canPlay(lastPlayed.session) ? lastPlayed : null;
 
+  const recentPlayable = recent
+    .filter((entry) => canPlay(entry.session))
+    .filter((entry) => !continueSession || entry.session.id !== continueSession.session.id)
+    .slice(0, RECENT_SHOW);
+
   function openSession(session: Session) {
     if (!canPlay(session)) return;
     dissolveTo(playerHref(session));
@@ -66,6 +78,8 @@ function LibraryBody() {
     <AppShell active="library">
       <div className="flex flex-col gap-[34px]">
         <h1 className="sc-h-app">What are you working on?</h1>
+
+        {currentUser ? <ListenHistory tone="library" /> : null}
 
         {continueSession && (
           <div className="flex flex-col gap-3">
@@ -85,6 +99,32 @@ function LibraryBody() {
                 </span>
               </span>
             </button>
+          </div>
+        )}
+
+        {recentPlayable.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <span className="sc-eyebrow">Recently played</span>
+            <div className="flex flex-col">
+              {recentPlayable.map((entry) => (
+                <button
+                  key={entry.session.id}
+                  type="button"
+                  onClick={() => openSession(entry.session)}
+                  className="flex items-center justify-between gap-4 border-t border-hairline py-[14px] text-left last:border-b"
+                >
+                  <span className="flex min-w-0 flex-col gap-[3px]">
+                    <span className="text-[16px] font-semibold">{sessionLabel(entry.session)}</span>
+                    <span className="text-[13px] text-ink-muted">
+                      {entry.playedAt ? playedAgo(entry.playedAt) : 'Recently'}
+                    </span>
+                  </span>
+                  <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-accent text-on-accent">
+                    <PlayIcon size={11} className="translate-x-[1px]" />
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
