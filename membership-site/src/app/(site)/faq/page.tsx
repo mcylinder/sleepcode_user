@@ -5,7 +5,7 @@ import { CONTACT_EMAIL, pageMeta } from '@/lib/site';
 
 export const metadata: Metadata = pageMeta(
   'FAQ',
-  'Plain answers about SleepCode, listening, and what is free during the beta.',
+  'Plain answers about SleepCode, listening, Fresh Start, and SleepCode+.',
 );
 
 export default function FAQPage() {

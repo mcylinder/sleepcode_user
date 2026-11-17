@@ -64,7 +64,7 @@ export default function PrivacyPage() {
 
           <h3>1.5 Payments</h3>
           <p>
-            SleepCode is currently free. If we offer paid plans, payments will be handled by Stripe. We never see or store
+            Payments for SleepCode+ are handled by Stripe. We never see or store
             your full card details.
           </p>
         </section>

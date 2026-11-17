@@ -39,6 +39,7 @@ AWS_REGION=us-east-1
 SES_FROM_EMAIL=...
 SES_TO_EMAIL=...
 ```
+Used by the contact form (`POST /api/contact`). `contact@sleepcoding.me` must be a verified SES identity (or the account must be out of sandbox).
 
 ### Session audio (server, secret)
 ```

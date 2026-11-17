@@ -46,7 +46,10 @@ export default function TermsPage() {
 
         <section>
           <h2>3. Free and Paid Access</h2>
-          <p>3.1 Some sessions are free. During the current beta, SleepCode offers free access only.</p>
+          <p>
+            3.1 Some sessions are free (currently Fresh Start · Mindset). SleepCode+ unlocks the remaining sessions
+            through a paid membership.
+          </p>
           <p>
             3.2 If we offer paid plans, the price, billing period, and renewal terms will be shown before you buy.
             Payments are processed by Stripe. Paid plans renew automatically until canceled.

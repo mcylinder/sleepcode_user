@@ -73,9 +73,17 @@ export default function LandingPage() {
       <section id="sessions" className="sc-band sc-section flex scroll-mt-4 flex-col gap-9">
         <div className="flex flex-col gap-[14px]">
           <span className="sc-eyebrow">Sessions</span>
-          <h2 className="sc-h-section">Every session is free during the beta.</h2>
+          <h2 className="sc-h-section">One free session. SleepCode+ for the rest.</h2>
         </div>
         <HomeSessions />
+      </section>
+
+      <section className="sc-section flex max-w-[640px] flex-col gap-[14px]">
+        <span className="sc-eyebrow">The person behind it</span>
+        <h2 className="sc-h-section">Written by a person. Heard by a person.</h2>
+        <p className="text-[17px] leading-[1.65] text-ink-body">
+          Affirmations written by Peter DuCharme. Every line is edited and listened to before it ships.
+        </p>
       </section>
     </>
   );

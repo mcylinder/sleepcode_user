@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useMembership } from '@/hooks/useMembership';
 import { useBilling } from '@/lib/useBilling';
 import { PRICES } from '@/lib/membership';
+import { FEATURED_FREE_SESSION } from '@/lib/catalog';
 import StatusText from '@/components/ui/StatusText';
 import { AccountSection, formatDate } from './Section';
 
@@ -24,7 +26,6 @@ const Note = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[15px] leading-[1.6] text-ink-muted">{children}</p>
 );
 
-// Beta: all sessions open (no upgrade CTA). Existing SleepCode+ members can still manage billing.
 export default function MembershipSection({ justCheckedOut }: { justCheckedOut: boolean }) {
   const { membership, isMember, loading } = useMembership();
   const { busy, error, openPortal } = useBilling();
@@ -76,12 +77,22 @@ export default function MembershipSection({ justCheckedOut }: { justCheckedOut: 
       </PlanRow>
     );
   } else {
+    const freeLabel = FEATURED_FREE_SESSION
+      ? `${FEATURED_FREE_SESSION.title} \u00b7 ${FEATURED_FREE_SESSION.theme}`
+      : 'one free session';
     body = (
-      <PlanRow name="Beta" detail="All sessions open">
+      <PlanRow name="Free" detail={freeLabel}>
         {justCheckedOut ? (
           <Note>Thanks! We&rsquo;re confirming your payment. This updates in a few seconds.</Note>
         ) : (
-          <Note>Every session is free during the beta.</Note>
+          <Note>
+            {freeLabel} is included. SleepCode+ unlocks every other session.
+          </Note>
+        )}
+        {!justCheckedOut && (
+          <Link href="/pricing" className="sc-btn self-start">
+            See SleepCode+
+          </Link>
         )}
         {hasBillingHistory && (
           <button type="button" onClick={openPortal} disabled={busy} className="sc-textbtn sc-textbtn--muted self-start text-[14px]">

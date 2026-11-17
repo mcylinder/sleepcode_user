@@ -8,9 +8,9 @@ import Logo from '@/components/ui/Logo';
 import { ChevronRight } from '@/components/ui/icons';
 
 // Every nav item is a page. Journal stays out of the nav until real posts exist.
-// Pricing stays out of the nav for beta (page code retained).
 const NAV = [
   { href: '/how-to-listen', label: 'How to listen' },
+  { href: '/pricing', label: 'Pricing' },
   { href: '/faq', label: 'FAQ' },
 ];
 

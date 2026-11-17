@@ -43,7 +43,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: 'Does it work?',
-        a: 'Attitudes are habits, and habits can change with gentle, steady repetition. SleepCode gives you the same clear affirmations night after night, so a new way of thinking has room to settle in. Everyone\u2019s experience is different. Every session is free during the beta, so give it a few weeks and see how it feels for you.',
+        a: 'Attitudes are habits, and habits can change with gentle, steady repetition. SleepCode gives you the same clear affirmations night after night, so a new way of thinking has room to settle in. Everyone\u2019s experience is different. Start with the free session, Fresh Start \u00b7 Mindset, stay with it for a few weeks, and see how it feels. SleepCode+ is there when you want another goal.',
       },
       {
         q: 'Whose voice is it?',
@@ -84,7 +84,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
     items: [
       {
         q: 'What is free?',
-        a: 'Every session is free during the beta, with no account needed. Create a free account to keep your settings and listening progress (including nights listened) wherever you listen.',
+        a: 'Fresh Start \u00b7 Mindset is free, with no account needed. SleepCode+ unlocks every other session. A free account keeps your player settings and listening progress \u2014 the weekday \u201cNights listened\u201d dots on the player \u2014 wherever you listen.',
       },
       {
         q: 'Is my data private?',
@@ -95,7 +95,6 @@ export const FAQ_GROUPS: FaqGroup[] = [
   },
 ];
 
-// Kept for the pricing page (hidden in beta nav; code retained for later).
 export const PRICING_FAQ: FaqGroup[] = [
   {
     title: 'Membership',
@@ -106,7 +105,7 @@ export const PRICING_FAQ: FaqGroup[] = [
       },
       {
         q: 'Is there a free trial?',
-        a: 'There\u2019s no trial, and you don\u2019t need one. Every session is free during the beta, with no account needed.',
+        a: 'There\u2019s no separate trial. Fresh Start \u00b7 Mindset is free to keep, with no account needed, so you can try SleepCode before SleepCode+.',
       },
       {
         q: 'Can I switch between monthly and yearly?',

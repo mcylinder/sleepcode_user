@@ -56,8 +56,8 @@ export function sessionLabel(session: Session): string {
   return `${session.title} \u00b7 ${session.theme}`;
 }
 
-// Beta: non-free sessions are listed as coming soon (no price, no upgrade).
-export function isComingSoon(session: Session): boolean {
+/** Paid sessions require an active SleepCode+ membership to play. */
+export function needsMembership(session: Session): boolean {
   return !session.free;
 }
 

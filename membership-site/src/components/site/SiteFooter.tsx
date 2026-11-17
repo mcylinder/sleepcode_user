@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 const LINKS = [
   { href: '/how-to-listen', label: 'How to listen' },
+  { href: '/pricing', label: 'Pricing' },
   { href: '/about', label: 'About' },
   { href: '/privacy', label: 'Privacy' },
   { href: '/terms', label: 'Terms' },
@@ -16,7 +17,9 @@ export default function SiteFooter({ compact = false }: { compact?: boolean }) {
       <span>&copy; {new Date().getFullYear()} SleepCode</span>
       <nav className="flex flex-wrap gap-x-5 gap-y-2" aria-label="Footer">
         {links.map((link) => (
-          <Link key={link.href} href={link.href}>{link.label}</Link>
+          <Link key={link.href} href={link.href}>
+            {link.label}
+          </Link>
         ))}
       </nav>
     </footer>

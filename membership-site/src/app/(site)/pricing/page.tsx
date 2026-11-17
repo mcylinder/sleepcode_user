@@ -1,26 +1,23 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 import FaqList from '@/components/site/FaqList';
 import PricingPlans from '@/components/site/PricingPlans';
 import { PRICING_FAQ } from '@/data/faq';
 import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = pageMeta('Pricing', 'SleepCode plans when paid membership returns.');
-
-// Beta: free only. Set to true when paid plans return; until then /pricing goes to the home page.
-const PRICING_LIVE = false;
+export const metadata: Metadata = pageMeta(
+  'Pricing',
+  'Fresh Start is free to keep. SleepCode+ unlocks every other session.',
+);
 
 export default function PricingPage() {
-  if (!PRICING_LIVE) redirect('/');
-
   return (
     <>
       <section className="sc-px flex max-w-[760px] flex-col gap-[18px] pb-[clamp(32px,4vw,48px)] pt-[clamp(28px,5vw,72px)]">
         <span className="sc-eyebrow">Pricing</span>
         <h1 className="sc-h-page">Plain pricing.</h1>
         <p className="sc-lead">
-          One session is free to keep. SleepCode+ adds every other session, including new ones as they&rsquo;re added.
-          Cancel any time.
+          Fresh Start · Mindset is free to keep. SleepCode+ adds every other session, including new ones as
+          they&rsquo;re added. Cancel any time.
         </p>
       </section>
       <section className="sc-px pb-[var(--pad-section)]">

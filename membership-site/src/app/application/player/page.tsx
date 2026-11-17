@@ -8,12 +8,13 @@ import {
   VOICES,
   findSession,
   findVoice,
-  isComingSoon,
+  needsMembership,
   playerHref,
   saveLastPlayed,
   sessionLabel,
   type Session,
 } from '@/lib/catalog';
+import { useMembership } from '@/hooks/useMembership';
 import { fetchSessionMedia, RequestError } from '@/lib/authedFetch';
 import { buildPlayPlan, buildScript, type ScriptConcept, type SessionManifest } from '@/lib/audio/playPlan';
 import { PulseWidthPreview } from '@/lib/audio/PulseWidthPreview';
@@ -69,19 +70,26 @@ type LoadState =
 
 export default function PlayerPage() {
   const router = useRouter();
+  const { isMember, loading: membershipLoading } = useMembership();
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
     const found = findSession(new URLSearchParams(window.location.search).get('session'));
-    // Beta: only free sessions are playable (no account required); the rest are Coming soon.
-    if (!found || isComingSoon(found)) {
+    if (!found) {
       router.replace('/application');
       return;
     }
     setSession(found);
   }, [router]);
 
-  if (!session) {
+  useEffect(() => {
+    if (!session || membershipLoading) return;
+    if (needsMembership(session) && !isMember) {
+      router.replace('/pricing');
+    }
+  }, [session, membershipLoading, isMember, router]);
+
+  if (!session || (needsMembership(session) && (membershipLoading || !isMember))) {
     return <PlayerMessage text={'Loading\u2026'} />;
   }
   return <Player session={session} />;
