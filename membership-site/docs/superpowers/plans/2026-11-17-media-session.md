@@ -42,7 +42,7 @@
     - `setPlaying(playing: boolean): void`
     - `dispose(): void`
 
-- [ ] **Step 1: Create `src/lib/audio/MediaSessionController.ts`**
+- [x] **Step 1: Create `src/lib/audio/MediaSessionController.ts`**
 
 ```ts
 export type MediaSessionMeta = {
@@ -131,12 +131,12 @@ export class MediaSessionController {
 }
 ```
 
-- [ ] **Step 2: Typecheck the new file**
+- [x] **Step 2: Typecheck the new file**
 
 Run: `cd membership-site && npx tsc --noEmit`
 Expected: PASS (no errors)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add membership-site/src/lib/audio/MediaSessionController.ts
@@ -157,7 +157,7 @@ EOF
 **Interfaces:**
 - Consumes: `MediaSessionController`, `MediaSessionMeta` from Task 1; existing `sessionLabel`, `togglePlay` / engine + wake refs
 
-- [ ] **Step 1: Import and hold a ref**
+- [x] **Step 1: Import and hold a ref**
 
 Near the other audio imports:
 
@@ -171,7 +171,7 @@ Inside `Player`, next to `wakeRef`:
 const mediaRef = useRef<MediaSessionController | null>(null);
 ```
 
-- [ ] **Step 2: Construct and dispose with the engine**
+- [x] **Step 2: Construct and dispose with the engine**
 
 In the existing mount `useEffect` that creates `SessionEngine` / `StayAwake`, also:
 
@@ -183,7 +183,7 @@ media.dispose();
 mediaRef.current = null;
 ```
 
-- [ ] **Step 3: Keep handlers pointed at the live play/pause path**
+- [x] **Step 3: Keep handlers pointed at the live play/pause path**
 
 `togglePlay` already enables wake on play and pauses via the engine. Update a ref each render so Media Session handlers never go stale:
 
@@ -222,7 +222,7 @@ useEffect(() => {
 
 Use the **explicit** play/pause handlers above (not toggle) so lock-screen Pause cannot accidentally start playback.
 
-- [ ] **Step 4: Set metadata when the session is known**
+- [x] **Step 4: Set metadata when the session is known**
 
 Inside `Player` (session prop is always defined):
 
@@ -237,7 +237,7 @@ useEffect(() => {
 }, [session]);
 ```
 
-- [ ] **Step 5: Sync playbackState**
+- [x] **Step 5: Sync playbackState**
 
 In the existing effect that reacts to `playing` (or a small dedicated one):
 
@@ -249,12 +249,12 @@ useEffect(() => {
 
 Also ensure `wakeRef.current?.disable()` still runs when `playing` becomes false (existing code) — do not change that.
 
-- [ ] **Step 6: Typecheck**
+- [x] **Step 6: Typecheck**
 
 Run: `cd membership-site && npx tsc --noEmit`
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add membership-site/src/app/application/player/page.tsx
@@ -271,7 +271,7 @@ EOF
 
 **Files:** none
 
-- [ ] **Step 1: Confirm checklist against the spec**
+- [x] **Step 1: Confirm checklist against the spec**
 
 After deploy or local device testing:
 
@@ -280,7 +280,7 @@ After deploy or local device testing:
 3. Leaving `/application/player` clears Media Session (dispose)
 4. No seek/skip controls appear from our handlers
 
-- [ ] **Step 2: If lock-screen UI never appears on a target device**
+- [x] **Step 2: If lock-screen UI never appears on a target device**
 
 Do **not** expand scope in this plan. File a follow-up for the silent `<audio>` focus bridge called out in the spec’s out-of-scope section.
 

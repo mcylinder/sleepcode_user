@@ -19,6 +19,7 @@ import { buildPlayPlan, buildScript, type ScriptConcept, type SessionManifest } 
 import { PulseWidthPreview } from '@/lib/audio/PulseWidthPreview';
 import { SessionEngine } from '@/lib/audio/SessionEngine';
 import { StayAwake } from '@/lib/audio/StayAwake';
+import { MediaSessionController } from '@/lib/audio/MediaSessionController';
 import type { PulseWidth } from '@/lib/audio/pulseWidth';
 import {
   DEFAULT_PREFS,
@@ -145,6 +146,7 @@ function Player({ session }: { session: Session }) {
   useDocumentTitle(sessionLabel(session));
   const engineRef = useRef<SessionEngine | null>(null);
   const wakeRef = useRef<StayAwake | null>(null);
+  const mediaRef = useRef<MediaSessionController | null>(null);
   const previewRef = useRef<PulseWidthPreview | null>(null);
   const pulseUrlRef = useRef<string | null>(null);
   const [load, setLoad] = useState<LoadState>({ kind: 'loading', loaded: 0, total: 0 });
@@ -191,9 +193,26 @@ function Player({ session }: { session: Session }) {
   useEffect(() => {
     const engine = new SessionEngine();
     const wake = new StayAwake();
+    const media = new MediaSessionController();
     engine.onPlayingChange = setPlaying;
     engineRef.current = engine;
     wakeRef.current = wake;
+    mediaRef.current = media;
+
+    media.setHandlers({
+      play: async () => {
+        const current = engineRef.current;
+        if (!current?.ready || current.playing) return;
+        previewRef.current?.stop();
+        wakeRef.current?.enable();
+        await current.play();
+      },
+      pause: async () => {
+        const current = engineRef.current;
+        if (!current?.ready || !current.playing) return;
+        await current.pause();
+      },
+    });
 
     const saved = loadPlayerPrefs();
     setPrefs(saved);
@@ -215,12 +234,27 @@ function Player({ session }: { session: Session }) {
       document.removeEventListener('visibilitychange', onVisibility);
       engine.dispose();
       wake.dispose();
+      media.dispose();
       previewRef.current?.dispose();
       previewRef.current = null;
       engineRef.current = null;
       wakeRef.current = null;
+      mediaRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    mediaRef.current?.setMetadata({
+      title: sessionLabel(session),
+      artist: 'SleepCode',
+      album: session.theme,
+      artworkPath: '/og.jpg',
+    });
+  }, [session]);
+
+  useEffect(() => {
+    mediaRef.current?.setPlaying(playing);
+  }, [playing]);
 
   useEffect(() => {
     const engine = engineRef.current;
