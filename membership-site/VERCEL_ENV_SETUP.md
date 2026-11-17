@@ -31,6 +31,12 @@ NEXT_PUBLIC_SITE_URL=https://sleepcoding.me
 ```
 `NEXT_PUBLIC_SITE_URL` is where Stripe sends people back after checkout and the billing portal. Use `http://localhost:3000` locally.
 
+### Analytics (client, safe to expose)
+```
+NEXT_PUBLIC_PLAUSIBLE_DOMAIN=sleepcoding.me
+```
+Optional. When set, loads cookieless Plausible (`plausible.io/js/script.js`). Omit locally if you don’t want local traffic in the dashboard.
+
 ### Email (server, secret)
 ```
 AWS_ACCESS_KEY_ID=...

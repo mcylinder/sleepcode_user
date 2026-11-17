@@ -32,7 +32,7 @@ export default function CookieBanner() {
     >
       <div className="mx-auto flex max-w-[1060px] items-center justify-between gap-6">
         <p className="text-[14px] leading-[1.5] text-ink-muted">
-          SleepCode uses only essential cookies to keep you signed in. No ads, no trackers.{' '}
+          SleepCode uses essential cookies to keep you signed in, plus cookieless analytics (Plausible). No ads.{' '}
           <Link href="/cookies" className="sc-link">Cookie policy</Link>
         </p>
         <button type="button" onClick={handleAccept} className="sc-textbtn min-h-[44px] flex-shrink-0">

@@ -5,7 +5,7 @@ import { LEGAL_EFFECTIVE_DATE, pageMeta } from '@/lib/site';
 
 export const metadata: Metadata = pageMeta(
   'Privacy',
-  'How SleepCode collects and protects information. No ads, no analytics trackers, no selling data.',
+  'How SleepCode collects and protects information. No ads, cookieless analytics, no selling data.',
 );
 
 export default function PrivacyPage() {
@@ -18,7 +18,8 @@ export default function PrivacyPage() {
         </p>
         <p>
           The short version: we collect as little as we can. You can listen to the free session without an account. We
-          don&rsquo;t run ads, we don&rsquo;t use analytics or third-party trackers, and we don&rsquo;t sell your data.
+          don&rsquo;t run ads and we don&rsquo;t sell your data. We use privacy-friendly, cookieless analytics (Plausible)
+          to understand which pages are used.
         </p>
 
         <section>
@@ -89,7 +90,8 @@ export default function PrivacyPage() {
             <li>Google Firebase: sign-in and account storage.</li>
             <li>Amazon Web Services: audio delivery (CloudFront) and email (SES).</li>
             <li>Vercel: website hosting.</li>
-            <li>Stripe: payment processing, if paid plans are offered.</li>
+            <li>Stripe: payment processing for SleepCode+.</li>
+            <li>Plausible Analytics: cookieless page analytics (no advertising profiles).</li>
             <li>Google, Apple, or Facebook: only if you choose to sign in with them.</li>
           </ul>
         </section>

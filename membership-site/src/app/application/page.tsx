@@ -156,11 +156,9 @@ function LibraryBody() {
                       ) : (
                         <span>SleepCode+</span>
                       )}
-                      {(session.free || isMember) && (
-                        <Link href={scriptHref(session)} className="sc-link">
-                          Read the transcript
-                        </Link>
-                      )}
+                      <Link href={scriptHref(session)} className="sc-link">
+                        Read the transcript
+                      </Link>
                     </span>
                   </div>
                 </div>

@@ -3,6 +3,7 @@ import { Hanken_Grotesk, Space_Mono } from 'next/font/google'
 import './globals.css'
 import ClientAuthProvider from '@/components/ClientAuthProvider'
 import CookieBanner from '@/components/CookieBanner'
+import Plausible from '@/components/site/Plausible'
 import { DissolveProvider } from '@/components/ui/Dissolve'
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -59,6 +60,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${hankenGrotesk.variable} ${spaceMono.variable}`}>
       <body>
+        <Plausible />
         <ClientAuthProvider>
           <DissolveProvider>
             {children}

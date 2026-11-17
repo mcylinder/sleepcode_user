@@ -62,7 +62,7 @@ export function needsMembership(session: Session): boolean {
 }
 
 export function scriptHref(session: Session): string {
-  return `/application/script?session=${encodeURIComponent(session.id)}`;
+  return `/sessions/${encodeURIComponent(session.id)}`;
 }
 
 // The session the marketing pages offer to play for free.

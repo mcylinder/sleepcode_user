@@ -5,7 +5,7 @@ import { LEGAL_EFFECTIVE_DATE, pageMeta } from '@/lib/site';
 
 export const metadata: Metadata = pageMeta(
   'Cookies',
-  'How SleepCode uses cookies and browser storage. No advertising or analytics cookies.',
+  'How SleepCode uses cookies and browser storage. No advertising cookies; analytics are cookieless.',
 );
 
 export default function CookiesPage() {
@@ -17,8 +17,8 @@ export default function CookiesPage() {
           similar browser storage on sleepcoding.me (the &quot;Service&quot;).
         </p>
         <p>
-          SleepCode uses only what it needs to work. No advertising cookies, no analytics, and no tracking across other
-          websites.
+          SleepCode uses only what it needs to work. No advertising cookies, and no tracking across other websites.
+          Site analytics (Plausible) are cookieless and do not store a cookie on your device.
         </p>
 
         <section>
@@ -44,6 +44,11 @@ export default function CookiesPage() {
             <li>Whether you&rsquo;ve acknowledged this cookie notice (local storage).</li>
           </ul>
           <p>These stay on your device and are used only to make the Service work the way you left it.</p>
+          <h3>2.3 Analytics</h3>
+          <p>
+            We use Plausible Analytics to see which pages are visited. Plausible does not set cookies and does not
+            collect personal information for advertising.
+          </p>
         </section>
 
         <section>
