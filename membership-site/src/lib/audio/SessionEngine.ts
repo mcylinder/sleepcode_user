@@ -204,6 +204,12 @@ export class SessionEngine {
     if (this.playing && this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
   }
 
+  /** Seconds per beat for visuals. One pulse.m4a holds two beats. */
+  get pulseBeatSeconds(): number | null {
+    if (!this.pulse || this.pulse.duration <= 0) return null;
+    return this.pulse.duration / 2;
+  }
+
   dispose(): void {
     this.disposed = true;
     this.loadId += 1;

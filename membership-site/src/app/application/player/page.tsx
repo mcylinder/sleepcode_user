@@ -27,6 +27,7 @@ import {
   LENGTH_MINUTES,
   engineBalance,
   formatHoursMinutes,
+  formatPlaybackClock,
   formatRemainingTitle,
   loadPlayerPrefs,
   savePlayerPrefs,
@@ -52,13 +53,14 @@ import PlayerIntro from '@/components/ui/PlayerIntro';
 import StatementsOverlay from '@/components/ui/StatementsOverlay';
 import SaveSettingsPrompt from '@/components/ui/SaveSettingsPrompt';
 import VoicePicker from '@/components/ui/VoicePicker';
-import { MoonIcon, PauseIcon, PlayIcon, StatementsIcon } from '@/components/ui/icons';
+import { MoonIcon, PauseIcon, PlayIcon, StatementsIcon, VoiceIcon } from '@/components/ui/icons';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const LAST_PLAYED_AFTER_SEC = 60;
 const LISTEN_NIGHT_AFTER_SEC = 180;
 const FADE_OUT_SECONDS = 8;
 const DEFAULT_SHEET_MINUTES = 60;
+const CHROME_IDLE_MS = 10_000;
 
 type LoadState =
   | { kind: 'loading'; loaded: number; total: number }
@@ -163,13 +165,17 @@ function Player({ session }: { session: Session }) {
   const [draftM, setDraftM] = useState(0);
   const [shadeOn, setShadeOn] = useState(false);
   const [introOpen, setIntroOpen] = useState(false);
+  const [voiceSheetOpen, setVoiceSheetOpen] = useState(false);
   const [statementsOpen, setStatementsOpen] = useState(false);
   const [script, setScript] = useState<ScriptConcept[]>([]);
   const [promptPending, setPromptPending] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
-  const [voiceReady, setVoiceReady] = useState(false);
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [beatSec, setBeatSec] = useState(1);
+  const [chromeVisible, setChromeVisible] = useState(true);
+  const [chromeEpoch, setChromeEpoch] = useState(0);
   const wasEnding = useRef(false);
   const listenedEnough = useRef(false);
   const lastPlayedSaved = useRef(false);
@@ -178,6 +184,7 @@ function Player({ session }: { session: Session }) {
   const sessionEndedCleanly = useRef(false);
   const promptOpenRef = useRef(false);
   const pendingVoiceNoticeRef = useRef<string | null>(null);
+  const chromeIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   promptOpenRef.current = promptOpen;
 
   usePageBackground(shadeOn ? '#000000' : playing ? 'var(--p-bg-playing)' : 'var(--p-bg)');
@@ -215,8 +222,9 @@ function Player({ session }: { session: Session }) {
     });
 
     const saved = loadPlayerPrefs();
+    // Persist default Owen (first catalog voice) so Account / next visit match.
+    if (saved.voiceId) savePlayerPrefs(saved);
     setPrefs(saved);
-    setVoiceReady(Boolean(saved.voiceId));
     if (saved.lengthMinutes) {
       setLengthSec(saved.lengthMinutes * 60);
       setRemainingSec(saved.lengthMinutes * 60);
@@ -259,7 +267,7 @@ function Player({ session }: { session: Session }) {
   useEffect(() => {
     const engine = engineRef.current;
     const voiceId = prefs.voiceId;
-    if (!engine || !voiceReady || !voiceId) return;
+    if (!engine || !voiceId) return;
     let cancelled = false;
     setLoad({ kind: 'loading', loaded: 0, total: 0 });
     const pendingNotice = pendingVoiceNoticeRef.current;
@@ -294,6 +302,7 @@ function Player({ session }: { session: Session }) {
       try {
         await loadWithVoice(voiceId);
         if (cancelled) return;
+        setBeatSec(engine!.pulseBeatSeconds ?? 1);
         setLoad({ kind: 'ready' });
       } catch (error) {
         if (cancelled) return;
@@ -307,6 +316,7 @@ function Player({ session }: { session: Session }) {
           try {
             await loadWithVoice(fallback.id);
             if (cancelled) return;
+            setBeatSec(engine!.pulseBeatSeconds ?? 1);
             const failedName = findVoice(voiceId)?.name ?? 'that';
             pendingVoiceNoticeRef.current =
               `This session isn\u2019t ready in ${failedName}\u2019s voice yet. Playing ${fallback.name} instead.`;
@@ -332,7 +342,7 @@ function Player({ session }: { session: Session }) {
     return () => {
       cancelled = true;
     };
-  }, [session, attempt, router, voiceReady, prefs.voiceId]);
+  }, [session, attempt, router, prefs.voiceId]);
 
   function chooseVoice(voiceId: string) {
     pendingVoiceNoticeRef.current = null;
@@ -340,10 +350,20 @@ function Player({ session }: { session: Session }) {
     const next = { ...loadPlayerPrefs(), voiceId };
     savePlayerPrefs(next);
     setPrefs(next);
-    setVoiceReady(true);
+    setVoiceSheetOpen(false);
   }
 
-  // Count real listening time: last-played after 1 minute; night after 3 minutes.
+  // Reset session clocks when switching sessions.
+  useEffect(() => {
+    listenAccum.current = 0;
+    setElapsedSec(0);
+    listenedEnough.current = false;
+    lastPlayedSaved.current = false;
+    nightRecorded.current = false;
+    sessionEndedCleanly.current = false;
+  }, [session.id]);
+
+  // Count real listening time: last-played after 1 minute; night after 3 minutes; elapsed display.
   useEffect(() => {
     if (!playing) return;
     let last = performance.now();
@@ -351,6 +371,7 @@ function Player({ session }: { session: Session }) {
       const now = performance.now();
       listenAccum.current += (now - last) / 1000;
       last = now;
+      setElapsedSec(Math.floor(listenAccum.current));
       if (listenAccum.current >= LAST_PLAYED_AFTER_SEC) {
         listenedEnough.current = true;
         if (!lastPlayedSaved.current) {
@@ -383,6 +404,7 @@ function Player({ session }: { session: Session }) {
       shadeOn ||
       playing ||
       introOpen ||
+      voiceSheetOpen ||
       sheetOpen ||
       panel !== null ||
       statementsOpen
@@ -398,7 +420,7 @@ function Player({ session }: { session: Session }) {
     markAccountPromptShownThisVisit();
     setPromptOpen(true);
     setPromptPending(false);
-  }, [currentUser, promptPending, shadeOn, playing, introOpen, sheetOpen, panel, statementsOpen]);
+  }, [currentUser, promptPending, shadeOn, playing, introOpen, voiceSheetOpen, sheetOpen, panel, statementsOpen]);
 
   // Leaving the player while the prompt is up counts as "Not now" (7-day dismiss).
   useEffect(() => {
@@ -453,6 +475,47 @@ function Player({ session }: { session: Session }) {
   useEffect(() => {
     if (!playing) wakeRef.current?.disable();
   }, [playing]);
+
+  // Fade top bar + tiles after 10s idle while playing. Overlays/panels keep chrome up.
+  // Night shade stays a manual choice — this only dims controls, it does not shade the screen.
+  const chromeBlocked =
+    !playing ||
+    shadeOn ||
+    sheetOpen ||
+    voiceSheetOpen ||
+    statementsOpen ||
+    introOpen ||
+    promptOpen ||
+    panel !== null;
+
+  useEffect(() => {
+    if (chromeIdleTimer.current) {
+      clearTimeout(chromeIdleTimer.current);
+      chromeIdleTimer.current = null;
+    }
+    if (chromeBlocked) {
+      setChromeVisible(true);
+      return;
+    }
+    chromeIdleTimer.current = setTimeout(() => setChromeVisible(false), CHROME_IDLE_MS);
+    return () => {
+      if (chromeIdleTimer.current) {
+        clearTimeout(chromeIdleTimer.current);
+        chromeIdleTimer.current = null;
+      }
+    };
+  }, [chromeBlocked, chromeEpoch]);
+
+  const noteChromeActivity = () => {
+    setChromeVisible(true);
+    setChromeEpoch((n) => n + 1);
+  };
+
+  const chromeStyle = {
+    opacity: chromeVisible ? 1 : 0,
+    pointerEvents: chromeVisible ? ('auto' as const) : ('none' as const),
+    transition: 'opacity 0.6s ease',
+  };
 
   // Width panel: if the session is already playing, hear width on the live engine.
   // Only start a separate pulse demo when idle.
@@ -558,10 +621,10 @@ function Player({ session }: { session: Session }) {
   const lengthTitle =
     hasLength && remainingSec > 0 ? formatRemainingTitle(remainingSec) : 'Session length';
 
+  const voiceName = findVoice(prefs.voiceId)?.name ?? 'Voice';
+
   let status: ReactNode = null;
-  if (!voiceReady) {
-    status = 'Choose a voice';
-  } else if (load.kind === 'loading') {
+  if (load.kind === 'loading') {
     status = load.total ? `Loading ${load.loaded} of ${load.total}` : 'Preparing session\u2026';
   } else if (load.kind === 'error') {
     status = (
@@ -584,8 +647,13 @@ function Player({ session }: { session: Session }) {
     <main
       className="flex min-h-screen min-h-[100dvh] flex-col text-p-fg"
       style={{ background: playing ? 'var(--p-bg-playing)' : 'var(--p-bg)', transition: 'background 2.6s ease' }}
+      onPointerDown={noteChromeActivity}
     >
-      <div className="flex items-center justify-between gap-3 px-[clamp(22px,4vw,48px)] pb-3 pt-[calc(12px+env(safe-area-inset-top,0px))] text-[15px] text-p-muted [@media(min-height:760px)]:pb-2 [@media(min-height:760px)]:pt-[calc(8px+env(safe-area-inset-top,0px))]">
+      <div
+        className="flex items-center justify-between gap-3 px-[clamp(22px,4vw,48px)] pb-3 pt-[calc(12px+env(safe-area-inset-top,0px))] text-[15px] text-p-muted [@media(min-height:760px)]:pb-2 [@media(min-height:760px)]:pt-[calc(8px+env(safe-area-inset-top,0px))]"
+        style={chromeStyle}
+        aria-hidden={!chromeVisible}
+      >
         <Link href="/application" className="flex min-h-[44px] items-center">&lsaquo; Back</Link>
         <div className="flex items-center gap-2">
           {script.length > 0 && (
@@ -603,6 +671,19 @@ function Player({ session }: { session: Session }) {
               <span className="hidden sm:inline">Transcript</span>
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => {
+              setPanel(null);
+              setVoiceSheetOpen(true);
+            }}
+            aria-label={`Voice: ${voiceName}`}
+            title="Choose voice"
+            className="flex min-h-[44px] items-center gap-2 rounded-full border border-p-chip-border px-3 text-[14px] font-medium text-p-fg"
+          >
+            <VoiceIcon size={16} className="text-p-accent" />
+            <span className="hidden sm:inline">{voiceName}</span>
+          </button>
           <button
             type="button"
             onClick={() => {
@@ -637,7 +718,7 @@ function Player({ session }: { session: Session }) {
           <div className="flex w-full flex-col items-center gap-5 pt-1">
             {/* Height-capped so larger rings don’t shove tiles off short screens. */}
             <div style={{ width: 'min(72vw, 42dvh, 300px)' }}>
-              <Rings color="var(--p-accent)" glowing={playing} restOpacity={0.26}>
+              <Rings color="var(--p-accent)" glowing={playing} restOpacity={0.26} beatSec={beatSec}>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -655,6 +736,21 @@ function Player({ session }: { session: Session }) {
 
             <h1 className="text-[clamp(24px,2.8vw,30px)] font-medium tracking-[-0.02em]">{label}</h1>
 
+            {(playing || elapsedSec > 0) && (
+              <p
+                className="font-mono text-[15px] tabular-nums tracking-wide text-p-muted"
+                aria-live="polite"
+              >
+                {formatPlaybackClock(elapsedSec)}
+                {hasLength && remainingSec > 0 ? (
+                  <span>
+                    {' '}
+                    · {formatPlaybackClock(remainingSec)} left
+                  </span>
+                ) : null}
+              </p>
+            )}
+
             <div className="flex flex-col items-center gap-2">
               <ListenHistory refreshKey={historyKey} />
               <p className="min-h-[20px] text-center text-[14px] text-p-muted" role="status">
@@ -666,7 +762,13 @@ function Player({ session }: { session: Session }) {
           <div className="flex-1" />
         </div>
 
-        <div className="w-full" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex w-full flex-col gap-3"
+          style={chromeStyle}
+          aria-hidden={!chromeVisible}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <PlayerIntro open={introOpen} onClose={() => setIntroOpen(false)} />
           <PlayerTiles
             open={panel}
             onOpenChange={setPanel}
@@ -713,28 +815,22 @@ function Player({ session }: { session: Session }) {
         </div>
       </Sheet>
 
-      <Sheet
-        open={!voiceReady}
-        onClose={() => router.replace('/application')}
-        label="Choose a voice"
-        tone="player"
-      >
-        <SheetHeader title="Choose a voice" onCancel={() => router.replace('/application')} tone="player" />
+      <Sheet open={voiceSheetOpen} onClose={() => setVoiceSheetOpen(false)} label="Choose a voice" tone="player">
+        <SheetHeader title="Choose a voice" onCancel={() => setVoiceSheetOpen(false)} tone="player" />
         <p className="text-[14px] leading-snug text-p-muted">
-          This preference applies to every session. You can change it later in Account.
+          This preference applies to every session. You can also change it in Account.
         </p>
         <VoicePicker voices={VOICES} selectedId={prefs.voiceId} onSelect={chooseVoice} tone="player" />
       </Sheet>
 
-      <PlayerIntro open={introOpen && voiceReady} onClose={() => setIntroOpen(false)} />
       <StatementsOverlay
-        open={statementsOpen && !shadeOn && voiceReady}
+        open={statementsOpen && !shadeOn}
         onClose={() => setStatementsOpen(false)}
         title={label}
         concepts={script}
       />
       <SaveSettingsPrompt
-        open={promptOpen && !shadeOn && !introOpen && !statementsOpen && voiceReady}
+        open={promptOpen && !shadeOn && !introOpen && !statementsOpen && !voiceSheetOpen}
         onClose={() => setPromptOpen(false)}
         nextHref={playerHref(session)}
       />

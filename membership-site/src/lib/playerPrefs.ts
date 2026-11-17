@@ -1,5 +1,5 @@
 import { DEFAULT_PULSE_WIDTH, normalizePulseWidth, type PulseWidth } from '@/lib/audio/pulseWidth';
-import { resolveVoiceId } from '@/lib/catalog';
+import { mediaVoiceId } from '@/lib/catalog';
 
 export const REPEAT_OPTIONS = [1, 2, 4] as const;
 export type RepeatCount = (typeof REPEAT_OPTIONS)[number];
@@ -17,7 +17,7 @@ export interface PlayerPrefs {
   repeat: RepeatCount;
   // Last session length chosen; null = no end time.
   lengthMinutes: number | null;
-  // Global voice; null until the listener picks one.
+  // Global voice. Defaults to the first catalog voice (Owen) when unset.
   voiceId: string | null;
   // Pulse stereo image: 0 Center … 100 Full. Default Narrow (33).
   pulseWidth: PulseWidth;
@@ -59,7 +59,7 @@ export function loadPlayerPrefs(): PlayerPrefs {
     const lengthRaw = raw.lengthMinutes ?? raw.timerMinutes;
     const lengthMinutes =
       typeof lengthRaw === 'number' && lengthRaw > 0 ? Math.min(MAX_LENGTH_MINUTES, Math.round(lengthRaw)) : null;
-    const voiceId = resolveVoiceId(typeof raw.voiceId === 'string' ? raw.voiceId : null);
+    const voiceId = mediaVoiceId(typeof raw.voiceId === 'string' ? raw.voiceId : null);
     const pulseWidth = normalizePulseWidth(raw.pulseWidth);
     return { instruction, volume, repeat, lengthMinutes, voiceId, pulseWidth };
   } catch {
@@ -104,6 +104,16 @@ export function formatRemainingTitle(remainingSec: number): string {
   if (h > 0) parts.push(`${h}hr`);
   if (m > 0 || h === 0) parts.push(`${m}min`);
   return `Session length: ${parts.join(' ')} remaining`;
+}
+
+/** Player clock: `m:ss` under an hour, `h:mm:ss` at or above. */
+export function formatPlaybackClock(totalSec: number): string {
+  const sec = Math.max(0, Math.floor(totalSec));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, '0')}`;
 }
 
 export const REPEAT_LABELS: Record<RepeatCount, string> = {

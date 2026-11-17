@@ -18,7 +18,7 @@ const STEPS = [
   },
   {
     title: 'Hear it in the first person.',
-    body: 'Each affirmation is phrased with "I" ("I finish what I start") so you hear it as something about yourself, not a command to follow.',
+    body: 'Most affirmations are phrased with "I" ("I finish what I start") so you hear it as something about yourself, not a command to follow.',
   },
   {
     title: 'Follow the pulse.',

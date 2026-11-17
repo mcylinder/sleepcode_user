@@ -295,15 +295,14 @@ a:hover, button:not(:disabled):hover { opacity: 0.8; }
   .sc-prose section:first-child h2 { margin-top: 0; }
 }
 
-/* Rings: glow in sequence, inner to outer, only while playing. */
-@keyframes scGlow {
-  0%, 100% { opacity: 0.22; box-shadow: 0 0 0 0 transparent, inset 0 0 0 0 transparent; }
-  30% { opacity: 1; box-shadow: 0 0 16px 1px currentColor, inset 0 0 12px 0 currentColor; }
-  65% { opacity: 0.3; box-shadow: 0 0 0 0 transparent, inset 0 0 0 0 transparent; }
+/* Rings: gentle beat-synced pulse (inner → outer), only while playing. */
+@keyframes scPulseBeat {
+  0%, 100% { opacity: 0.24; }
+  42% { opacity: 0.88; }
 }
-@keyframes scDotGlow {
-  0%, 100% { opacity: 0.6; box-shadow: 0 0 0 0 transparent; }
-  20% { opacity: 1; box-shadow: 0 0 18px 4px currentColor; }
+@keyframes scPulseDot {
+  0%, 100% { opacity: 0.65; }
+  42% { opacity: 1; }
 }
 
 @keyframes sc-shake {

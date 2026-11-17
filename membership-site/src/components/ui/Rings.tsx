@@ -1,25 +1,31 @@
-// Four concentric rings and a centre dot. While `glowing`, each ring glows in turn (inner to
-// outer) and the dot leads; at rest the rings sit at `restOpacity`. Optional `children`
-// replace the centre dot (play/pause in the player).
+// Four concentric rings and a centre dot. While `glowing`, rings pulse gently on the
+// audio beat (inner → outer ripple). At rest they sit at `restOpacity`. Optional
+// `children` replace the centre dot (play/pause in the player).
 const RING_SIZES = [34, 55, 76, 97];
+const DEFAULT_BEAT_SEC = 1;
 
 export default function Rings({
   color,
   glowing = false,
   restOpacity,
+  beatSec = DEFAULT_BEAT_SEC,
   className = '',
   children,
 }: {
   color: string;
   glowing?: boolean;
   restOpacity: number;
+  /** Seconds per beat; matches SessionEngine pulse (pulse.m4a / 2). */
+  beatSec?: number;
   className?: string;
   children?: React.ReactNode;
 }) {
+  const period = Math.max(0.4, Math.min(3, beatSec || DEFAULT_BEAT_SEC));
+
   return (
     <div
       className={`relative aspect-square w-full ${glowing ? 'sc-rings-glowing' : ''} ${className}`}
-      style={{ color }}
+      style={{ color, ['--sc-beat' as string]: `${period}s` }}
     >
       <div aria-hidden="true">
         {RING_SIZES.map((size, i) => (
@@ -32,7 +38,8 @@ export default function Rings({
               border: '1.5px solid currentColor',
               opacity: restOpacity,
               transition: 'opacity 1.4s ease',
-              animation: glowing ? `scGlow 6s ease-in-out ${0.7 + i * 0.7}s infinite` : 'none',
+              animation: glowing ? `scPulseBeat ${period}s ease-in-out infinite` : 'none',
+              animationDelay: glowing ? `${i * period * 0.12}s` : undefined,
             }}
           />
         ))}
@@ -43,7 +50,7 @@ export default function Rings({
               background: 'currentColor',
               opacity: glowing ? 1 : 0.75,
               transition: 'opacity 1.4s ease',
-              animation: glowing ? 'scDotGlow 6s ease-in-out infinite' : 'none',
+              animation: glowing ? `scPulseDot ${period}s ease-in-out infinite` : 'none',
             }}
           />
         )}
