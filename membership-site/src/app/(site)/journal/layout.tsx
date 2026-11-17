@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/site';
 
 // Hidden until there are enough posts to link from the nav.
 export const metadata: Metadata = {
-  title: 'Journal \u2014 SleepCode',
+  ...pageMeta('Journal', 'Notes on SleepCode, listening, and how the sessions are made.'),
   robots: { index: false, follow: false },
 };
 

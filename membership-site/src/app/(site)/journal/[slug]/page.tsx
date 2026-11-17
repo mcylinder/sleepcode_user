@@ -11,7 +11,22 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const post = findPost((await params).slug);
-  return post ? { title: `${post.title} \u2014 SleepCode`, description: post.dek } : {};
+  if (!post) return {};
+  const shareTitle = `${post.title} · SleepCode`;
+  return {
+    title: post.title,
+    description: post.dek,
+    openGraph: {
+      title: shareTitle,
+      description: post.dek,
+      images: [{ url: '/og.jpg', width: 1200, height: 630, alt: 'SleepCode' }],
+    },
+    twitter: {
+      title: shareTitle,
+      description: post.dek,
+      images: ['/og.jpg'],
+    },
+  };
 }
 
 function Block({ block }: { block: JournalBlock }) {

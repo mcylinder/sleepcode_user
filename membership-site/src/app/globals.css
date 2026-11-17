@@ -14,6 +14,8 @@
   --ink-body:  #3d352d;
   --ink-muted: #5e5247;
   --accent:    #2f6f6c;
+  /* Darker teal for small text labels (eyebrow) so contrast clears ~4.5:1 on sand. */
+  --accent-text: #245552;
   --danger:    #8f3b2a;
   --on-accent: #f1ebe2;
   --hairline:        rgba(44, 38, 32, 0.14);
@@ -95,7 +97,7 @@ a:hover, button:not(:disabled):hover { opacity: 0.8; }
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--accent-text);
   }
   .sc-eyebrow.sc-eyebrow--muted,
   .sc-eyebrow--muted { color: var(--ink-muted); }

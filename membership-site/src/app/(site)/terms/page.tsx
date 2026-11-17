@@ -1,6 +1,12 @@
+import type { Metadata } from 'next';
 import ArticleLayout from '@/components/site/ArticleLayout';
 import LegalContact from '@/components/LegalContact';
-import { LEGAL_EFFECTIVE_DATE } from '@/lib/site';
+import { LEGAL_EFFECTIVE_DATE, pageMeta } from '@/lib/site';
+
+export const metadata: Metadata = pageMeta(
+  'Terms',
+  'Terms and conditions for using SleepCode at sleepcoding.me.',
+);
 
 export default function TermsPage() {
   return (

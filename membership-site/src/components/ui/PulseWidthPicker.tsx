@@ -19,7 +19,12 @@ export default function PulseWidthPicker({
   if (layout === 'glyphs') {
     return (
       <div className="flex flex-col gap-3">
-        <span className={`text-[14px] ${player ? 'text-p-muted' : 'text-ink-muted'}`}>Pulse width</span>
+        <div className="flex flex-col gap-1">
+          <span className={`text-[14px] ${player ? 'text-p-muted' : 'text-ink-muted'}`}>Pulse width</span>
+          <span className={`text-[13px] leading-snug ${player ? 'text-p-muted' : 'text-ink-muted'}`}>
+            Spreads the pulse from the center to both ears; wider works best with headphones.
+          </span>
+        </div>
         <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Pulse width">
           {PULSE_WIDTH_OPTIONS.map((width) => {
             const isSelected = width === selected;

@@ -37,8 +37,22 @@ export const THEMES: string[] = [
   'Freedom',
 ];
 
-// Display name: "Open Door · Optimism".
+/** Multi-part series from ids like `first-date-part-1`. */
+export function sessionPartInfo(session: Session): { part: number; of: number } | null {
+  const match = /-part-(\d+)$/i.exec(session.id);
+  if (!match) return null;
+  const part = Number(match[1]);
+  const of = SESSIONS.filter(
+    (other) => other.title === session.title && other.theme === session.theme && /-part-\d+$/i.test(other.id),
+  ).length;
+  if (of < 2) return null;
+  return { part, of };
+}
+
+// Display name: "Open Door · Optimism", or "First Date · Part 1 of 4" for series.
 export function sessionLabel(session: Session): string {
+  const parts = sessionPartInfo(session);
+  if (parts) return `${session.title} \u00b7 Part ${parts.part} of ${parts.of}`;
   return `${session.title} \u00b7 ${session.theme}`;
 }
 

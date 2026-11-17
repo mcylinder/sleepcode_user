@@ -173,7 +173,7 @@ export default function DefaultsSection() {
         <SaveDefaultsButton disabled={!dirty} onSave={saveOpen} />
       </ExpandableRow>
       <ExpandableRow
-        label="Instruction"
+        label="Voice blend"
         value={`${open === 'blend' ? draft.instruction : prefs.instruction}%`}
         open={open === 'blend'}
         onToggle={() => toggle('blend')}

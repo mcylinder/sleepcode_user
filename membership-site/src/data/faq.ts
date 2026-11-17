@@ -1,5 +1,3 @@
-import { FEATURED_FREE_SESSION, sessionLabel } from '@/lib/catalog';
-
 export interface FaqItem {
   q: string;
   a: string;
@@ -9,8 +7,6 @@ export interface FaqGroup {
   title: string;
   items: FaqItem[];
 }
-
-const FREE_LABEL = FEATURED_FREE_SESSION ? sessionLabel(FEATURED_FREE_SESSION) : 'Open Door · Optimism';
 
 const NOT_THERAPY: FaqItem = {
   q: 'Is this a replacement for therapy?',
@@ -34,12 +30,20 @@ export const FAQ_GROUPS: FaqGroup[] = [
         a: 'The pulse is a soft 111 Hz tone. Its rhythm is matched to the cadence of the affirmations, so each one arrives on a steady beat. The repetition is designed to be gently hypnotic, giving your attention somewhere to rest so the words can be absorbed rather than analyzed.',
       },
       {
+        q: 'What is pulse width?',
+        a: 'Pulse width spreads the pulse from the center to both ears. Center keeps it in the middle; Narrow, Wide and Full open it out. Wider settings work best with headphones.',
+      },
+      {
+        q: 'What are the weekday dots in the player?',
+        a: 'They mark nights you listened for a few minutes. That is your listening history (nights listened), not a streak score.',
+      },
+      {
         q: 'Is SleepCode a sleep aid?',
         a: 'No. It isn\u2019t designed to help you fall asleep, and it doesn\u2019t treat sleep problems. Bedtime is simply when most people listen: as you drift off, your mind is quiet enough to hear the affirmations with fewer distractions.',
       },
       {
         q: 'Does it work?',
-        a: `Attitudes are habits, and habits can change with gentle, steady repetition. SleepCode gives you the same clear affirmations night after night, so a new way of thinking has room to settle in. Everyone\u2019s experience is different. ${FREE_LABEL} is free, so give it a few weeks and see how it feels for you.`,
+        a: 'Attitudes are habits, and habits can change with gentle, steady repetition. SleepCode gives you the same clear affirmations night after night, so a new way of thinking has room to settle in. Everyone\u2019s experience is different. Every session is free during the beta, so give it a few weeks and see how it feels for you.',
       },
       {
         q: 'Whose voice is it?',
@@ -80,7 +84,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
     items: [
       {
         q: 'What is free?',
-        a: `${FREE_LABEL} is free, with no account needed. Create a free account to keep your settings and progress wherever you listen. More sessions are coming soon.`,
+        a: 'Every session is free during the beta, with no account needed. Create a free account to keep your settings and listening progress (including nights listened) wherever you listen.',
       },
       {
         q: 'Is my data private?',
@@ -102,7 +106,7 @@ export const PRICING_FAQ: FaqGroup[] = [
       },
       {
         q: 'Is there a free trial?',
-        a: `There\u2019s no trial, and you don\u2019t need one. ${FREE_LABEL} is free, with no account needed.`,
+        a: 'There\u2019s no trial, and you don\u2019t need one. Every session is free during the beta, with no account needed.',
       },
       {
         q: 'Can I switch between monthly and yearly?',

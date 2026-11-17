@@ -9,6 +9,7 @@ import { buildScript, type ScriptConcept, type SessionManifest } from '@/lib/aud
 import { loadPlayerPrefs } from '@/lib/playerPrefs';
 import PlayLink from '@/components/ui/PlayLink';
 import Logo from '@/components/ui/Logo';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 type ScriptState =
   | { kind: 'loading' }
@@ -51,6 +52,7 @@ function ScriptBody() {
   const params = useSearchParams();
   const session = findSession(params.get('session'));
   const script = useScript(session);
+  useDocumentTitle(session ? sessionLabel(session) : 'Transcript');
 
   if (!session) {
     return (
