@@ -55,7 +55,7 @@ export default function EmailPanel({
     <form onSubmit={changeEmail} className="flex flex-col gap-4">
       <p className="text-[15px] text-ink-muted">
         Currently <span className="text-ink">{user.email}</span>
-        {user.emailVerified ? ' \u00b7 verified' : ''}
+        {user.emailVerified ? '\u2002\u00b7\u2002verified' : ''}
       </p>
       <div>
         <label htmlFor="newEmail" className="sr-only">New email address</label>
@@ -69,10 +69,11 @@ export default function EmailPanel({
           placeholder="New email address"
         />
       </div>
-      <div>
-        <button type="submit" disabled={busy || !newEmail.trim()} className="sc-textbtn">
-          {busy ? 'Sending\u2026' : 'Send confirmation link'}
+      <div className="flex flex-col items-start gap-2">
+        <button type="submit" disabled={busy || !newEmail.trim()} className="sc-btn-outline">
+          {busy ? 'Sending\u2026' : 'Change email'}
         </button>
+        <span className="text-[13px] text-ink-muted">We&rsquo;ll send a link to the new address to confirm.</span>
       </div>
       <StatusText status={status} />
     </form>

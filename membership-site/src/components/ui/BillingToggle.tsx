@@ -1,4 +1,4 @@
-import type { BillingInterval } from '@/lib/membership';
+import { YEARLY_SAVINGS_PERCENT, type BillingInterval } from '@/lib/membership';
 
 const OPTIONS: { id: BillingInterval; label: string }[] = [
   { id: 'month', label: 'Monthly' },
@@ -23,6 +23,9 @@ export default function BillingToggle({
           onClick={() => onChange(option.id)}
         >
           {option.label}
+          {option.id === 'year' && (
+            <span className="ml-[6px] text-[11px] font-semibold text-accent">Save {YEARLY_SAVINGS_PERCENT}%</span>
+          )}
         </button>
       ))}
     </div>

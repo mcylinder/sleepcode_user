@@ -6,7 +6,6 @@ export type RepeatCount = (typeof REPEAT_OPTIONS)[number];
 
 export const LENGTH_HOURS = Array.from({ length: 11 }, (_, i) => i);
 export const LENGTH_MINUTES = [0, 10, 20, 30, 40, 50];
-const MAX_LENGTH_MINUTES = 10 * 60 + 50;
 
 // Shared by the player and Account > Defaults; changing either updates both.
 export interface PlayerPrefs {
@@ -15,8 +14,6 @@ export interface PlayerPrefs {
   // Overall level, 0-100.
   volume: number;
   repeat: RepeatCount;
-  // Last session length chosen; null = no end time.
-  lengthMinutes: number | null;
   // Global voice. Defaults to the first catalog voice (Owen) when unset.
   voiceId: string | null;
   // Pulse stereo image: 0 Center … 100 Full. Default Narrow (33).
@@ -28,7 +25,6 @@ export const DEFAULT_PREFS: PlayerPrefs = {
   instruction: 75,
   volume: 80,
   repeat: 2,
-  lengthMinutes: null,
   voiceId: null,
   pulseWidth: DEFAULT_PULSE_WIDTH,
 };
@@ -40,9 +36,8 @@ function roundInstruction(value: number): number {
 const PREFS_KEY = 'sleepcode_player_prefs';
 
 interface StoredPrefs extends Partial<PlayerPrefs> {
-  // Earlier versions stored the pulse share and a timer.
+  // Earlier versions stored the pulse share. Session length is no longer a preference.
   blend?: number;
-  timerMinutes?: number | null;
 }
 
 export function loadPlayerPrefs(): PlayerPrefs {
@@ -56,12 +51,9 @@ export function loadPlayerPrefs(): PlayerPrefs {
     const volume =
       typeof raw.volume === 'number' ? Math.min(100, Math.max(0, Math.round(raw.volume))) : DEFAULT_PREFS.volume;
     const repeat = REPEAT_OPTIONS.includes(raw.repeat as RepeatCount) ? (raw.repeat as RepeatCount) : DEFAULT_PREFS.repeat;
-    const lengthRaw = raw.lengthMinutes ?? raw.timerMinutes;
-    const lengthMinutes =
-      typeof lengthRaw === 'number' && lengthRaw > 0 ? Math.min(MAX_LENGTH_MINUTES, Math.round(lengthRaw)) : null;
     const voiceId = mediaVoiceId(typeof raw.voiceId === 'string' ? raw.voiceId : null);
     const pulseWidth = normalizePulseWidth(raw.pulseWidth);
-    return { instruction, volume, repeat, lengthMinutes, voiceId, pulseWidth };
+    return { instruction, volume, repeat, voiceId, pulseWidth };
   } catch {
     return DEFAULT_PREFS;
   }

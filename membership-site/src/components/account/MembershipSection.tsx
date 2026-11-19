@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import BillingToggle from '@/components/ui/BillingToggle';
 import { useMembership } from '@/hooks/useMembership';
 import { useBilling } from '@/lib/useBilling';
-import { PRICES } from '@/lib/membership';
-import { FEATURED_FREE_SESSION } from '@/lib/catalog';
+import { PRICES, type BillingInterval } from '@/lib/membership';
+import { FEATURED_FREE_SESSION, SEP, SESSIONS, THEMES } from '@/lib/catalog';
 import StatusText from '@/components/ui/StatusText';
 import { AccountSection, formatDate } from './Section';
 
@@ -12,7 +14,7 @@ const PAYMENT_PROBLEM_STATUSES = ['past_due', 'unpaid', 'incomplete'];
 
 function PlanRow({ name, detail, children }: { name: string; detail?: string; children?: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-4 border-t border-[rgba(44,38,32,0.16)] py-5">
+    <div className="flex flex-col gap-4 border-t border-hairline py-5">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <span className="text-[18px] font-semibold">{name}</span>
         {detail && <span className="text-[14px] text-ink-muted">{detail}</span>}
@@ -28,7 +30,9 @@ const Note = ({ children }: { children: React.ReactNode }) => (
 
 export default function MembershipSection({ justCheckedOut }: { justCheckedOut: boolean }) {
   const { membership, isMember, loading } = useMembership();
-  const { busy, error, openPortal } = useBilling();
+  const { busy, error, openPortal, startCheckout } = useBilling();
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>('year');
+  const price = PRICES[billingInterval];
 
   const hasPaymentProblem = !!membership && PAYMENT_PROBLEM_STATUSES.includes(membership.status);
   const hasBillingHistory = !!membership && membership.status !== 'none';
@@ -46,7 +50,7 @@ export default function MembershipSection({ justCheckedOut }: { justCheckedOut: 
     body = (
       <PlanRow
         name="SleepCode+"
-        detail={plan ? `${membership.interval === 'year' ? 'Yearly' : 'Monthly'} \u00b7 ${plan.amount} ${plan.label}` : undefined}
+        detail={plan ? `${membership.interval === 'year' ? 'Yearly' : 'Monthly'}${SEP}${plan.amount} ${plan.label}` : undefined}
       >
         <Note>
           {membership.currentPeriodEnd &&
@@ -78,21 +82,50 @@ export default function MembershipSection({ justCheckedOut }: { justCheckedOut: 
     );
   } else {
     const freeLabel = FEATURED_FREE_SESSION
-      ? `${FEATURED_FREE_SESSION.title} \u00b7 ${FEATURED_FREE_SESSION.theme}`
-      : 'one free session';
+      ? `${FEATURED_FREE_SESSION.title}${SEP}${FEATURED_FREE_SESSION.theme}`
+      : 'One free session';
+    const goalCount = THEMES.filter((name) => SESSIONS.some((x) => x.theme === name)).length;
     body = (
-      <PlanRow name="Free" detail={freeLabel}>
+      <PlanRow name="SleepCode" detail="Your plan">
         {justCheckedOut ? (
           <Note>Thanks! We&rsquo;re confirming your payment. This updates in a few seconds.</Note>
         ) : (
-          <Note>
-            {freeLabel} is included. SleepCode+ unlocks every other session.
-          </Note>
+          <div className="flex flex-col gap-3">
+            <Note>
+              Your plan includes <strong className="font-semibold text-ink">{freeLabel}</strong>, yours to play as often as
+              you like. It&rsquo;s an easy way to explore how SleepCode fits into your routine.
+            </Note>
+            <Note>
+              <strong className="font-semibold text-ink">SleepCode+</strong> opens all {SESSIONS.length} sessions across{' '}
+              {goalCount} goals, so you can work on whatever matters to you next. New sessions are added as they arrive.
+            </Note>
+          </div>
         )}
         {!justCheckedOut && (
-          <Link href="/pricing" className="sc-btn self-start">
-            See SleepCode+
-          </Link>
+          <div className="flex flex-col gap-4 rounded-2xl bg-surface p-[clamp(20px,3vw,28px)]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="text-[15px] font-semibold">SleepCode+</span>
+              <BillingToggle value={billingInterval} onChange={setBillingInterval} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-[32px] font-medium leading-tight tracking-[-0.03em]">
+                {price.amount}
+                <span className="text-[15px] font-normal tracking-normal text-ink-muted"> {price.label}</span>
+              </span>
+              <span className="text-[14px] text-ink-muted">{price.note}</span>
+            </div>
+            <div className="flex flex-col items-start gap-3">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+                <button type="button" onClick={() => startCheckout(billingInterval)} disabled={busy} className="sc-btn">
+                  {busy ? 'Opening checkout\u2026' : 'Upgrade to SleepCode+'}
+                </button>
+                <Link href="/library" className="sc-link text-[14px]">
+                  Browse the sessions
+                </Link>
+              </div>
+              <span className="text-[13px] text-ink-muted">Cancel any time{SEP}Secure checkout with Stripe</span>
+            </div>
+          </div>
         )}
         {hasBillingHistory && (
           <button type="button" onClick={openPortal} disabled={busy} className="sc-textbtn sc-textbtn--muted self-start text-[14px]">

@@ -13,13 +13,13 @@ import { authErrorCode, authErrorMessage } from '@/lib/authErrors';
 
 type Mode = 'signin' | 'signup' | 'reset';
 
-const DEFAULT_DESTINATION = '/application';
+const DEFAULT_DESTINATION = '/library';
 
 const HEADINGS: Record<Mode, { title: string; sub: string }> = {
   signin: { title: 'Welcome back.', sub: 'Sign in to pick up where you left off.' },
   signup: {
     title: 'Create your account.',
-    sub: 'Free, no card needed. Keep your settings and progress wherever you listen.',
+    sub: 'Free, no card needed. Includes Fresh Start, and keeps your settings and progress wherever you listen.',
   },
   reset: { title: 'Reset your password.', sub: 'We\u2019ll email you a link to choose a new one.' },
 };

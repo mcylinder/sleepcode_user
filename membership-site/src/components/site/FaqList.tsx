@@ -20,7 +20,7 @@ export default function FaqList({ groups }: { groups: FaqGroup[] }) {
             const isOpen = open === key;
             const panelId = `${baseId}-${key}`;
             return (
-              <div key={item.q} className="border-t border-[rgba(44,38,32,0.16)]">
+              <div key={item.q} className="border-t border-hairline">
                 <button
                   type="button"
                   aria-expanded={isOpen}
@@ -52,7 +52,7 @@ export default function FaqList({ groups }: { groups: FaqGroup[] }) {
                       className="max-w-[38em] pb-[22px] pr-9 text-[16px] leading-[1.65] text-ink-muted"
                       style={{ opacity: isOpen ? 1 : 0, transition: 'opacity .45s ease' }}
                     >
-                      {item.a}
+                      {withTitles(item.a)}
                     </p>
                   </div>
                 </div>
@@ -62,5 +62,18 @@ export default function FaqList({ groups }: { groups: FaqGroup[] }) {
         </div>
       ))}
     </div>
+  );
+}
+
+// **Title** in an answer marks a session name; it renders a step brighter than the answer text.
+function withTitles(text: string) {
+  return text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+    i % 2 ? (
+      <strong key={i} className="font-semibold text-ink">
+        {part}
+      </strong>
+    ) : (
+      part
+    ),
   );
 }

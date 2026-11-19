@@ -98,7 +98,7 @@ export default async function JournalPostPage({ params }: { params: Promise<{ sl
               <Link
                 key={r.slug}
                 href={`/journal/${r.slug}`}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-4 border-t border-[rgba(44,38,32,0.16)] py-[18px]"
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-4 border-t border-hairline py-[18px]"
               >
                 <span className="text-[18px] font-semibold leading-[1.35]">{r.title}</span>
                 <span className="font-mono text-[13px] text-ink-muted">{journalDate(r.date)}</span>

@@ -11,11 +11,13 @@ export default function StatementsOverlay({
   open,
   onClose,
   title,
+  subtitle,
   concepts,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  subtitle?: string;
   concepts: ScriptConcept[];
 }) {
   useEffect(() => {
@@ -28,8 +30,6 @@ export default function StatementsOverlay({
   }, [open, onClose]);
 
   if (!open) return null;
-
-  const count = concepts.reduce((n, c) => n + c.lines.length, 0);
 
   return (
     <div
@@ -44,14 +44,10 @@ export default function StatementsOverlay({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 pb-4 pt-2">
-          <div className="flex flex-col gap-1">
-            <h2 id="statements-title" className="text-[20px] font-semibold tracking-[-0.015em]">
-              Transcript
-            </h2>
-            <p className="text-[13px] text-p-muted">
-              {title} &middot; {count} affirmations, played in a shuffled order
-            </p>
-          </div>
+          <h2 id="statements-title" className="flex flex-col gap-1 pt-[6px]">
+            <span className="text-[20px] font-semibold tracking-[-0.015em]">{title}</span>
+            {subtitle && <span className="text-[12px] uppercase tracking-[0.1em] text-p-muted">{subtitle}</span>}
+          </h2>
           <button
             type="button"
             onClick={onClose}

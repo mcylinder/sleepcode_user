@@ -43,7 +43,14 @@ export default function AccountPage() {
   }
 
   const toggle = (row: Row) => setOpenRow((current) => (current === row ? null : row));
-  const methodCount = currentUser.providerData.length;
+  const PROVIDER_NAMES: Record<string, string> = {
+    password: 'Email',
+    'google.com': 'Google',
+    'apple.com': 'Apple',
+    'facebook.com': 'Facebook',
+  };
+  const methodNames =
+    currentUser.providerData.map((p) => PROVIDER_NAMES[p.providerId] ?? p.providerId).join(', ') || 'None';
   const hasPassword = currentUser.providerData.some((p) => p.providerId === 'password');
 
   async function handleLogout() {
@@ -54,25 +61,15 @@ export default function AccountPage() {
   return (
     <AppShell active="account" maxWidth={720}>
       <div className="flex flex-col gap-[38px]">
-        <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h1 className="sc-h-app">Account</h1>
-          <div className="flex flex-wrap gap-x-4 gap-y-2 text-[14px]">
-            <Link href="/how-to-listen" className="sc-link">
-              How to listen
-            </Link>
-            <Link href="/faq" className="sc-link">
-              FAQ
-            </Link>
-          </div>
-        </div>
+        <h1 className="sc-h-app">Account</h1>
 
         <MembershipSection justCheckedOut={justCheckedOut} />
         <DefaultsSection />
 
-        <AccountSection title="Sign-in">
+        <AccountSection title="Account details">
           <ExpandableRow
-            label={currentUser.email ?? 'No email on file'}
-            action="Edit"
+            label="Email"
+            value={currentUser.email ?? 'No email on file'}
             open={openRow === 'email'}
             onToggle={() => toggle('email')}
           >
@@ -86,19 +83,17 @@ export default function AccountPage() {
           )}
           <ExpandableRow
             label="Sign-in methods"
-            value={`${methodCount} connected`}
+            value={methodNames}
             open={openRow === 'methods'}
             onToggle={() => toggle('methods')}
           >
             <SignInMethodsPanel withRecentLogin={withRecentLogin} />
           </ExpandableRow>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="border-t border-hairline py-4 text-left text-[16px] text-ink-muted"
-          >
-            Sign out
-          </button>
+          <div className="border-t border-hairline pt-5">
+            <button type="button" onClick={handleLogout} className="sc-btn-outline">
+              Sign out
+            </button>
+          </div>
         </AccountSection>
 
         <ExpandableRow label="Delete account" quiet open={openRow === 'delete'} onToggle={() => toggle('delete')}>

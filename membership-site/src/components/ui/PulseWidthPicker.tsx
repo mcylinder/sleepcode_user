@@ -8,23 +8,27 @@ export default function PulseWidthPicker({
   onSelect,
   tone = 'site',
   layout = 'list',
+  showHeader = true,
 }: {
   selected: PulseWidth;
   onSelect: (width: PulseWidth) => void;
   tone?: 'site' | 'player';
   layout?: 'list' | 'glyphs';
+  showHeader?: boolean;
 }) {
   const player = tone === 'player';
 
   if (layout === 'glyphs') {
     return (
       <div className="flex flex-col gap-3">
+        {showHeader && (
         <div className="flex flex-col gap-1">
           <span className={`text-[14px] ${player ? 'text-p-muted' : 'text-ink-muted'}`}>Pulse width</span>
           <span className={`text-[13px] leading-snug ${player ? 'text-p-muted' : 'text-ink-muted'}`}>
             Spreads the pulse from the center to both ears; wider works best with headphones.
           </span>
         </div>
+        )}
         <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Pulse width">
           {PULSE_WIDTH_OPTIONS.map((width) => {
             const isSelected = width === selected;
@@ -37,9 +41,7 @@ export default function PulseWidthPicker({
                 onClick={() => onSelect(width)}
                 className={`flex h-[60px] flex-col items-center justify-center gap-2 rounded-xl border text-[13px] ${
                   isSelected
-                    ? player
-                      ? 'border-transparent bg-p-fg font-semibold text-p-on-accent'
-                      : 'border-transparent bg-ink font-semibold text-on-accent'
+                    ? 'sc-sel font-semibold'
                     : player
                       ? 'border-p-chip-border bg-transparent text-p-fg'
                       : 'border-hairline bg-transparent text-ink'
@@ -50,8 +52,8 @@ export default function PulseWidthPicker({
                   track={
                     isSelected
                       ? player
-                        ? 'rgba(14, 22, 21, 0.28)'
-                        : 'rgba(20, 24, 22, 0.28)'
+                        ? 'rgba(16, 19, 26, 0.3)'
+                        : 'rgba(16, 19, 26, 0.3)'
                       : undefined
                   }
                   fill={isSelected ? (player ? 'var(--p-on-accent)' : 'var(--ink)') : undefined}
@@ -78,9 +80,7 @@ export default function PulseWidthPicker({
             onClick={() => onSelect(width)}
             className={`flex min-h-[48px] items-center gap-3 rounded-[14px] border px-4 text-left text-[16px] font-semibold ${
               isSelected
-                ? player
-                  ? 'border-p-accent bg-p-accent/15 text-p-fg'
-                  : 'border-accent bg-accent/10 text-ink'
+                ? 'sc-sel'
                 : player
                   ? 'border-p-chip-border bg-transparent text-p-fg'
                   : 'border-hairline bg-bg-alt text-ink'

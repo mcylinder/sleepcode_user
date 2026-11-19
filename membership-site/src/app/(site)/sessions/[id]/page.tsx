@@ -6,6 +6,7 @@ import {
   findSession,
   needsMembership,
   sessionLabel,
+  sessionSubtitle,
 } from '@/lib/catalog';
 import { loadSessionScript, transcriptIntro } from '@/lib/sessionScript';
 import { pageMeta } from '@/lib/site';
@@ -39,35 +40,26 @@ export default async function SessionTranscriptPage({
   if (!session) notFound();
 
   const script = await loadSessionScript(session);
-  const label = sessionLabel(session);
-  const count =
-    script.kind === 'ready' ? script.concepts.reduce((n, c) => n + c.lines.length, 0) : 0;
 
   return (
     <div className="sc-px mx-auto flex w-full max-w-[720px] flex-col gap-8 pb-[var(--pad-section)] pt-[clamp(28px,5vw,72px)]">
       <div className="flex flex-col gap-3">
-        <span className="sc-eyebrow">Transcript</span>
-        <h1 className="sc-h-page">{label}</h1>
+        <span className="sc-eyebrow">{sessionSubtitle(session)}</span>
+        <h1 className="sc-h-page">{session.title}</h1>
         <p className="sc-lead">{transcriptIntro(session)}</p>
-        {script.kind === 'ready' && (
-          <p className="text-[15px] text-ink-muted">
-            {count} affirmations in {script.concepts.length} groups. Each group says one idea a few
-            different ways; the session moves through them in a shuffled order.
-          </p>
-        )}
       </div>
 
       <div className="flex flex-wrap gap-4">
         {needsMembership(session) ? (
           <Link href="/pricing" className="sc-btn">
-            Unlock with SleepCode+
+            Get SleepCode+
           </Link>
         ) : (
           <PlayLink session={session} className="sc-btn">
             Hear this session
           </PlayLink>
         )}
-        <Link href="/application" className="sc-btn-outline">
+        <Link href="/library" className="sc-btn-outline">
           Library
         </Link>
       </div>

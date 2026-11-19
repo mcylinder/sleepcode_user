@@ -5,7 +5,7 @@ import { FEATURED_FREE_SESSION, loadLastPlayed, playedAgo, playerHref, type Last
 import PlayLink from '@/components/ui/PlayLink';
 import { useDissolve } from '@/components/ui/Dissolve';
 
-// Landing hero button. Goes straight to the free player — no account wall.
+// Landing hero button. Signed-out visitors sign up free, then land in the player.
 export default function HeroCta() {
   const dissolveTo = useDissolve();
   const [lastPlayed, setLastPlayed] = useState<LastPlayed | null>(null);
@@ -15,11 +15,6 @@ export default function HeroCta() {
     setLastPlayed(loadLastPlayed());
   }, []);
 
-  const note = (
-    <p className="max-w-[28em] text-[14px] leading-[1.5] text-ink-muted">
-      For your goals, not your sleep. Bedtime is just when you listen.
-    </p>
-  );
 
   const resume = lastPlayed?.session.free ? lastPlayed : null;
 
@@ -43,7 +38,6 @@ export default function HeroCta() {
             <span className="text-[14px] text-ink-muted">Last played {playedAgo(resume.playedAt)}</span>
           )}
         </div>
-        {note}
       </div>
     );
   }
@@ -52,10 +46,9 @@ export default function HeroCta() {
     <div className="flex flex-col gap-3">
       {free ? (
         <PlayLink session={free} className="sc-btn sc-btn--lg self-start">
-          Hear a free session
+          Try a free session
         </PlayLink>
       ) : null}
-      {note}
     </div>
   );
 }

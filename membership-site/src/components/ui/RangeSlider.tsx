@@ -1,0 +1,134 @@
+'use client';
+
+import { useRef } from 'react';
+
+// One slider style for Level and Mix. `value` is 0–100 and sets the thumb position.
+// `fill` draws the accent from the left edge to the thumb (Level); Mix leaves it off and
+// labels both ends instead. Drag anywhere on the track, or use the arrow keys.
+export default function RangeSlider({
+  value,
+  onChange,
+  step = 5,
+  label,
+  valueText,
+  startLabel,
+  endLabel,
+  fill = true,
+  tone = 'player',
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  step?: number;
+  label: string;
+  valueText: string;
+  startLabel?: string;
+  endLabel?: string;
+  fill?: boolean;
+  tone?: 'player' | 'site';
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+  const player = tone === 'player';
+  const clamp = (v: number) => Math.min(100, Math.max(0, Math.round(v / step) * step));
+
+  const setFromClientX = (clientX: number) => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect || rect.width <= 0) return;
+    onChange(clamp(((clientX - rect.left) / rect.width) * 100));
+  };
+
+  const endClass = `flex-none text-[13px] ${player ? 'text-p-muted' : 'text-ink-muted'}`;
+
+  return (
+    <div className="flex items-center gap-3">
+      {startLabel && <span className={endClass}>{startLabel}</span>}
+      <div
+        ref={trackRef}
+        role="slider"
+        tabIndex={0}
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={value}
+        aria-valuetext={valueText}
+        className={`relative flex h-11 flex-1 cursor-pointer touch-none items-center outline-none focus-visible:outline-2 focus-visible:outline-offset-2 ${
+          player ? 'focus-visible:outline-p-accent' : 'focus-visible:outline-accent'
+        }`}
+        onPointerDown={(e) => {
+          dragging.current = true;
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setFromClientX(e.clientX);
+        }}
+        onPointerMove={(e) => {
+          if (dragging.current) setFromClientX(e.clientX);
+        }}
+        onPointerUp={() => {
+          dragging.current = false;
+        }}
+        onPointerCancel={() => {
+          dragging.current = false;
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowRight' || e.key === 'ArrowUp') onChange(clamp(value + step));
+          else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') onChange(clamp(value - step));
+          else if (e.key === 'Home') onChange(0);
+          else if (e.key === 'End') onChange(100);
+          else return;
+          e.preventDefault();
+        }}
+      >
+        <div className={`absolute inset-x-0 h-[4px] rounded-full ${player ? 'bg-p-track' : 'bg-hairline-strong'}`} />
+        {fill && (
+          <div
+            className={`absolute left-0 h-[4px] rounded-full ${player ? 'bg-p-accent' : 'bg-accent'}`}
+            style={{ width: `${value}%` }}
+          />
+        )}
+        {!fill && (
+          <div
+            className={`absolute left-1/2 h-[10px] w-px -translate-x-1/2 ${player ? 'bg-p-muted' : 'bg-ink-muted'} opacity-50`}
+          />
+        )}
+        <div
+          className={`absolute h-5 w-5 -translate-x-1/2 rounded-full ${player ? 'bg-p-fg' : 'bg-ink'}`}
+          style={{ left: `${value}%` }}
+        />
+      </div>
+      {endLabel && <span className={endClass}>{endLabel}</span>}
+    </div>
+  );
+}
+
+// Name on the left, value on the right, control underneath, optional hint.
+export function SoundRow({
+  name,
+  icon,
+  value,
+  hint,
+  tone = 'player',
+  children,
+}: {
+  name: string;
+  icon?: React.ReactNode;
+  value: string;
+  hint?: string;
+  tone?: 'player' | 'site';
+  children: React.ReactNode;
+}) {
+  const player = tone === 'player';
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className={`flex items-center gap-2 text-[15px] font-semibold ${player ? 'text-p-fg' : 'text-ink'}`}>
+          {icon && <span className={player ? 'text-p-accent' : 'text-accent'}>{icon}</span>}
+          {name}
+        </span>
+        <span className={`font-mono text-[13px] tabular-nums ${player ? 'text-p-muted' : 'text-ink-muted'}`}>{value}</span>
+      </div>
+      {children}
+      {hint && <p className={`text-[13px] leading-snug ${player ? 'text-p-muted' : 'text-ink-muted'}`}>{hint}</p>}
+    </div>
+  );
+}
+
+export const mixValueText = (instruction: number) => `Voice ${instruction}\u2002\u00b7\u2002Pulse ${100 - instruction}`;

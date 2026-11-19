@@ -38,7 +38,8 @@ export async function authedFetch<T = unknown>(
   return readJson<T>(response);
 }
 
-// Signs session/{voiceId}/{sessionId}/. Free sessions work signed out; paid still need a bearer token.
+// Signs session/{voiceId}/{sessionId}/. Signed out works only for the free session (the home-page excerpt uses it);
+// the player itself requires sign-in. Paid sessions always need a bearer token.
 export async function fetchSessionMedia(
   sessionId: string,
   voiceId: string,

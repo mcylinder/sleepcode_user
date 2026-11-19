@@ -20,13 +20,13 @@ export default function CookieBanner() {
   };
 
   // The player stays dark and uncluttered; the notice waits for the next sand page.
-  if (!isVisible || pathname.startsWith('/application/player')) {
+  if (!isVisible || pathname.startsWith('/play/')) {
     return null;
   }
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-hairline bg-bg-alt px-[var(--pad-x)] pb-[calc(14px+env(safe-area-inset-bottom,0px))] pt-[14px]"
+      className="sc-cookie fixed inset-x-0 bottom-0 z-30 border-t border-hairline bg-bg-alt px-[var(--pad-x)] pb-[calc(14px+env(safe-area-inset-bottom,0px))] pt-[14px]"
       role="region"
       aria-label="Cookie notice"
     >

@@ -1,4 +1,5 @@
 import sessionsData from '@/data/sessions.json';
+import keywordsData from '@/data/session-keywords.json';
 
 // Each session's audio lives under session/{voiceId}/{sessionId}/ in the media bucket.
 export interface Voice {
@@ -49,11 +50,21 @@ export function sessionPartInfo(session: Session): { part: number; of: number } 
   return { part, of };
 }
 
+// Second line under a session title: its collection, or "Part 1 of 4" for a series.
+export function sessionSubtitle(session: Session): string {
+  const parts = sessionPartInfo(session);
+  return parts ? `Part ${parts.part} of ${parts.of}` : session.theme;
+}
+
+// The separator between a title and its collection: a middle dot with en spaces, so it
+// doesn't crowd the words in Instrument Sans.
+export const SEP = '\u2002\u00b7\u2002';
+
 // Display name: "Open Door · Optimism", or "First Date · Part 1 of 4" for series.
 export function sessionLabel(session: Session): string {
   const parts = sessionPartInfo(session);
-  if (parts) return `${session.title} \u00b7 Part ${parts.part} of ${parts.of}`;
-  return `${session.title} \u00b7 ${session.theme}`;
+  if (parts) return `${session.title}${SEP}Part ${parts.part} of ${parts.of}`;
+  return `${session.title}${SEP}${session.theme}`;
 }
 
 /** Paid sessions require an active SleepCode+ membership to play. */
@@ -89,7 +100,7 @@ export function mediaVoiceId(preferred: string | null | undefined): string | nul
 }
 
 export function playerHref(session: Session): string {
-  return `/application/player?session=${encodeURIComponent(session.id)}`;
+  return `/play/${encodeURIComponent(session.id)}`;
 }
 
 export function moreSessionsLabel(count: number): string {
@@ -187,4 +198,24 @@ export function playedAgo(date: Date, now = new Date()): string {
   if (days === 1) return 'yesterday';
   if (days < 7) return `${days} days ago`;
   return `on ${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+}
+
+// Extra search words (data/session-keywords.json). A series shares one set, keyed by its base id.
+const KEYWORDS = keywordsData as unknown as Record<string, string[] | string>;
+export function sessionKeywords(session: Session): string[] {
+  const own = KEYWORDS[session.id];
+  const series = KEYWORDS[session.id.replace(/-part-\d+$/i, '')];
+  const list = Array.isArray(own) ? own : Array.isArray(series) ? series : [];
+  return list;
+}
+
+/** How well a session matches a search: title 4, goal 3, description 2, keyword 1; 0 = no match. */
+export function searchScore(session: Session, needle: string): number {
+  if (!needle) return 1;
+  const has = (text: string) => text.toLowerCase().includes(needle);
+  if (has(session.title)) return 4;
+  if (has(session.theme)) return 3;
+  if (has(session.description)) return 2;
+  if (sessionKeywords(session).some(has)) return 1;
+  return 0;
 }

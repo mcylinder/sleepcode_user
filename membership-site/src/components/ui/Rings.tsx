@@ -9,6 +9,8 @@ export default function Rings({
   glowing = false,
   restOpacity,
   beatSec = DEFAULT_BEAT_SEC,
+  shimmer = false,
+  halo = false,
   className = '',
   children,
 }: {
@@ -17,6 +19,10 @@ export default function Rings({
   restOpacity: number;
   /** Seconds per beat; matches SessionEngine pulse (pulse.m4a / 2). */
   beatSec?: number;
+  /** At rest, brighten each ring in turn, inner to outer. */
+  shimmer?: boolean;
+  /** Soft light behind the rings. */
+  halo?: boolean;
   className?: string;
   children?: React.ReactNode;
 }) {
@@ -25,8 +31,15 @@ export default function Rings({
   return (
     <div
       className={`relative aspect-square w-full ${glowing ? 'sc-rings-glowing' : ''} ${className}`}
-      style={{ color, ['--sc-beat' as string]: `${period}s` }}
+      style={{ color, ['--sc-beat' as string]: `${period}s`, ['--sc-rest' as string]: restOpacity }}
     >
+      {halo && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-[-18%] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(140,160,230,.28) 0%, transparent 62%)', opacity: 0.55 }}
+        />
+      )}
       <div aria-hidden="true">
         {RING_SIZES.map((size, i) => (
           <div
@@ -38,8 +51,12 @@ export default function Rings({
               border: '1.5px solid currentColor',
               opacity: restOpacity,
               transition: 'opacity 1.4s ease',
-              animation: glowing ? `scPulseBeat ${period}s ease-in-out infinite` : 'none',
-              animationDelay: glowing ? `${i * period * 0.12}s` : undefined,
+              animation: glowing
+                ? `scPulseBeat ${period}s ease-in-out infinite`
+                : shimmer
+                  ? 'scRingShimmer 7s ease-in-out infinite'
+                  : 'none',
+              animationDelay: glowing ? `${i * period * 0.12}s` : shimmer ? `${i * 0.55}s` : undefined,
             }}
           />
         ))}

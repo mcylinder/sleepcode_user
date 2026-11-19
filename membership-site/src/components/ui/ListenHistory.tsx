@@ -24,12 +24,12 @@ export default function ListenHistory({
           library ? 'text-ink-muted' : 'text-p-muted'
         }`}
       >
-        Nights listened
+        Sessions this week
       </span>
       <div
         className="flex items-start justify-center gap-3.5"
         role="img"
-        aria-label="Listening over the last 7 nights"
+        aria-label="Sessions this week"
       >
         {days.map((day) => {
           const ringOnly = !day.listened;
@@ -41,7 +41,7 @@ export default function ListenHistory({
               : 'var(--ink-muted)'
             : todayStyle
               ? 'var(--p-today)'
-              : '#5d706d';
+              : 'var(--p-step-outline)';
           const labelColor = library
             ? todayStyle
               ? 'var(--accent-text)'

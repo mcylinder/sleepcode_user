@@ -1,0 +1,34 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMembership } from '@/hooks/useMembership';
+
+export interface NavItem {
+  href: string;
+  label: string;
+  active: boolean;
+}
+
+// One list of destinations for every header, rail, menu and tab bar.
+// Order never changes; Pricing only shows for people who aren't members yet.
+export function useMainNav(): NavItem[] {
+  const pathname = usePathname() ?? '';
+  const { currentUser } = useAuth();
+  const { isMember } = useMembership();
+
+  const items = [
+    { href: '/library', label: 'Library' },
+    { href: '/how-to-listen', label: 'How to listen' },
+    ...(isMember ? [] : [{ href: '/pricing', label: 'Pricing' }]),
+    { href: '/faq', label: 'FAQ' },
+    currentUser
+      ? { href: '/account', label: 'Account' }
+      : { href: `/login?next=${encodeURIComponent(pathname || '/library')}`, label: 'Sign in', match: '/login' },
+  ];
+
+  return items.map((item) => {
+    const match = 'match' in item && item.match ? item.match : item.href;
+    return { href: item.href, label: item.label, active: pathname === match || pathname.startsWith(`${match}/`) };
+  });
+}

@@ -32,8 +32,8 @@ export default function AboutPage() {
         <p>
           SleepCode works differently. Each session is a sequence of plain, first-person affirmations in one
           voice per session, layered over a steady pulse. Every word is audible. You set how much voice you hear,
-          choose how many times each affirmation repeats or how long the session runs, and listen as you drift off.
-          SleepCode isn&rsquo;t a sleep aid; bedtime is simply when most people listen.
+          choose how many times each affirmation repeats or how long the session runs, and listen whenever you find a
+          quiet moment. SleepCode isn&rsquo;t a sleep aid.
         </p>
 
         <h2>How we build it</h2>

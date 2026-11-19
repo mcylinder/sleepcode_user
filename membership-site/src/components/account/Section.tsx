@@ -37,13 +37,15 @@ export function ExpandableRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className={quiet ? '' : 'border-t border-hairline'}>
+    <div className={quiet ? 'flex flex-col' : 'border-t border-hairline'}>
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className={`flex w-full items-center justify-between gap-3 text-left ${
-          quiet ? 'min-h-[44px] text-[14px] text-ink-muted' : 'py-4 text-[16px]'
+        className={`flex items-center gap-3 text-left ${
+          quiet
+            ? 'ml-auto min-h-[44px] text-[14px] text-ink-muted hover:text-danger'
+            : 'w-full justify-between py-4 text-[16px]'
         }`}
       >
         <span className="min-w-0 truncate">{label}</span>

@@ -1,7 +1,9 @@
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { JOURNAL_POSTS, journalDate } from '@/data/journal';
 
 export default function JournalIndexPage() {
+  if (JOURNAL_POSTS.length === 0) notFound();
   return (
     <div className="sc-px pb-[var(--pad-section)]">
       <div className="flex max-w-[760px] flex-col gap-[18px] pb-[clamp(32px,4vw,48px)] pt-[clamp(28px,5vw,72px)]">
@@ -13,7 +15,7 @@ export default function JournalIndexPage() {
           <Link
             key={post.slug}
             href={`/journal/${post.slug}`}
-            className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-4 border-t border-[rgba(44,38,32,0.16)] py-[18px]"
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-4 border-t border-hairline py-[18px]"
           >
             <span className="flex flex-col gap-1">
               <span className="text-[18px] font-semibold leading-[1.35]">{post.title}</span>

@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           uses, and protects information when you use SleepCode at sleepcoding.me (the &quot;Service&quot;).
         </p>
         <p>
-          The short version: we collect as little as we can. You can listen to the free session without an account. We
+          The short version: we collect as little as we can. You need a free account to listen to sessions; the short excerpt on the home page plays without one. We
           don&rsquo;t run ads and we don&rsquo;t sell your data. We use privacy-friendly, cookieless analytics (Plausible)
           to understand which pages are used.
         </p>

@@ -9,12 +9,12 @@ const TIPS = [
     body: 'Choose how long it runs, up to 10 hours. It stops on its own.',
   },
   {
-    title: 'Voice.',
-    body: 'Set how much voice you hear over the pulse.',
+    title: 'Narrator.',
+    body: 'Tap the narrator\u2019s name under the title to pick another voice.',
   },
   {
-    title: 'Pulse width.',
-    body: 'Spreads the pulse from the center to both ears; wider works best with headphones.',
+    title: 'Sound.',
+    body: 'Level, mix (voice against pulse) and width of the pulse.',
   },
   {
     title: 'Choose repeats.',

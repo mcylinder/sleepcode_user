@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMembership } from '@/hooks/useMembership';
 import { useBilling } from '@/lib/useBilling';
-import { FEATURED_FREE_SESSION, MEMBER_ONLY_COUNT, SESSIONS, moreSessionsLabel } from '@/lib/catalog';
+import { FEATURED_FREE_SESSION, SEP, SESSIONS, THEMES } from '@/lib/catalog';
 import { PRICES, type BillingInterval } from '@/lib/membership';
 import BillingToggle from '@/components/ui/BillingToggle';
 import PlayLink from '@/components/ui/PlayLink';
@@ -21,6 +21,7 @@ export default function PricingPlans({ resumeCheckout = false }: { resumeCheckou
   const resumed = useRef(false);
   const free = FEATURED_FREE_SESSION;
   const price = PRICES[billingInterval];
+  const goals = THEMES.filter((name) => SESSIONS.some((x) => x.theme === name));
 
   useEffect(() => {
     if (!resumeCheckout || !currentUser || membershipLoading || resumed.current) return;
@@ -36,50 +37,46 @@ export default function PricingPlans({ resumeCheckout = false }: { resumeCheckou
   const signupThenCheckout = `/login?mode=signup&next=${encodeURIComponent(`/pricing?checkout=${billingInterval}`)}`;
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-12">
-      <div className="flex flex-col gap-[14px] border-t border-hairline-strong py-[26px]">
-        <span className="flex min-h-[36px] items-center text-[15px] font-semibold">Free</span>
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-[clamp(16px,2.5vw,28px)]">
+      <div className="flex flex-col gap-[14px] rounded-2xl border border-hairline p-[clamp(22px,3vw,32px)]">
+        <span className="flex min-h-[36px] items-center text-[15px] font-semibold">SleepCode</span>
         <span className="text-[44px] font-medium leading-tight tracking-[-0.03em]">$0</span>
         <p className="text-[16px] leading-[1.6] text-ink-muted">
-          {free
-            ? `${free.title} \u00b7 ${free.theme}, free to keep.`
-            : 'A free session.'}
+          {free ? `${free.title}, yours free.` : 'A free session.'}
         </p>
+        <IncludesList
+          items={['Listen as often as you like', 'Every player setting: length, mix, repeat, narrator']}
+        />
         {free && (
-          <PlayLink session={free} className="sc-link self-start">
-            Play it now
+          <PlayLink session={free} className="sc-btn-outline mt-auto self-start">
+            Play {free.title}
           </PlayLink>
         )}
       </div>
 
-      <div className="flex flex-col gap-[14px] border-t border-hairline-strong py-[26px]">
+      <div className="flex flex-col gap-[14px] rounded-2xl bg-surface p-[clamp(22px,3vw,32px)]">
         <div className="flex min-h-[36px] flex-wrap items-center justify-between gap-3">
           <span className="text-[15px] font-semibold">SleepCode+</span>
           <BillingToggle value={billingInterval} onChange={setBillingInterval} />
         </div>
-        <span className="text-[44px] font-medium leading-tight tracking-[-0.03em]">
-          {price.amount}
-          <span className="text-[17px] font-normal tracking-normal text-ink-muted"> {price.label}</span>
-        </span>
-        <p className="text-[16px] leading-[1.6] text-ink-muted">
-          {free ? `${free.title} plus ${moreSessionsLabel(MEMBER_ONLY_COUNT)}` : 'Every session'}, each written for a
-          specific goal. {price.note}
-        </p>
-        <ul aria-label="Sessions included with SleepCode+" className="border-b border-hairline">
-          {SESSIONS.map((session, i) => (
-            <li
-              key={session.id}
-              className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-t border-hairline py-[9px] text-[15px]"
-            >
-              <span className="font-mono text-[12px] text-ink-muted">{String(i + 1).padStart(2, '0')}</span>
-              <span className="font-medium">{session.title}</span>
-              <span className="text-[13px] text-ink-muted">{session.free ? 'Free' : session.theme}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="self-start">
+        <div className="flex flex-col gap-1">
+          <span className="text-[44px] font-medium leading-tight tracking-[-0.03em]">
+            {price.amount}
+            <span className="text-[17px] font-normal tracking-normal text-ink-muted"> {price.label}</span>
+          </span>
+          <span className="text-[14px] text-ink-muted">{price.note}</span>
+        </div>
+        <p className="text-[16px] leading-[1.6] text-ink-muted">The full library, and everything new.</p>
+        <IncludesList
+          items={[
+            'Everything in Free',
+            `All ${SESSIONS.length} sessions across ${goals.join(', ').replace(/, ([^,]*)$/, ' and $1')}`,
+            'New sessions as they\u2019re added',
+          ]}
+        />
+        <div className="flex flex-col items-start gap-3">
           {!currentUser ? (
-            <Link href={signupThenCheckout} className="sc-btn-outline">Start SleepCode+</Link>
+            <Link href={signupThenCheckout} className="sc-btn">Get SleepCode+</Link>
           ) : isMember ? (
             <Link href="/account" className="sc-btn-outline">Manage your membership</Link>
           ) : (
@@ -87,14 +84,32 @@ export default function PricingPlans({ resumeCheckout = false }: { resumeCheckou
               type="button"
               onClick={() => startCheckout(billingInterval)}
               disabled={busy || membershipLoading}
-              className="sc-btn-outline"
+              className="sc-btn"
             >
-              {busy ? 'Opening checkout\u2026' : 'Upgrade to SleepCode+'}
+              {busy ? 'Opening checkout\u2026' : 'Get SleepCode+'}
             </button>
           )}
+          {!isMember && (
+            <span className="text-[13px] text-ink-muted">Cancel any time{SEP}Secure checkout with Stripe</span>
+          )}
         </div>
+        <Link href="/library" className="sc-link self-start text-[14px]">
+          Browse every session
+        </Link>
         {error && <StatusText status={{ type: 'error', text: error }} />}
       </div>
     </div>
+  );
+}
+
+function IncludesList({ items }: { items: string[] }) {
+  return (
+    <ul className="flex flex-col">
+      {items.map((item) => (
+        <li key={item} className="border-t border-hairline py-[9px] text-[15px] leading-[1.5]">
+          {item}
+        </li>
+      ))}
+    </ul>
   );
 }

@@ -28,9 +28,7 @@ export default function VoicePicker({
             onClick={() => onSelect(voice.id)}
             className={`flex min-h-[56px] flex-col items-start gap-1 rounded-[14px] border px-4 py-3 text-left ${
               selected
-                ? player
-                  ? 'border-p-accent bg-p-accent/15'
-                  : 'border-accent bg-accent/10'
+                ? 'sc-sel'
                 : player
                   ? 'border-p-chip-border bg-transparent'
                   : 'border-hairline bg-bg-alt'

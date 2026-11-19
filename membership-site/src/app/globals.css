@@ -4,60 +4,72 @@
 
 /*
   SleepCode "Consult" design tokens and shared patterns (design_handoff_sleepcode_reskin).
-  Change values here, not per page. Site pages use the sand palette; the player stays dark.
+  Change values here, not per page. One Midnight palette everywhere; built for night use in a dark room.
 */
 
 :root {
-  --bg:        #ddd3c5;
-  --bg-alt:    #d5c9b9;
-  --ink:       #2c2620;
-  --ink-body:  #3d352d;
-  --ink-muted: #5e5247;
-  --accent:    #2f6f6c;
-  /* Darker teal for small text labels (eyebrow) so contrast clears ~4.5:1 on sand. */
-  --accent-text: #245552;
-  --danger:    #8f3b2a;
-  --on-accent: #f1ebe2;
-  --hairline:        rgba(44, 38, 32, 0.14);
-  --hairline-strong: rgba(44, 38, 32, 0.25);
+  /* Midnight: one palette for site, app and player (SleepCode type and color board). */
+  --bg:        #10131a;
+  --bg-alt:    #151a23;
+  --surface:   #191e28;
+  --ink:       #e2e4ea;
+  --ink-body:  #c9ceda;
+  --ink-muted: #98a0b0;
+  --accent:    #adc4e8;
+  --accent-text: #adc4e8;
+  --accent-rgb: 173, 196, 232;
+  --danger:    #e59a86;
+  --on-accent: #10131a;
+  --selected-bg: rgba(173,196,232,.16);
+  --highlight: #e8c9a0;
+  --hairline:        rgba(226, 228, 234, 0.12);
+  --hairline-strong: rgba(226, 228, 234, 0.2);
+  --hover-wash:      rgba(226, 228, 234, 0.04);
+  --scrim:           rgba(5, 7, 11, 0.6);
 
-  --p-bg:          #233230;
-  --p-bg-playing:  #0f1615;
-  --p-fg:          #e7e1d6;
-  --p-muted:       #a9b3ae;
-  --p-accent:      #7fb8b1;
-  --p-on-accent:   #14100e;
-  --p-track:       rgba(231, 225, 214, 0.18);
-  --p-chip-border: rgba(231, 225, 214, 0.2);
-  --p-sheet:       #1c2827;
-  --p-scrim:       rgba(6, 10, 10, 0.6);
-  --p-panel:        #2b3a38;
-  --p-panel-border: rgba(231, 225, 214, 0.12);
-  --p-tile-active:  #31474a;
-  --p-well:         var(--p-sheet);
-  --p-step-outline: #627673;
-  --p-today:        #e8c9a0;
-  --p-voice-bright: rgb(176, 224, 218);
-  --p-voice-deep:   rgb(56, 96, 92);
-  --p-pulse-bright: rgb(168, 174, 171);
-  --p-pulse-deep:   rgb(62, 72, 70);
+  /* Player names kept for existing components; they now point at the same palette. */
+  --p-bg:          var(--bg);
+  --p-bg-playing:  #0a0c11;
+  --p-fg:          var(--ink);
+  --p-muted:       var(--ink-muted);
+  --p-accent:      var(--accent);
+  --p-on-accent:   var(--on-accent);
+  --p-track:       rgba(226, 228, 234, 0.18);
+  --p-chip-border: var(--hairline-strong);
+  --p-sheet:       var(--bg-alt);
+  --p-scrim:       var(--scrim);
+  --p-panel:        var(--surface);
+  --p-panel-border: var(--hairline);
+  --p-tile-active:  #222a38;
+  --p-well:         var(--bg-alt);
+  --p-step-outline: #5c6577;
+  --p-today:        var(--highlight);
+  --p-voice-bright: rgb(197, 212, 236);
+  --p-voice-deep:   rgb(70, 88, 120);
+  --p-pulse-bright: rgb(168, 174, 186);
+  --p-pulse-deep:   rgb(58, 64, 78);
 
-  --font-sans: var(--font-hanken), -apple-system, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+  --font-sans: var(--font-instrument), -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
   --pad-x: clamp(22px, 5vw, 60px);
   --pad-section: clamp(48px, 7vw, 100px);
   --ease-sheet: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ease-open: cubic-bezier(0.3, 0.7, 0.2, 1);
 
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html { background: var(--bg); }
 body {
-  background: var(--bg);
+  /* Glow: faint light from the top right and lower left, so the dark isn't flat. */
+  background:
+    radial-gradient(1100px 620px at 78% -8%, rgba(92, 112, 190, 0.2), transparent 62%),
+    radial-gradient(900px 600px at -10% 45%, rgba(120, 90, 170, 0.1), transparent 60%),
+    var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
+  letter-spacing: 0.015em;
   -webkit-font-smoothing: antialiased;
 }
 a { color: inherit; text-decoration: none; }
@@ -70,6 +82,8 @@ a:hover, button:not(:disabled):hover { opacity: 0.8; }
 
 @layer components {
   .sc-frame {
+    position: relative;
+    isolation: isolate;
     min-height: 100vh;
     min-height: 100dvh;
     display: flex;
@@ -161,12 +175,15 @@ a:hover, button:not(:disabled):hover { opacity: 0.8; }
   .sc-cta-filled:disabled { opacity: 0.5; cursor: default; }
 
   .sc-link {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
     text-decoration: underline;
-    text-underline-offset: 4px;
+    text-decoration-color: var(--ink-muted);
+    text-underline-offset: 0.35em;
     text-decoration-thickness: 1px;
+    padding-block: 2px;
   }
+  .sc-link:hover { text-decoration-color: currentColor; }
 
   /* Plain text action: tappable without looking like a button. */
   .sc-textbtn {
@@ -199,21 +216,23 @@ a:hover, button:not(:disabled):hover { opacity: 0.8; }
     font: inherit;
     cursor: pointer;
   }
-  .sc-seg button[aria-checked='true'] { background: var(--ink); color: var(--on-accent); }
+  .sc-seg button[aria-checked='true'] { background: var(--selected-bg); box-shadow: inset 0 0 0 1px var(--accent); color: var(--ink); }
 
   /* Filter and choice pills */
   .sc-pill {
     flex: none;
     padding: 8px 15px;
     border-radius: 999px;
-    border: 1px solid rgba(44, 38, 32, 0.22);
+    border: 1px solid var(--hairline-strong);
     background: transparent;
     color: var(--ink);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
   }
-  .sc-pill.is-selected { background: var(--ink); border-color: var(--ink); color: var(--on-accent); }
+  .sc-pill.is-selected { background: var(--selected-bg); border-color: var(--accent); color: var(--ink); }
+  /* Selected state: blue wash + blue edge. Solid accent is reserved for actions. */
+  .sc-sel { background: var(--selected-bg); border-color: var(--accent); color: var(--ink); }
 
   .sc-scroll-fade { mask-image: linear-gradient(90deg, #000 85%, transparent); }
 
@@ -230,25 +249,26 @@ a:hover, button:not(:disabled):hover { opacity: 0.8; }
   /* Hairline input: no box, just a rule. */
   .sc-input {
     width: 100%;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--hairline-strong);
-    border-radius: 0;
+    min-height: 48px;
+    background: var(--surface);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 12px;
     padding: 12px 14px;
     font-size: 16px;
     color: var(--ink);
     outline: none;
-    transition: border-color 150ms ease;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
   }
   .sc-input:-webkit-autofill,
   .sc-input:-webkit-autofill:hover,
   .sc-input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 1000px var(--bg-alt) inset;
+    -webkit-box-shadow: 0 0 0 1000px var(--surface) inset;
     -webkit-text-fill-color: var(--ink);
     caret-color: var(--ink);
   }
   .sc-input::placeholder { color: var(--ink-muted); opacity: 0.75; }
-  .sc-input:focus { border-bottom-color: var(--ink); }
+  .sc-input:hover { border-color: rgba(226,228,234,.32); }
+  .sc-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--selected-bg); }
   select.sc-input { appearance: none; cursor: pointer; }
   textarea.sc-input { resize: vertical; line-height: 1.6; }
   .sc-label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-muted); }
@@ -272,8 +292,8 @@ a:hover, button:not(:disabled):hover { opacity: 0.8; }
   .sc-pullquote {
     margin: 14px 0;
     padding: 26px 0;
-    border-top: 1px solid rgba(44, 38, 32, 0.2);
-    border-bottom: 1px solid rgba(44, 38, 32, 0.2);
+    border-top: 1px solid var(--hairline-strong);
+    border-bottom: 1px solid var(--hairline-strong);
     font-weight: 500;
     font-size: clamp(23px, 2.4vw, 30px);
     line-height: 1.3;
@@ -300,6 +320,18 @@ a:hover, button:not(:disabled):hover { opacity: 0.8; }
   0%, 100% { opacity: 0.24; }
   42% { opacity: 0.88; }
 }
+/* At rest, each ring brightens in turn, inner to outer, as if light spreads from the play button. */
+@keyframes scRingShimmer {
+  0%, 48%, 100% {
+    opacity: var(--sc-rest, 0.55);
+    box-shadow: 0 0 18px 1px rgba(var(--accent-rgb), 0), inset 0 0 18px 1px rgba(var(--accent-rgb), 0);
+  }
+  20% {
+    opacity: 1;
+    box-shadow: 0 0 18px 1px rgba(var(--accent-rgb), 0.45), inset 0 0 18px 1px rgba(var(--accent-rgb), 0.3);
+  }
+}
+.sc-ringfield { -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent); mask-image: linear-gradient(180deg, #000 55%, transparent); }
 @keyframes scPulseDot {
   0%, 100% { opacity: 0.65; }
   42% { opacity: 1; }
@@ -320,4 +352,11 @@ a:hover, button:not(:disabled):hover { opacity: 0.8; }
   .sc-rings-glowing .sc-ring { opacity: 0.72 !important; }
   .sc-rings-glowing .sc-ring-dot { opacity: 1 !important; }
   .sc-sheet-panel { transition: none !important; transform: none !important; }
+}
+
+/* Keep the cookie notice above the app's bottom tab bar on phones (the tab bar hides at the 900px "wide" breakpoint). */
+@media (max-width: 899.98px) {
+  body:has(.sc-app-tabbar) .sc-cookie {
+    bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  }
 }

@@ -1,0 +1,375 @@
+'use client';
+
+import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import {
+  FEATURED_FREE_SESSION,
+  MEMBER_ONLY_COUNT,
+  SESSIONS,
+  THEMES,
+  loadLastPlayed,
+  loadRecentlyPlayed,
+  needsMembership,
+  playedAgo,
+  playerHref,
+  scriptHref,
+  searchScore,
+  sessionPartInfo,
+  type LastPlayed,
+  type Session,
+} from '@/lib/catalog';
+import AppShell from '@/components/ui/AppShell';
+import { useDissolve } from '@/components/ui/Dissolve';
+import { ChevronRight, LockIcon, PlayIcon } from '@/components/ui/icons';
+import { useMembership } from '@/hooks/useMembership';
+import SessionName from '@/components/ui/SessionName';
+
+const ALL = 'All';
+const RECENT_SHOW = 3;
+
+function LibraryBody() {
+  const dissolveTo = useDissolve();
+  const searchParams = useSearchParams();
+  const { isMember, loading: membershipLoading } = useMembership();
+  const [lastPlayed, setLastPlayed] = useState<LastPlayed | null>(null);
+  const [recent, setRecent] = useState<LastPlayed[]>([]);
+  const themeParam = searchParams.get('theme');
+  const initialTheme = themeParam && THEMES.includes(themeParam) ? themeParam : ALL;
+  const [theme, setTheme] = useState(initialTheme);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    setLastPlayed(loadLastPlayed());
+    setRecent(loadRecentlyPlayed());
+  }, []);
+
+  useEffect(() => {
+    if (themeParam && THEMES.includes(themeParam)) setTheme(themeParam);
+  }, [themeParam]);
+
+  const needle = query.trim().toLowerCase();
+  // Matches title, goal, description and the extra keywords; best matches first, catalog order within.
+  const visible = SESSIONS.map((session, index) => ({ session, index, score: searchScore(session, needle) }))
+    .filter(({ session, score }) => score > 0 && (theme === ALL || session.theme === theme))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map(({ session }) => session);
+
+  function canPlay(session: Session) {
+    return session.free || isMember;
+  }
+
+  const continueSession =
+    lastPlayed && canPlay(lastPlayed.session) ? lastPlayed : null;
+
+  const recentPlayable = recent
+    .filter((entry) => canPlay(entry.session))
+    .filter((entry) => !continueSession || entry.session.id !== continueSession.session.id)
+    .slice(0, RECENT_SHOW);
+
+  function isLocked(session: Session) {
+    return needsMembership(session) && !isMember && !membershipLoading;
+  }
+
+  function openSession(session: Session) {
+    if (!canPlay(session)) return;
+    dissolveTo(playerHref(session));
+  }
+
+  return (
+    <AppShell active="library">
+      <div className="flex flex-col gap-[34px]">
+        <h1 className="sc-h-app">What are you working on?</h1>
+
+
+        {continueSession && (
+          <div className="flex flex-col gap-3">
+            <span className="sc-eyebrow">Continue</span>
+            <button
+              type="button"
+              onClick={() => openSession(continueSession.session)}
+              className="flex items-center gap-4 border-y border-hairline py-4 text-left"
+            >
+              <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-accent text-on-accent">
+                <PlayIcon size={13} className="translate-x-[1px]" />
+              </span>
+              <span className="flex flex-1 flex-col gap-[3px]">
+                <span className="text-[17px] font-semibold"><SessionName session={continueSession.session} /></span>
+                <span className="text-[14px] text-ink-muted">
+                  {continueSession.playedAt && `Last played ${playedAgo(continueSession.playedAt)}`}
+                </span>
+              </span>
+            </button>
+          </div>
+        )}
+
+        {recentPlayable.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <span className="sc-eyebrow">Recently played</span>
+            <div className="flex flex-col">
+              {recentPlayable.map((entry) => (
+                <button
+                  key={entry.session.id}
+                  type="button"
+                  onClick={() => openSession(entry.session)}
+                  className="flex items-center justify-between gap-4 border-t border-hairline py-[14px] text-left last:border-b"
+                >
+                  <span className="flex min-w-0 flex-col gap-[3px]">
+                    <span className="text-[16px] font-semibold"><SessionName session={entry.session} /></span>
+                    <span className="text-[13px] text-ink-muted">
+                      {entry.playedAt ? playedAgo(entry.playedAt) : 'Recently'}
+                    </span>
+                  </span>
+                  <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-accent text-on-accent">
+                    <PlayIcon size={11} className="translate-x-[1px]" />
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-[34px]">
+          {!isMember && !membershipLoading && (
+            <div className="flex flex-col gap-5 rounded-2xl bg-surface p-[clamp(20px,3vw,28px)] sm:flex-row sm:items-center">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" className="flex-none text-accent" aria-hidden="true">
+                <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="1" opacity="0.45" />
+                <circle cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth="1" opacity="0.7" />
+                <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.2" />
+                <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+              </svg>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="text-[18px] font-semibold tracking-[-0.01em]">Ready for your next goal?</span>
+                <span className="text-[15px] leading-[1.5] text-ink-muted">
+                  {FEATURED_FREE_SESSION ? `${FEATURED_FREE_SESSION.title} is yours free. ` : ''}SleepCode+ opens all{' '}
+                  {MEMBER_ONLY_COUNT + (FEATURED_FREE_SESSION ? 1 : 0)} sessions, plus new ones as they arrive.
+                </span>
+              </div>
+              <Link href="/pricing" className="sc-btn flex-none self-start sm:self-center">
+                Get SleepCode+
+              </Link>
+            </div>
+          )}
+          <label className="flex flex-col gap-2">
+            <span className="sr-only">Search sessions</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search sessions"
+              className="min-h-[44px] w-full max-w-[420px] rounded-full border border-hairline-strong bg-bg px-4 text-[15px] text-ink outline-none placeholder:text-ink-muted focus:border-accent"
+            />
+          </label>
+
+          <div className="grid max-w-[620px] grid-cols-3 gap-2 sm:grid-cols-5" role="group" aria-label="Filter by goal">
+            {[ALL, ...THEMES].map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setTheme(item)}
+                aria-pressed={theme === item}
+                className={`sc-pill justify-center ${theme === item ? 'is-selected' : ''}`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+
+          {visible.length === 0 ? (
+            <p className="border-t border-hairline py-[18px] text-[15px] text-ink-muted">
+              No sessions match that search.
+            </p>
+          ) : theme === ALL && !needle ? (
+            THEMES.map((goal) => {
+              const inGoal = visible.filter((session) => session.theme === goal);
+              if (inGoal.length === 0) return null;
+              return (
+                <section key={goal} className="flex flex-col gap-3" aria-label={goal}>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 className="text-[20px] font-semibold tracking-[-0.01em]">{goal}</h2>
+                    <button type="button" onClick={() => setTheme(goal)} className="text-[14px] text-ink-muted hover:text-ink">
+                      {inGoal.length} {inGoal.length === 1 ? 'session' : 'sessions'}
+                    </button>
+                  </div>
+                  <SessionRows sessions={inGoal} isLocked={isLocked} onPlay={openSession} />
+                </section>
+              );
+            })
+          ) : (
+            <section className="flex flex-col gap-3" aria-label={theme === ALL ? 'Search results' : theme}>
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-[20px] font-semibold tracking-[-0.01em]">
+                  {theme === ALL ? `Results for \u201c${query.trim()}\u201d` : theme}
+                </h2>
+                <span className="text-[14px] text-ink-muted">
+                  {visible.length} {visible.length === 1 ? 'session' : 'sessions'}
+                </span>
+              </div>
+              <SessionRows sessions={visible} isLocked={isLocked} onPlay={openSession} />
+            </section>
+          )}
+        </div>
+      </div>
+    </AppShell>
+  );
+}
+
+type RowItem = { kind: 'single'; session: Session } | { kind: 'series'; title: string; parts: Session[] };
+
+// Parts of a series ("Launching a Business", parts 1–4) collapse into one row.
+function toRows(sessions: Session[]): RowItem[] {
+  const rows: RowItem[] = [];
+  const seriesIndex = new Map<string, number>();
+  for (const session of sessions) {
+    if (!sessionPartInfo(session)) {
+      rows.push({ kind: 'single', session });
+      continue;
+    }
+    const key = `${session.theme}::${session.title}`;
+    const at = seriesIndex.get(key);
+    if (at === undefined) {
+      seriesIndex.set(key, rows.length);
+      rows.push({ kind: 'series', title: session.title, parts: [session] });
+    } else {
+      (rows[at] as Extract<RowItem, { kind: 'series' }>).parts.push(session);
+    }
+  }
+  return rows;
+}
+
+function SessionRows({
+  sessions,
+  isLocked,
+  onPlay,
+}: {
+  sessions: Session[];
+  isLocked: (session: Session) => boolean;
+  onPlay: (session: Session) => void;
+}) {
+  return (
+    <ul className="flex flex-col border-b border-hairline">
+      {toRows(sessions).map((row) =>
+        row.kind === 'single' ? (
+          <li key={row.session.id} className="border-t border-hairline">
+            <SessionRow session={row.session} title={row.session.title} locked={isLocked(row.session)} onPlay={onPlay} />
+          </li>
+        ) : (
+          <SeriesRow key={row.parts[0].id} title={row.title} parts={row.parts} isLocked={isLocked} onPlay={onPlay} />
+        ),
+      )}
+    </ul>
+  );
+}
+
+// The whole row is the target. Playable: a play circle, opens the player. Locked: a lock, opens
+// the session page (description, transcript, Unlock with SleepCode+).
+function SessionRow({
+  session,
+  title,
+  locked,
+  onPlay,
+  inset = false,
+}: {
+  session: Session;
+  title: string;
+  locked: boolean;
+  onPlay: (session: Session) => void;
+  inset?: boolean;
+}) {
+  const body = (
+    <>
+      <span className="flex min-w-0 flex-1 flex-col gap-[4px]">
+        <span className="flex flex-wrap items-baseline gap-x-2 text-[16px] font-semibold">
+          {title}
+          {session.free && <span className="text-[13px] font-medium text-accent">Free</span>}
+        </span>
+        {session.description ? (
+          <span className="line-clamp-2 max-w-[60ch] text-[14px] leading-[1.5] text-ink-muted">{session.description}</span>
+        ) : null}
+      </span>
+      {locked ? (
+        <span className="flex flex-none items-center gap-2 text-[13px] text-ink-muted">
+          <span className="hidden sm:inline">SleepCode+</span>
+          <span className="grid h-9 w-9 place-items-center rounded-full border border-hairline-strong">
+            <LockIcon size={14} />
+          </span>
+        </span>
+      ) : (
+        <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-accent text-on-accent">
+          <PlayIcon size={11} className="translate-x-[1px]" />
+        </span>
+      )}
+    </>
+  );
+  const className = `flex w-full items-center gap-4 py-[15px] text-left ${inset ? 'pl-5' : ''}`;
+  return locked ? (
+    <Link href={scriptHref(session)} className={className} aria-label={`${title}, SleepCode+. See the session.`}>
+      {body}
+    </Link>
+  ) : (
+    <button type="button" onClick={() => onPlay(session)} className={className} aria-label={`Play ${title}`}>
+      {body}
+    </button>
+  );
+}
+
+function SeriesRow({
+  title,
+  parts,
+  isLocked,
+  onPlay,
+}: {
+  title: string;
+  parts: Session[];
+  isLocked: (session: Session) => boolean;
+  onPlay: (session: Session) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const first = parts[0];
+  return (
+    <li className="border-t border-hairline">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-4 py-[15px] text-left"
+      >
+        <span className="flex min-w-0 flex-1 flex-col gap-[4px]">
+          <span className="flex flex-wrap items-baseline gap-x-2 text-[16px] font-semibold">
+            {title}
+            <span className="text-[13px] font-medium text-ink-muted">{parts.length} parts</span>
+          </span>
+          {first.description ? (
+            <span className="line-clamp-2 max-w-[60ch] text-[14px] leading-[1.5] text-ink-muted">{first.description}</span>
+          ) : null}
+        </span>
+        <span className="grid h-9 w-9 flex-none place-items-center text-ink-muted">
+          <ChevronRight className={`transition-transform duration-300 ${open ? 'rotate-90' : ''}`} />
+        </span>
+      </button>
+      {open && (
+        <ul className="flex flex-col pb-2">
+          {parts.map((part) => (
+            <li key={part.id} className="border-t border-hairline">
+              <SessionRow
+                session={part}
+                title={`Part ${sessionPartInfo(part)?.part ?? ''}`}
+                locked={isLocked(part)}
+                onPlay={onPlay}
+                inset
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={null}>
+      <LibraryBody />
+    </Suspense>
+  );
+}

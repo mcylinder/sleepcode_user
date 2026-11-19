@@ -10,87 +10,118 @@ export interface FaqGroup {
 
 const NOT_THERAPY: FaqItem = {
   q: 'Is this a replacement for therapy?',
-  a: 'No. SleepCode is a tool for everyday habits of mind, not medical treatment. It isn\u2019t intended to diagnose or treat any condition. If you\u2019re struggling, please talk to someone qualified.',
+  a: 'No. SleepCode is a tool for everyday habits of mind, not medical treatment. It isn’t intended to diagnose or treat any condition. If you’re having a hard time, please reach out to a qualified professional.',
 };
+
+// Shared with the Pricing page.
+const MEMBERSHIP_QUESTIONS: FaqItem[] = [
+  {
+    q: 'How do I cancel?',
+    a: 'Go to Account and choose Manage billing. You can cancel at any time, and you keep access until the end of the period you paid for, and you won’t be charged again.',
+  },
+  {
+    q: 'Is there a free trial?',
+    a: '**Fresh Start** is free to listen to as often as you like, so you can get a feel for SleepCode before choosing SleepCode+.',
+  },
+  {
+    q: 'Can I switch between monthly and yearly?',
+    a: 'Yes. Choose Manage billing in Account. Stripe adjusts the price for the time left on your current plan.',
+  },
+  {
+    q: 'How do I pay?',
+    a: 'All major credit and debit cards. Payments are processed by Stripe, so we never see or store your card details.',
+  },
+];
 
 export const FAQ_GROUPS: FaqGroup[] = [
   {
-    title: 'Using SleepCode',
+    title: 'About SleepCode',
     items: [
       {
+        q: 'Does it work?',
+        a: 'Attitudes are habits, and habits can change with gentle, steady repetition. SleepCode gives you the same clear affirmations each time you listen, so a new way of thinking has room to settle in. Everyone’s experience is different. Start with the free session, **Fresh Start · Mindset**. Stay with it for a few weeks, and see how it feels. SleepCode+ is there when you want another goal.',
+      },
+      {
         q: 'What does supraliminal mean?',
-        a: 'Every word in a session is clearly audible. Nothing is hidden under music or played too quietly to hear. You know exactly what you are listening to. It\u2019s the opposite of subliminal.',
+        a: 'Every word in a session is clearly audible. Nothing is hidden under music or played too quietly to hear. You know exactly what you are listening to. It’s the opposite of subliminal.',
       },
       {
         q: 'How is that different from subliminal audio?',
         a: 'Subliminal tracks hide messages below hearing. We think you should be able to hear, read and check every sentence, so ours are spoken plainly.',
       },
       {
-        q: 'What is the pulse?',
-        a: 'The pulse is a soft 111 Hz tone. Its rhythm is matched to the cadence of the affirmations, so each one arrives on a steady beat. The repetition is designed to be gently hypnotic, giving your attention somewhere to rest so the words can be absorbed rather than analyzed.',
-      },
-      {
-        q: 'What is pulse width?',
-        a: 'Pulse width spreads the pulse from the center to both ears. Center keeps it in the middle; Narrow, Wide and Full open it out. Wider settings work best with headphones.',
-      },
-      {
-        q: 'What are the weekday dots in the player?',
-        a: 'They mark nights you listened for a few minutes. That is your listening history (nights listened), not a streak score.',
-      },
-      {
         q: 'Is SleepCode a sleep aid?',
-        a: 'No. It isn\u2019t designed to help you fall asleep, and it doesn\u2019t treat sleep problems. Bedtime is simply when most people listen: as you drift off, your mind is quiet enough to hear the affirmations with fewer distractions.',
+        a: 'No. It isn’t designed to help you fall asleep, and it doesn’t treat sleep problems. Many people listen as the day winds down, when things are quiet, but any calm moment works.',
       },
+      NOT_THERAPY,
+    ],
+  },
+  {
+    title: 'Membership',
+    items: [
       {
-        q: 'Does it work?',
-        a: 'Attitudes are habits, and habits can change with gentle, steady repetition. SleepCode gives you the same clear affirmations night after night, so a new way of thinking has room to settle in. Everyone\u2019s experience is different. Start with the free session, Fresh Start \u00b7 Mindset, stay with it for a few weeks, and see how it feels. SleepCode+ is there when you want another goal.',
+        q: 'What is free?',
+        a: 'Create a free account and you’re on the SleepCode plan, with **Fresh Start · Mindset** included. Your account also keeps your player settings and listening days wherever you listen. With SleepCode+, you get all 84 sessions across 8 goals.',
       },
+      ...MEMBERSHIP_QUESTIONS,
       {
-        q: 'Whose voice is it?',
-        a: 'The voice is made with a text-to-speech system, chosen and directed for clarity and calm, so the delivery stays even across hours of listening. Every affirmation is written, edited and listened to by a person before it\u2019s added to a session.',
-      },
-      {
-        q: 'How often should I listen?',
-        a: 'Most nights works best. Repetition is how the affirmations become familiar. In the player you can hear each affirmation more than once, or set a session length and let it run.',
-      },
-      {
-        q: 'Can I listen as I fall asleep?',
-        a: 'Yes. Set a session length so it stops on its own, and use Night shade to turn the screen fully black. Falling asleep is simply a good time to listen; the session itself is about your goal.',
-      },
-      {
-        q: 'Can I use headphones?',
-        a: 'Yes, or a speaker. Keep the volume low. If you wear headphones in bed, choose a comfortable pair made for sleeping.',
-      },
-      {
-        q: 'How long is a session?',
-        a: 'As long as you like, up to 10 hours. Set a length in the player and it stops on its own.',
-      },
-      {
-        q: 'Can I read what\u2019s said?',
-        a: 'Yes. Every session has a full transcript. Find it in the library or the player. Nothing is spoken that isn\u2019t written there.',
-      },
-      {
-        q: 'Do I need to download an app?',
-        a: 'No. SleepCode runs in your phone\u2019s web browser, and on a computer too.',
-      },
-      {
-        q: 'Will the audio stop if my screen turns off?',
-        a: 'SleepCode keeps your screen awake while a session plays so the audio isn\u2019t interrupted. Night shade blacks out the screen without stopping it.',
+        q: 'Is my data private?',
+        a: 'We keep only what we need to run your membership. No ads and no third-party trackers.',
       },
     ],
   },
   {
-    title: 'Account',
+    title: 'The sound',
     items: [
       {
-        q: 'What is free?',
-        a: 'Fresh Start \u00b7 Mindset is free, with no account needed. SleepCode+ unlocks every other session. A free account keeps your player settings and listening progress \u2014 the weekday \u201cNights listened\u201d dots on the player \u2014 wherever you listen.',
+        q: 'What is the pulse?',
+        a: 'A soft 111 Hz tone that keeps time with the affirmations. It’s there to gently carry the words and give your attention a quiet place to rest.',
       },
       {
-        q: 'Is my data private?',
-        a: 'We keep only what we need to run your account. No ads and no third-party trackers.',
+        q: 'What is the Width setting?',
+        a: 'Width sets how far the pulse alternates between your ears, from Center to Full. This left-right rhythm is a form of auditory bilateral stimulation, which many people use to settle, ease physical tension and feel calmer. It works best with headphones or stereo speakers.',
       },
-      NOT_THERAPY,
+      {
+        q: 'Whose voice is it?',
+        a: 'Each narrator is made with a text-to-speech system, chosen and directed for clarity and calm, so the delivery stays even across hours of listening. Tap the narrator’s name under the session title in the player to choose another. Every affirmation is written, edited and listened to by a person before it’s added to a session.',
+      },
+      {
+        q: 'Can I use headphones?',
+        a: 'Yes, or a speaker. The left-right pulse works best with headphones or stereo speakers. Keep the volume at a comfortable speaking level. On a smartphone, set the ringer to “on” to hear the session audio. Do Not Disturb can be active.',
+      },
+    ],
+  },
+  {
+    title: 'Listening',
+    items: [
+      {
+        q: 'How often should I listen?',
+        a: 'Often. Repetition is how the affirmations become familiar. Choose a time that fits your routine and keep coming back to it.',
+      },
+      {
+        q: 'What if I fall asleep?',
+        a: 'Go ahead and let yourself drift off. The session can keep playing as you sleep. Set a length so it stops on its own, and use Night shade to turn the screen fully black.',
+      },
+      {
+        q: 'How long is a session?',
+        a: 'As long as you choose. It starts at two hours, and you can set it shorter or longer in the player. It stops on its own when the time is up.',
+      },
+      {
+        q: 'Can I read what’s said?',
+        a: 'Yes. Every session has a full transcript. Find it in the library or the player. Nothing is spoken that isn’t written there.',
+      },
+      {
+        q: 'Do I need to download an app?',
+        a: 'No. SleepCode runs in your phone’s web browser, and on a computer too.',
+      },
+      {
+        q: 'Will the audio stop if my screen turns off?',
+        a: 'SleepCode keeps your screen awake while a session plays so the audio isn’t interrupted. Night shade blacks out the screen without stopping it.',
+      },
+      {
+        q: 'What are the weekday dots in the player?',
+        a: 'The dots light up on the days you listen, a quick look at how your week is going.',
+      },
     ],
   },
 ];
@@ -98,23 +129,6 @@ export const FAQ_GROUPS: FaqGroup[] = [
 export const PRICING_FAQ: FaqGroup[] = [
   {
     title: 'Membership',
-    items: [
-      {
-        q: 'Can I cancel?',
-        a: 'Yes, at any time. Go to Account and choose Manage billing. You keep access until the end of the period you paid for, and you won\u2019t be charged again.',
-      },
-      {
-        q: 'Is there a free trial?',
-        a: 'There\u2019s no separate trial. Fresh Start \u00b7 Mindset is free to keep, with no account needed, so you can try SleepCode before SleepCode+.',
-      },
-      {
-        q: 'Can I switch between monthly and yearly?',
-        a: 'Yes. Choose Manage billing in Account. Stripe adjusts the price for the time left on your current plan.',
-      },
-      {
-        q: 'How do I pay?',
-        a: 'All major credit and debit cards. Payments are processed by Stripe; we never see or store your card details.',
-      },
-    ],
+    items: MEMBERSHIP_QUESTIONS,
   },
 ];

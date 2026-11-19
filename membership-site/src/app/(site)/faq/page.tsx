@@ -15,12 +15,17 @@ export default function FAQPage() {
         <span className="sc-eyebrow">FAQ</span>
         <h1 className="sc-h-page">Questions, answered plainly.</h1>
         <p className="max-w-[26em] text-[17px] leading-[1.6] text-ink-muted">
-          If something isn&rsquo;t covered here, write to us. A person reads every message.
+          <span className="block">If something isn&rsquo;t covered here, write to us.</span>
+          <span className="block">We&rsquo;d love to hear from you.</span>
         </p>
         <a href={`mailto:${CONTACT_EMAIL}`} className="sc-link self-start">{CONTACT_EMAIL}</a>
       </div>
       <div className="min-w-[min(100%,300px)] wide:col-span-2">
         <FaqList groups={FAQ_GROUPS} />
+        <p className="pt-[22px] text-[15px] text-ink-muted">
+          Another question? Email{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="sc-link">{CONTACT_EMAIL}</a>
+        </p>
       </div>
     </div>
   );

@@ -3,30 +3,17 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import Logo from '@/components/ui/Logo';
 import { ChevronRight } from '@/components/ui/icons';
-
-// Every nav item is a page. Journal stays out of the nav until real posts exist.
-const NAV = [
-  { href: '/how-to-listen', label: 'How to listen' },
-  { href: '/pricing', label: 'Pricing' },
-  { href: '/faq', label: 'FAQ' },
-];
+import { useMainNav } from '@/lib/useMainNav';
 
 const PANEL_ID = 'site-menu';
 
+// Same destinations as the app rail and tab bar (see useMainNav). Journal stays out until real posts exist.
 export default function SiteHeader() {
-  const { currentUser } = useAuth();
   const pathname = usePathname();
+  const nav = useMainNav();
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const account = currentUser
-    ? [
-        { href: '/application', label: 'Library' },
-        { href: '/account', label: 'Account' },
-      ]
-    : [{ href: '/login', label: 'Sign in' }];
 
   useEffect(() => setMenuOpen(false), [pathname]);
 
@@ -39,33 +26,30 @@ export default function SiteHeader() {
     return () => window.removeEventListener('keydown', onKey);
   }, [menuOpen]);
 
-  const isActive = (href: string) => pathname.startsWith(href);
+  const library = nav[0];
 
   return (
     <header className="relative">
       <div className="sc-px flex items-center justify-between gap-4 py-[22px]">
         <Logo />
-        <nav className="hidden items-center gap-[26px] text-[15px] text-ink-muted md:flex" aria-label="Site">
-          {NAV.map((item) => (
+        <nav className="hidden items-center gap-[26px] text-[15px] text-ink-muted md:flex" aria-label="Main">
+          {nav.map((item) => (
             <Link
-              key={item.href}
+              key={item.label}
               href={item.href}
-              aria-current={isActive(item.href) ? 'page' : undefined}
-              className={isActive(item.href) ? 'font-semibold text-accent' : ''}
+              aria-current={item.active ? 'page' : undefined}
+              className={item.active ? 'font-semibold text-accent' : 'hover:text-ink'}
             >
-              {item.label}
-            </Link>
-          ))}
-          {account.map((item) => (
-            <Link key={item.href} href={item.href} className="font-medium text-ink">
               {item.label}
             </Link>
           ))}
         </nav>
         <div className="flex items-center gap-5 text-[15px] md:hidden">
-          <Link href={account[0].href} className="font-medium text-ink">
-            {account[0].label}
-          </Link>
+          {!library.active && (
+            <Link href={library.href} className="font-medium text-ink">
+              {library.label}
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
@@ -85,18 +69,18 @@ export default function SiteHeader() {
       {menuOpen && (
         <nav
           id={PANEL_ID}
-          aria-label="Site"
-          className="absolute inset-x-0 top-full z-20 border-b border-hairline bg-bg pb-4 shadow-[0_18px_30px_-24px_rgba(44,38,32,0.45)] md:hidden"
+          aria-label="Main"
+          className="absolute inset-x-0 top-full z-20 border-b border-hairline bg-bg pb-4 shadow-[0_18px_30px_-24px_rgba(0,0,0,0.6)] md:hidden"
         >
           <ul className="sc-px">
-            {[...NAV, ...account.slice(1)].map((item) => (
-              <li key={item.href}>
+            {nav.map((item) => (
+              <li key={item.label}>
                 <Link
                   href={item.href}
                   onClick={() => setMenuOpen(false)}
-                  aria-current={isActive(item.href) ? 'page' : undefined}
+                  aria-current={item.active ? 'page' : undefined}
                   className={`sc-row sc-row--between min-h-[52px] text-[17px] font-medium ${
-                    isActive(item.href) ? 'text-accent' : 'text-ink'
+                    item.active ? 'text-accent' : 'text-ink'
                   }`}
                 >
                   {item.label}

@@ -149,3 +149,50 @@ export function PulseWidthGlyph({
     </svg>
   );
 }
+
+// Three sliders: listening settings.
+export function SettingsIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" className={className} aria-hidden="true">
+      <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" />
+      <circle cx="16" cy="6" r="2" />
+      <circle cx="10" cy="12" r="2" />
+      <circle cx="18" cy="18" r="2" />
+    </svg>
+  );
+}
+
+// Mix: a rotary knob. The pointer turns left for more voice and right for more pulse
+// (−135° at all voice, +135° at all pulse). `instruction` is the voice share, 0–100.
+export function MixIcon({ size = 18, instruction = 50, className }: IconProps & { instruction?: number }) {
+  const angle = ((-135 + (100 - instruction) * 2.7) * Math.PI) / 180;
+  const x = 12 + Math.sin(angle) * 5.5;
+  const y = 12 - Math.cos(angle) * 5.5;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d={`M12 12L${x.toFixed(2)} ${y.toFixed(2)}`} />
+    </svg>
+  );
+}
+
+// Width: the pulse in the middle with arcs opening out to each ear as it widens.
+const WIDTH_ARCS: Record<PulseWidth, number> = { 0: 0, 33: 1, 66: 2, 100: 3 };
+export function WidthIcon({ size = 18, width = 33, className }: IconProps & { width?: PulseWidth }) {
+  const arcs = WIDTH_ARCS[width];
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
+      {Array.from({ length: arcs }, (_, i) => {
+        const d = 5 + i * 3.5;
+        const h = 3 + i * 2;
+        return (
+          <g key={i}>
+            <path d={`M${12 - d} ${12 - h}q-2 ${h} 0 ${h * 2}`} />
+            <path d={`M${12 + d} ${12 - h}q2 ${h} 0 ${h * 2}`} />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}

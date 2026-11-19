@@ -1,102 +1,176 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { pageMeta } from '@/lib/site';
+import HeroCta from '@/components/site/HeroCta';
+import { MixIcon, MoonIcon, RepeatIcon, SpeakerIcon, StopwatchIcon, WidthIcon } from '@/components/ui/icons';
 
 export const metadata: Metadata = pageMeta(
   'How to listen',
   'A few practical notes on getting the most from a SleepCode session.',
 );
 
-const SECTIONS = [
+// The rings from the logo: stands for "one goal".
+function GoalGlyph({ size = 26 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <circle cx="12" cy="12" r="10.5" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+// A miniature of the player's "Sessions this week" row.
+function WeekGlyph() {
+  const days = [1, 1, 0, 1, 0];
+  return (
+    <svg width={40} height={6} viewBox="0 0 40 6" aria-hidden="true">
+      {days.map((on, i) => (
+        <circle
+          key={i}
+          cx={3 + i * 8.5}
+          cy={3}
+          r={1.9}
+          fill={on ? 'currentColor' : 'none'}
+          stroke="currentColor"
+          strokeWidth={1.1}
+        />
+      ))}
+    </svg>
+  );
+}
+
+type Item = { id: string; title: string; body: string; glyph: React.ReactNode };
+
+// Names match the player: Level, Mix, Width, Repeat, Length, Night shade.
+const GROUPS: { id: string; title: string; items: Item[] }[] = [
   {
-    id: 'choose-one-goal',
-    title: 'Choose one goal',
-    body: 'Pick the session closest to what you are working on and stay with it for a while. Repetition works best when you stay with one session for a few weeks.',
+    id: 'start-here',
+    title: 'Start here',
+    items: [
+      {
+        id: 'choose-one-goal',
+        title: 'One goal',
+        glyph: <GoalGlyph />,
+        body: 'Choose the session that fits your goal and make it a habit. The more regularly you hear the same words, the more natural they can start to feel.',
+      },
+    ],
   },
   {
-    id: 'set-the-voice',
-    title: 'Set the voice',
-    body: 'The pulse is a soft 111 Hz tone, timed to the cadence of the affirmations. The Voice control sets how much voice you hear over the pulse. Start with the voice clearly on top, then adjust until the words are easy to follow.',
+    id: 'adjust-the-sound',
+    title: 'Adjust the sound',
+    items: [
+      {
+        id: 'level',
+        title: 'Level',
+        glyph: <SpeakerIcon size={26} level={50} />,
+        body: 'A comfortable speaking volume is enough. On a smartphone, set the ringer to “on” to hear the session audio. Do Not Disturb can be active.',
+      },
+      {
+        id: 'mix',
+        title: 'Mix',
+        glyph: <MixIcon size={26} instruction={70} />,
+        body: 'Mix balances the voice against the pulse. The pulse is there to gently carry the words, so start with the voice easy to hear, then find the balance you prefer.',
+      },
+      {
+        id: 'width',
+        title: 'Width',
+        glyph: <WidthIcon size={26} width={66} />,
+        body: 'Width sets how far the pulse alternates between your ears, from narrow to wide. This left-right rhythm is a form of auditory bilateral stimulation, which many people use to settle, ease physical tension and feel calmer.',
+      },
+      {
+        id: 'repeat',
+        title: 'Repeat',
+        glyph: <RepeatIcon size={24} />,
+        body: 'Repeat plays each affirmation once, twice or four times. Use whichever feels right.',
+      },
+      {
+        id: 'length',
+        title: 'Length',
+        glyph: <StopwatchIcon size={24} />,
+        body: 'Length sets how long the session runs.',
+      },
+    ],
   },
   {
-    id: 'pulse-width',
-    title: 'Pulse width',
-    body: 'Pulse width spreads the pulse from the center to both ears; wider works best with headphones. Try Narrow or Wide until it feels steady rather than distracting.',
-  },
-  {
-    id: 'repeat-or-set-a-length',
-    title: 'Repeat or set a length',
-    body: 'Choose whether each affirmation plays once, twice or four times. Set a session length in hours and minutes, up to 10 hours.',
-  },
-  {
-    id: 'nights-listened',
-    title: 'Nights listened',
-    body: 'The row of weekday dots under the title marks nights you listened for a few minutes. It is real listening history, not a streak badge.',
-  },
-  {
-    id: 'keep-the-volume-low',
-    title: 'Keep the volume low',
-    body: 'A comfortable speaking volume is enough. Headphones help in shared rooms, but a speaker works fine.',
-  },
-  {
-    id: 'dim-the-screen',
-    title: 'Dim the screen',
-    body: 'Night shade turns the screen fully black while the session keeps playing. Tap anywhere to wake it.',
+    id: 'while-you-listen',
+    title: 'While you listen',
+    items: [
+      {
+        id: 'sessions-this-week',
+        title: 'Sessions this week',
+        glyph: <WeekGlyph />,
+        body: 'The dots in the player light up on the days you listen, a quick look at how your week is going.',
+      },
+      {
+        id: 'night-shade',
+        title: 'Night shade',
+        glyph: <MoonIcon size={24} />,
+        body: 'Night shade turns the screen fully black while the session keeps playing. Tap anywhere to wake it.',
+      },
+    ],
   },
 ];
 
-const num = (i: number) => String(i + 1).padStart(2, '0');
-
 export default function HowToListenPage() {
   return (
-    <>
-      <div className="sc-px flex max-w-[760px] flex-col gap-[18px] pb-[clamp(32px,4vw,48px)] pt-[clamp(28px,5vw,72px)]">
-        <span className="sc-eyebrow">Guide</span>
+    <div className="sc-px flex max-w-[760px] flex-col pb-[var(--pad-section)] pt-[clamp(28px,5vw,72px)]">
+      <div className="flex flex-col gap-[18px] pb-[clamp(36px,5vw,56px)]">
         <h1 className="sc-h-page">How to listen</h1>
-        <p className="sc-lead">
-          A few practical notes on getting the most from a session. None of it is required. Use what fits your night.
-        </p>
+        <p className="sc-lead">A few practical notes for getting the most from a session.</p>
       </div>
 
-      <div className="sc-px grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] items-start gap-[clamp(28px,5vw,72px)] pb-[var(--pad-section)]">
-        <nav className="flex flex-col wide:sticky wide:top-5" aria-label="On this page">
-          <span className="sc-eyebrow sc-eyebrow--muted pb-[10px]">
-            On this page
-          </span>
-          {SECTIONS.map((section, i) => (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              className="grid grid-cols-[30px_1fr] border-t border-hairline py-[10px] text-[15px]"
+      <div className="flex flex-col gap-[clamp(40px,5vw,60px)]">
+        {GROUPS.map((group) => (
+          <section key={group.id} id={group.id} aria-labelledby={`${group.id}-h`} className="flex scroll-mt-5 flex-col gap-2">
+            <h2
+              id={`${group.id}-h`}
+              className="border-b border-hairline-strong pb-3 text-[clamp(22px,2.2vw,27px)] font-semibold leading-[1.25] tracking-[-0.015em]"
             >
-              <span className="font-mono text-[12px] leading-[1.7] text-ink-muted">{num(i)}</span>
-              <span>{section.title}</span>
-            </a>
-          ))}
-        </nav>
+              {group.title}
+            </h2>
+            <ul className="flex flex-col">
+              {group.items.map((item) => (
+                <li
+                  key={item.id}
+                  id={item.id}
+                  className="grid scroll-mt-5 grid-cols-[40px_1fr] items-start gap-x-[14px] sm:grid-cols-[52px_1fr] sm:gap-x-[18px] border-b border-hairline py-[18px] last:border-b-0"
+                >
+                  <span
+                    className="grid h-[40px] w-[40px] place-items-center rounded-[12px] sm:h-[52px] sm:w-[52px] sm:rounded-[14px] bg-surface text-accent"
+                    aria-hidden="true"
+                  >
+                    {item.glyph}
+                  </span>
+                  <div className="flex flex-col gap-1 pt-[3px]">
+                    <h3 className="text-[18px] font-semibold leading-[1.35]">{item.title}</h3>
+                    <p className="text-[16px] leading-[1.65] text-ink-body">{item.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
 
-        <div className="flex min-w-[min(100%,300px)] max-w-[680px] flex-col gap-[clamp(36px,4vw,52px)] wide:col-span-3">
-          {SECTIONS.map((section, i) => (
-            <section
-              key={section.id}
-              id={section.id}
-              className="flex scroll-mt-5 flex-col gap-3 border-t border-[rgba(44,38,32,0.2)] pt-[22px]"
-            >
-              <span className="font-mono text-[13px] text-ink-muted">{num(i)}</span>
-              <h2 className="text-[clamp(22px,2.2vw,27px)] font-semibold leading-[1.25] tracking-[-0.015em]">
-                {section.title}
-              </h2>
-              <p className="text-[17px] leading-[1.7] text-ink-body">{section.body}</p>
-            </section>
-          ))}
-          <div className="flex flex-col gap-[10px] border-y border-hairline-strong py-[22px]">
-            <span className="text-[16px] font-semibold">A note on care</span>
-            <p className="text-[16px] leading-[1.65] text-ink-muted">
-              SleepCode is a tool for everyday habits of mind. It isn&rsquo;t medical treatment and isn&rsquo;t a
-              substitute for professional support. If you&rsquo;re struggling, please talk to someone qualified.
-            </p>
+        <div className="flex flex-col gap-5 rounded-2xl bg-surface p-[clamp(22px,3vw,32px)]">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-[22px] font-semibold leading-[1.3] tracking-[-0.01em]">Ready to listen?</h2>
+            <p className="text-[16px] leading-[1.6] text-ink-muted">Try Fresh Start free, or browse every goal in the library.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <HeroCta />
+            <Link href="/library" className="text-[15px] font-medium text-ink underline-offset-4 hover:underline">
+              Explore the library
+            </Link>
           </div>
         </div>
+
+        <p className="text-[14px] leading-[1.6] text-ink-muted">
+          <span className="font-semibold text-ink-body">A note on care. </span>
+          SleepCode is a tool for everyday habits of mind. It isn&rsquo;t medical treatment and isn&rsquo;t a substitute
+          for professional support. If you&rsquo;re having a hard time, please reach out to a qualified professional.
+        </p>
       </div>
-    </>
+    </div>
   );
 }

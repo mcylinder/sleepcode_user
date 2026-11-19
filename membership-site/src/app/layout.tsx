@@ -1,21 +1,21 @@
 import type { Metadata, Viewport } from 'next'
-import { Hanken_Grotesk, Space_Mono } from 'next/font/google'
+import { IBM_Plex_Mono, Instrument_Sans } from 'next/font/google'
 import './globals.css'
 import ClientAuthProvider from '@/components/ClientAuthProvider'
 import CookieBanner from '@/components/CookieBanner'
 import Plausible from '@/components/site/Plausible'
 import { DissolveProvider } from '@/components/ui/Dissolve'
 
-const hankenGrotesk = Hanken_Grotesk({
+const instrumentSans = Instrument_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
-  variable: '--font-hanken',
+  variable: '--font-instrument',
 })
 
-const spaceMono = Space_Mono({
+const plexMono = IBM_Plex_Mono({
   subsets: ['latin'],
   weight: ['400'],
-  variable: '--font-space-mono',
+  variable: '--font-plex-mono',
 })
 
 const SITE_URL = 'https://sleepcoding.me'
@@ -47,9 +47,9 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#ddd3c5',
-  // Default for sand pages; the player overrides this client-side while mounted.
-  colorScheme: 'light',
+  themeColor: '#10131a',
+  // Midnight everywhere; the player darkens this client-side while playing.
+  colorScheme: 'dark',
 }
 
 export default function RootLayout({
@@ -58,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${hankenGrotesk.variable} ${spaceMono.variable}`}>
+    <html lang="en" className={`${instrumentSans.variable} ${plexMono.variable}`}>
       <body>
         <Plausible />
         <ClientAuthProvider>

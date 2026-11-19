@@ -11,7 +11,7 @@ function ScriptRedirect() {
 
   useEffect(() => {
     const session = findSession(params.get('session'));
-    router.replace(session ? scriptHref(session) : '/application');
+    router.replace(session ? scriptHref(session) : '/library');
   }, [params, router]);
 
   return (

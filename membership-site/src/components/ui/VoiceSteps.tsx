@@ -70,7 +70,7 @@ export default function VoiceSteps({
 
   return (
     <div className="flex flex-col gap-3">
-      <span className={`text-[14px] ${player ? 'text-p-muted' : 'text-ink-muted'}`}>Voice to pulse blend</span>
+      <span className={`text-[14px] ${player ? 'text-p-muted' : 'text-ink-muted'}`}>Voice and pulse mix</span>
       {showHeader && (
         <div className={`text-[20px] font-semibold tabular-nums ${player ? 'text-p-fg' : 'text-ink'}`}>
           {instruction}%

@@ -57,7 +57,7 @@ export default function ContactPage() {
   };
 
   return (
-    <ArticleLayout eyebrow="Contact" title="Get in touch." dek="Questions about your account, billing, or a session. A person reads every message.">
+    <ArticleLayout eyebrow="Contact" title="Get in touch." dek="Questions about your account, billing, or a session? We’d love to hear from you.">
       <dl>
         {DETAILS.map((item) => (
           <div key={item.label} className="sc-row flex items-baseline gap-4">

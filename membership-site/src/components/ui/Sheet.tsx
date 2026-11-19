@@ -53,7 +53,7 @@ export default function Sheet({
     <div
       className="fixed inset-0 z-40 flex items-end justify-center"
       style={{
-        background: player ? 'var(--p-scrim)' : 'rgba(44, 38, 32, 0.42)',
+        background: 'var(--scrim)',
         opacity: shown ? 1 : 0,
         pointerEvents: shown ? 'auto' : 'none',
         transition: `opacity ${TRANSITION_MS}ms ease`,
@@ -78,8 +78,18 @@ export default function Sheet({
   );
 }
 
-// Title row with a Cancel action, shared by every sheet.
-export function SheetHeader({ title, onCancel, tone = 'site' }: { title: string; onCancel: () => void; tone?: 'site' | 'player' }) {
+// Title row with a Cancel (or Done, for settings that apply instantly) action, shared by every sheet.
+export function SheetHeader({
+  title,
+  onCancel,
+  tone = 'site',
+  actionLabel = 'Cancel',
+}: {
+  title: string;
+  onCancel: () => void;
+  tone?: 'site' | 'player';
+  actionLabel?: string;
+}) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-[18px] font-semibold">{title}</span>
@@ -88,7 +98,7 @@ export function SheetHeader({ title, onCancel, tone = 'site' }: { title: string;
         onClick={onCancel}
         className={`min-h-[44px] text-[15px] font-medium ${tone === 'player' ? 'text-p-muted' : 'text-ink-muted'}`}
       >
-        Cancel
+        {actionLabel}
       </button>
     </div>
   );
