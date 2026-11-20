@@ -1,0 +1,189 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import PulseWidthPicker from '@/components/ui/PulseWidthPicker';
+import RangeSlider, { SoundRow, mixValueText } from '@/components/ui/RangeSlider';
+import { MixIcon, RepeatIcon, SpeakerIcon, VoiceIcon, WidthIcon } from '@/components/ui/icons';
+import { buildPlayPlan, type SessionManifest } from '@/lib/audio/playPlan';
+import { PulseWidthPreview } from '@/lib/audio/PulseWidthPreview';
+import { pulseWidthLabel, type PulseWidth } from '@/lib/audio/pulseWidth';
+import { FEATURED_FREE_SESSION, VOICES, findVoice, mediaVoiceId } from '@/lib/catalog';
+import { fetchSessionMedia } from '@/lib/authedFetch';
+import {
+  DEFAULT_PREFS,
+  REPEAT_LABELS,
+  REPEAT_OPTIONS,
+  loadPlayerPrefs,
+  savePlayerPrefs,
+  type PlayerPrefs,
+} from '@/lib/playerPrefs';
+import { AccountSection } from './Section';
+
+const REPEAT_DOTS: Record<(typeof REPEAT_OPTIONS)[number], number> = { 1: 1, 2: 2, 4: 4 };
+
+// The same preferences the player uses. Changes apply immediately, in both places.
+export default function DefaultsSection() {
+  const [prefs, setPrefs] = useState<PlayerPrefs>(DEFAULT_PREFS);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const previewRef = useRef<PulseWidthPreview | null>(null);
+
+  useEffect(() => {
+    const saved = loadPlayerPrefs();
+    setPrefs(saved);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const free = FEATURED_FREE_SESSION;
+      const voiceId = mediaVoiceId(loadPlayerPrefs().voiceId);
+      if (!free || !voiceId) return;
+      try {
+        const signed = await fetchSessionMedia(free.id, voiceId);
+        const fileUrl = (name: string) => `${signed.baseUrl}${encodeURIComponent(name)}?${signed.query}`;
+        const response = await fetch(fileUrl('manifest.json'));
+        if (!response.ok) return;
+        const manifest = (await response.json()) as SessionManifest;
+        const plan = buildPlayPlan(manifest, fileUrl);
+        if (!cancelled) setPreviewUrl(plan.pulseUrl);
+      } catch {
+        // Choices still save without preview audio.
+      }
+    })();
+    return () => {
+      cancelled = true;
+      previewRef.current?.dispose();
+      previewRef.current = null;
+    };
+  }, []);
+
+  async function startWidthPreview(url: string | null, current: PlayerPrefs) {
+    const preview = previewRef.current ?? new PulseWidthPreview();
+    previewRef.current = preview;
+    preview.setPrefsVolume(current.volume, current.instruction);
+    preview.setWidth(current.pulseWidth);
+    if (!url) return;
+    try {
+      await preview.start(url);
+    } catch {
+      // Silent failure; row still works.
+    }
+  }
+
+  // Changes apply straight away, exactly like the player; the player saves here too.
+  const update = (patch: Partial<PlayerPrefs>) => {
+    const next = { ...loadPlayerPrefs(), ...patch };
+    savePlayerPrefs(next);
+    setPrefs(next);
+    if (patch.pulseWidth !== undefined) previewWidth(next);
+    else if (previewRef.current && (patch.instruction !== undefined || patch.volume !== undefined)) {
+      previewRef.current.setPrefsVolume(next.volume, next.instruction);
+    }
+  };
+
+  // Choosing a width plays a few seconds of the pulse so you can hear the difference.
+  const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previewWidth = (current: PlayerPrefs) => {
+    void startWidthPreview(previewUrl, current);
+    if (stopTimer.current) clearTimeout(stopTimer.current);
+    stopTimer.current = setTimeout(() => previewRef.current?.stop(), 3500);
+  };
+
+  const voiceName = findVoice(prefs.voiceId)?.name ?? 'Not set';
+  const row = 'border-t border-hairline py-5';
+
+  return (
+    <AccountSection title="Listening settings">
+      <p className="pb-4 text-[14px] leading-[1.55] text-ink-muted">
+        Changes save as you go and apply the next time you play.
+      </p>
+      <div className={row}>
+        <SoundRow name="Level" icon={<SpeakerIcon size={18} level={prefs.volume} />} value={`${prefs.volume}%`} tone="site">
+          <RangeSlider
+            value={prefs.volume}
+            onChange={(volume) => update({ volume })}
+            label="Level"
+            valueText={`${prefs.volume}%`}
+            tone="site"
+          />
+        </SoundRow>
+      </div>
+      <div className={row}>
+        <SoundRow name="Mix" icon={<MixIcon size={18} instruction={prefs.instruction} />} value={mixValueText(prefs.instruction)} tone="site">
+          <RangeSlider
+            value={100 - prefs.instruction}
+            onChange={(v) => update({ instruction: 100 - v })}
+            label="Mix"
+            valueText={mixValueText(prefs.instruction)}
+            startLabel="Voice"
+            endLabel="Pulse"
+            fill={false}
+            tone="site"
+          />
+        </SoundRow>
+      </div>
+      <div className={row}>
+        <SoundRow name="Width" icon={<WidthIcon size={18} width={prefs.pulseWidth} />} value={pulseWidthLabel(prefs.pulseWidth)} tone="site">
+          <div className="pt-2">
+            <PulseWidthPicker
+              selected={prefs.pulseWidth}
+              onSelect={(pulseWidth: PulseWidth) => update({ pulseWidth })}
+              tone="site"
+              layout="glyphs"
+              showHeader={false}
+            />
+          </div>
+        </SoundRow>
+      </div>
+      <div className={row}>
+        <SoundRow name="Repeat" icon={<RepeatIcon size={18} />} value={REPEAT_LABELS[prefs.repeat]} tone="site">
+          <div className="grid grid-cols-3 gap-2 pt-2" role="radiogroup" aria-label="Repeat">
+            {REPEAT_OPTIONS.map((count) => {
+              const selected = prefs.repeat === count;
+              return (
+                <button
+                  key={count}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => update({ repeat: count })}
+                  className={`sc-pill flex min-h-[60px] flex-col rounded-xl items-center justify-center gap-1.5 text-[14px] ${
+                    selected ? 'is-selected font-semibold' : ''
+                  }`}
+                >
+                  <span className="flex gap-1" aria-hidden="true">
+                    {Array.from({ length: REPEAT_DOTS[count] }, (_, i) => (
+                      <span key={i} className="h-1.5 w-1.5 rounded-full" style={{ background: 'currentColor' }} />
+                    ))}
+                  </span>
+                  {REPEAT_LABELS[count]}
+                </button>
+              );
+            })}
+          </div>
+        </SoundRow>
+      </div>
+      <div className={row}>
+        <SoundRow name="Narrator" icon={<VoiceIcon size={18} />} value={voiceName} tone="site">
+          <div className="grid grid-cols-2 gap-2 pt-2 sm:grid-cols-3" role="radiogroup" aria-label="Narrator">
+            {VOICES.map((voice) => {
+              const selected = prefs.voiceId === voice.id;
+              return (
+                <button
+                  key={voice.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => update({ voiceId: voice.id })}
+                  className={`sc-pill min-h-[48px] rounded-xl text-[14px] ${selected ? 'is-selected font-semibold' : ''}`}
+                >
+                  {voice.name}
+                </button>
+              );
+            })}
+          </div>
+        </SoundRow>
+      </div>
+    </AccountSection>
+  );
+}

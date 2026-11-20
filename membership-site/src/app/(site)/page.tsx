@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ForMembers, ForVisitors } from '@/components/site/ForVisitors';
+import MemberPicks from '@/components/site/MemberPicks';
 import HeroCta from '@/components/site/HeroCta';
 import HomeSessions from '@/components/site/HomeSessions';
 import HeroRings from '@/components/site/HeroRings';
@@ -56,6 +58,7 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <ForVisitors>
       <section id="how-it-works" className="sc-band sc-section flex scroll-mt-4 flex-col gap-10">
         <div className="flex max-w-[640px] flex-col gap-[14px]">
           <span className="sc-eyebrow">How it works</span>
@@ -78,6 +81,10 @@ export default function LandingPage() {
           Read the full listening guide
         </Link>
       </section>
+      </ForVisitors>
+      <ForMembers>
+        <MemberPicks />
+      </ForMembers>
 
       <section id="sessions" className="sc-section flex scroll-mt-4 flex-col gap-9">
         <div className="flex flex-col gap-[14px]">

@@ -1,0 +1,130 @@
+import Link from 'next/link';
+import {
+  FEATURED_FREE_SESSION,
+  THEMES,
+  findSession,
+  SESSIONS,
+  needsMembership,
+  scriptHref,
+  type Session,
+} from '@/lib/catalog';
+import PlayLink from '@/components/ui/PlayLink';
+import { ChevronRight, LockIcon, PlayIcon } from '@/components/ui/icons';
+import SessionName from '@/components/ui/SessionName';
+import Rings from '@/components/ui/Rings';
+
+/** Home featured (besides the free session): optimism, steadiness, speaking up. */
+const FEATURED_PAID_IDS = ['open-door', 'steady-ground', 'the-presentation'] as const;
+
+const ROW = 'flex items-center gap-4 border-t border-hairline py-[15px]';
+
+function FeaturedRow({ session }: { session: Session }) {
+  const body = (
+    <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
+      <span className="text-[16px] font-semibold"><SessionName session={session} /></span>
+      {session.description ? (
+        <span className="max-w-[60ch] text-[14px] leading-[1.5] text-ink-body">{session.description}</span>
+      ) : null}
+    </div>
+  );
+
+  if (!needsMembership(session)) {
+    return (
+      <PlayLink
+        session={session}
+        className={`${ROW} group transition-colors hover:bg-[var(--hover-wash)]`}
+      >
+        {body}
+        <span className="flex flex-none items-center gap-2 text-[13px] font-medium text-accent">
+          <span className="hidden sm:inline">Play free</span>
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-accent text-on-accent">
+            <PlayIcon size={11} className="translate-x-[1px]" />
+          </span>
+        </span>
+      </PlayLink>
+    );
+  }
+
+  return (
+    <Link
+      href={scriptHref(session)}
+      className={`${ROW} group transition-colors hover:bg-[var(--hover-wash)]`}
+    >
+      {body}
+      <span className="flex flex-none items-center gap-2 text-[13px] text-ink-muted">
+        <span className="hidden sm:inline">SleepCode+</span>
+        <span className="grid h-9 w-9 place-items-center rounded-full border border-hairline-strong">
+          <LockIcon size={14} />
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+// The free session, given a feature panel with the rings, so a new visitor sees the one thing
+// they can play right now.
+function Spotlight({ session }: { session: Session }) {
+  return (
+    <PlayLink
+      session={session}
+      className="group flex flex-col items-start gap-6 rounded-2xl bg-surface p-[clamp(22px,3vw,36px)] transition-colors hover:bg-p-tile-active sm:flex-row sm:items-center sm:gap-8"
+    >
+      <span className="w-[clamp(104px,14vw,140px)] flex-none">
+        <Rings color="var(--accent)" restOpacity={0.45}>
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-accent text-on-accent">
+            <PlayIcon size={15} className="translate-x-[1px]" />
+          </span>
+        </Rings>
+      </span>
+      <span className="flex min-w-0 flex-col gap-[10px]">
+        <span className="sc-eyebrow">Free{'\u2002\u00b7\u2002'}{session.theme}</span>
+        <span className="text-[clamp(24px,2.6vw,30px)] font-medium leading-[1.15] tracking-[-0.02em]">{session.title}</span>
+        {session.description ? <span className="text-[15px] leading-[1.5] text-ink-muted">{session.description}</span> : null}
+        <span className="sc-btn mt-1 self-start">Play free</span>
+      </span>
+    </PlayLink>
+  );
+}
+
+export default function HomeSessions() {
+  const free = FEATURED_FREE_SESSION;
+  const paid = FEATURED_PAID_IDS.map((id) => findSession(id)).filter((s): s is Session => !!s);
+
+  return (
+    <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-4">
+        <span className="sc-eyebrow sc-eyebrow--muted">Goals</span>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4">
+          {THEMES.map((theme) => (
+            <Link
+              key={theme}
+              href={`/application?theme=${encodeURIComponent(theme)}`}
+              className="group flex items-center justify-between gap-3 border-t border-hairline py-[14px] text-[16px] font-semibold transition-colors hover:text-accent"
+            >
+              <span>{theme}</span>
+              <span className="flex items-center gap-2 text-[13px] font-normal text-ink-muted group-hover:text-accent">
+                <span className="font-mono">{SESSIONS.filter((x) => x.theme === theme).length}</span>
+                <ChevronRight />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <span className="sc-eyebrow sc-eyebrow--muted">Featured</span>
+        <div className="grid grid-cols-1 items-center gap-x-10 gap-y-6 wide:grid-cols-[1.1fr_1fr]">
+          {free && <Spotlight session={free} />}
+          <div className="flex flex-col border-b border-hairline">
+            {paid.map((session) => (
+              <FeaturedRow key={session.id} session={session} />
+            ))}
+          </div>
+        </div>
+        <Link href="/application" className="sc-link mt-[6px] self-start text-[16px]">
+          Explore the library
+        </Link>
+      </div>
+    </div>
+  );
+}

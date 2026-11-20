@@ -1,0 +1,183 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import PulseWidthPicker from '@/components/ui/PulseWidthPicker';
+import VoicePicker from '@/components/ui/VoicePicker';
+import VoiceSteps from '@/components/ui/VoiceSteps';
+import { buildPlayPlan, type SessionManifest } from '@/lib/audio/playPlan';
+import { PulseWidthPreview } from '@/lib/audio/PulseWidthPreview';
+import { pulseWidthLabel, type PulseWidth } from '@/lib/audio/pulseWidth';
+import { FEATURED_FREE_SESSION, VOICES, findVoice, mediaVoiceId } from '@/lib/catalog';
+import { fetchSessionMedia } from '@/lib/authedFetch';
+import {
+  DEFAULT_PREFS,
+  REPEAT_LABELS,
+  REPEAT_OPTIONS,
+  loadPlayerPrefs,
+  savePlayerPrefs,
+  type PlayerPrefs,
+} from '@/lib/playerPrefs';
+import { AccountSection, ExpandableRow } from './Section';
+
+type DefaultsRow = 'voice' | 'repeat' | 'blend' | 'width';
+
+const REPEAT_DOTS: Record<(typeof REPEAT_OPTIONS)[number], number> = { 1: 1, 2: 2, 4: 4 };
+
+// The same preferences the player uses. Changes apply immediately, in both places.
+export default function DefaultsSection() {
+  const [prefs, setPrefs] = useState<PlayerPrefs>(DEFAULT_PREFS);
+  const [open, setOpen] = useState<DefaultsRow | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const previewRef = useRef<PulseWidthPreview | null>(null);
+
+  useEffect(() => {
+    const saved = loadPlayerPrefs();
+    setPrefs(saved);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const free = FEATURED_FREE_SESSION;
+      const voiceId = mediaVoiceId(loadPlayerPrefs().voiceId);
+      if (!free || !voiceId) return;
+      try {
+        const signed = await fetchSessionMedia(free.id, voiceId);
+        const fileUrl = (name: string) => `${signed.baseUrl}${encodeURIComponent(name)}?${signed.query}`;
+        const response = await fetch(fileUrl('manifest.json'));
+        if (!response.ok) return;
+        const manifest = (await response.json()) as SessionManifest;
+        const plan = buildPlayPlan(manifest, fileUrl);
+        if (!cancelled) setPreviewUrl(plan.pulseUrl);
+      } catch {
+        // Choices still save without preview audio.
+      }
+    })();
+    return () => {
+      cancelled = true;
+      previewRef.current?.dispose();
+      previewRef.current = null;
+    };
+  }, []);
+
+  async function startWidthPreview(url: string | null, current: PlayerPrefs) {
+    const preview = previewRef.current ?? new PulseWidthPreview();
+    previewRef.current = preview;
+    preview.setPrefsVolume(current.volume, current.instruction);
+    preview.setWidth(current.pulseWidth);
+    if (!url) return;
+    try {
+      await preview.start(url);
+    } catch {
+      // Silent failure; row still works.
+    }
+  }
+
+  useEffect(() => {
+    if (open !== 'width' || !previewUrl) return;
+    void startWidthPreview(previewUrl, prefs);
+  }, [open, previewUrl]);
+
+  const toggle = (row: DefaultsRow) => {
+    setOpen((current) => {
+      const next = current === row ? null : row;
+      if (current === 'width' && next !== 'width') previewRef.current?.stop();
+      if (next) setPrefs(loadPlayerPrefs());
+      return next;
+    });
+  };
+
+  // Changes apply straight away, exactly like the player; the player saves here too.
+  const update = (patch: Partial<PlayerPrefs>) => {
+    const next = { ...loadPlayerPrefs(), ...patch };
+    savePlayerPrefs(next);
+    setPrefs(next);
+    if (open === 'width') {
+      if (patch.pulseWidth !== undefined) previewRef.current?.setWidth(patch.pulseWidth);
+      if (patch.instruction !== undefined) previewRef.current?.setPrefsVolume(next.volume, next.instruction);
+    }
+  };
+
+  const voiceName = findVoice(prefs.voiceId)?.name ?? 'Not set';
+
+  return (
+    <AccountSection title="Listening settings">
+      <p className="pb-3 text-[14px] leading-[1.55] text-ink-muted">
+        These follow whatever you last chose in the player. Change them here or there.
+      </p>
+      <ExpandableRow
+        label="Narrator"
+        value={voiceName}
+        open={open === 'voice'}
+        onToggle={() => toggle('voice')}
+      >
+        <VoicePicker
+          voices={VOICES}
+          selectedId={prefs.voiceId}
+          onSelect={(voiceId) => update({ voiceId })}
+          tone="site"
+        />
+      </ExpandableRow>
+      <ExpandableRow
+        label="Repeat"
+        value={REPEAT_LABELS[prefs.repeat]}
+        open={open === 'repeat'}
+        onToggle={() => toggle('repeat')}
+      >
+        <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Repeat">
+          {REPEAT_OPTIONS.map((count) => {
+            const selected = prefs.repeat === count;
+            return (
+              <button
+                key={count}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => update({ repeat: count })}
+                className={`sc-pill flex min-h-[48px] flex-col items-center justify-center gap-1.5 text-[14px] ${
+                  selected ? 'is-selected font-semibold' : ''
+                }`}
+              >
+                <span className="flex gap-1" aria-hidden="true">
+                  {Array.from({ length: REPEAT_DOTS[count] }, (_, i) => (
+                    <span
+                      key={i}
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ background: selected ? 'var(--on-accent)' : 'var(--ink)' }}
+                    />
+                  ))}
+                </span>
+                {REPEAT_LABELS[count]}
+              </button>
+            );
+          })}
+        </div>
+      </ExpandableRow>
+      <ExpandableRow
+        label="Mix"
+        value={`Voice ${prefs.instruction}%`}
+        open={open === 'blend'}
+        onToggle={() => toggle('blend')}
+      >
+        <VoiceSteps
+          instruction={prefs.instruction}
+          onChange={(instruction) => update({ instruction })}
+          tone="site"
+        />
+      </ExpandableRow>
+      <ExpandableRow
+        label="Pulse width"
+        value={pulseWidthLabel(prefs.pulseWidth)}
+        open={open === 'width'}
+        onToggle={() => toggle('width')}
+      >
+        <PulseWidthPicker
+          selected={prefs.pulseWidth}
+          onSelect={(pulseWidth: PulseWidth) => update({ pulseWidth })}
+          tone="site"
+          layout="list"
+        />
+      </ExpandableRow>
+    </AccountSection>
+  );
+}

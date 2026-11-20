@@ -1,0 +1,57 @@
+'use client';
+
+import { RepeatIcon, SpeakerIcon, StopwatchIcon } from '@/components/ui/icons';
+import { REPEAT_TILE_LABELS, type RepeatCount } from '@/lib/playerPrefs';
+
+// Every player control opens the same bottom sheet; this type names which one is open.
+export type PlayerPanel = 'length' | 'sound' | 'repeat' | 'narrator' | null;
+
+type TileId = Exclude<PlayerPanel, 'narrator' | null>;
+
+// The three everyday controls. Each tile shows the same two lines: what it is, and its value.
+export default function PlayerTiles({
+  open,
+  onOpen,
+  lengthLabel,
+  lengthTitle = 'Length',
+  repeat,
+  volume,
+}: {
+  open: PlayerPanel;
+  onOpen: (panel: TileId) => void;
+  lengthLabel: string;
+  lengthTitle?: string;
+  repeat: RepeatCount;
+  volume: number;
+}) {
+  const tiles: { id: TileId; label: string; value: string; icon: React.ReactNode }[] = [
+    { id: 'length', label: lengthTitle, value: lengthLabel, icon: <StopwatchIcon size={18} /> },
+    { id: 'sound', label: 'Sound', value: `${volume}%`, icon: <SpeakerIcon size={18} level={volume} /> },
+    { id: 'repeat', label: 'Repeat', value: REPEAT_TILE_LABELS[repeat], icon: <RepeatIcon size={18} /> },
+  ];
+
+  return (
+    <div className="grid w-full grid-cols-3 gap-2">
+      {tiles.map((tile) => {
+        const active = open === tile.id;
+        return (
+          <button
+            key={tile.id}
+            type="button"
+            aria-haspopup="dialog"
+            aria-expanded={active}
+            aria-label={`${tile.label}: ${tile.value}`}
+            onClick={() => onOpen(tile.id)}
+            className={`flex h-[76px] min-w-0 flex-col items-center justify-center gap-1 rounded-2xl text-p-fg ${
+              active ? 'border-[1.5px] border-p-accent bg-p-tile-active' : 'border border-p-panel-border bg-p-panel'
+            }`}
+          >
+            <span className="text-p-accent">{tile.icon}</span>
+            <span className="text-[11px] uppercase leading-none tracking-[0.08em] text-p-muted">{tile.label}</span>
+            <span className="max-w-full truncate px-1 text-[13px] leading-none tabular-nums">{tile.value}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}

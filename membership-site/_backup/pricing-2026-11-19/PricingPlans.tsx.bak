@@ -1,0 +1,135 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMembership } from '@/hooks/useMembership';
+import { useBilling } from '@/lib/useBilling';
+import { FEATURED_FREE_SESSION, MEMBER_ONLY_COUNT, SEP, SESSIONS, THEMES, moreSessionsLabel } from '@/lib/catalog';
+import { PRICES, type BillingInterval } from '@/lib/membership';
+import BillingToggle from '@/components/ui/BillingToggle';
+import PlayLink from '@/components/ui/PlayLink';
+import StatusText from '@/components/ui/StatusText';
+import { ChevronRight } from '@/components/ui/icons';
+
+// Free and SleepCode+ side by side. With `resumeCheckout`, visitors who picked a plan before
+// signing in come back here with ?checkout=month|year and go straight to Stripe.
+export default function PricingPlans({ resumeCheckout = false }: { resumeCheckout?: boolean }) {
+  const { currentUser } = useAuth();
+  const { isMember, loading: membershipLoading } = useMembership();
+  const { busy, error, startCheckout } = useBilling();
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>('year');
+  const resumed = useRef(false);
+  const free = FEATURED_FREE_SESSION;
+  const price = PRICES[billingInterval];
+  const goals = THEMES.map((name) => ({ name, count: SESSIONS.filter((x) => x.theme === name).length })).filter((g) => g.count > 0);
+
+  useEffect(() => {
+    if (!resumeCheckout || !currentUser || membershipLoading || resumed.current) return;
+    const requested = new URLSearchParams(window.location.search).get('checkout');
+    if (requested !== 'month' && requested !== 'year') return;
+    resumed.current = true;
+    window.history.replaceState(null, '', window.location.pathname);
+    setBillingInterval(requested);
+    if (!isMember) startCheckout(requested);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeCheckout, currentUser, isMember, membershipLoading]);
+
+  const signupThenCheckout = `/login?mode=signup&next=${encodeURIComponent(`/pricing?checkout=${billingInterval}`)}`;
+
+  return (
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-12">
+      <div className="flex flex-col gap-[14px] border-t border-hairline-strong py-[26px]">
+        <span className="flex min-h-[36px] items-center text-[15px] font-semibold">Free</span>
+        <span className="text-[44px] font-medium leading-tight tracking-[-0.03em]">$0</span>
+        <p className="text-[16px] leading-[1.6] text-ink-muted">
+          {free
+            ? `${free.title}${SEP}${free.theme}, free to keep.`
+            : 'A free session.'}
+        </p>
+        <IncludesList
+          items={[
+            free ? `${free.title}, as often as you like, no time limit` : 'One full session',
+            'Every player setting: length, mix, repeat, narrator',
+            'Sessions this week, saved with a free account',
+          ]}
+        />
+        {free && (
+          <PlayLink session={free} className="sc-btn-outline self-start">
+            Play {free.title}
+          </PlayLink>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-[14px] border-t border-hairline-strong py-[26px]">
+        <div className="flex min-h-[36px] flex-wrap items-center justify-between gap-3">
+          <span className="text-[15px] font-semibold">SleepCode+</span>
+          <BillingToggle value={billingInterval} onChange={setBillingInterval} />
+        </div>
+        <span className="text-[44px] font-medium leading-tight tracking-[-0.03em]">
+          {price.amount}
+          <span className="text-[17px] font-normal tracking-normal text-ink-muted"> {price.label}</span>
+        </span>
+        <p className="text-[16px] leading-[1.6] text-ink-muted">
+          {free ? `${free.title} plus ${moreSessionsLabel(MEMBER_ONLY_COUNT)}` : 'Every session'}, each written for a
+          specific goal. {price.note}
+        </p>
+        <IncludesList
+          items={[
+            'Everything in Free',
+            `${moreSessionsLabel(MEMBER_ONLY_COUNT)}, across ${goals.length} goals`,
+            'New sessions as they\u2019re added',
+          ]}
+        />
+        <div className="self-start">
+          {!currentUser ? (
+            <Link href={signupThenCheckout} className="sc-btn">Start SleepCode+</Link>
+          ) : isMember ? (
+            <Link href="/account" className="sc-btn-outline">Manage your membership</Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => startCheckout(billingInterval)}
+              disabled={busy || membershipLoading}
+              className="sc-btn"
+            >
+              {busy ? 'Opening checkout\u2026' : 'Upgrade to SleepCode+'}
+            </button>
+          )}
+        </div>
+        <div className="flex flex-col pt-2">
+          <span className="sc-eyebrow sc-eyebrow--muted pb-[10px]">Sessions by goal</span>
+          <ul className="border-b border-hairline">
+            {goals.map((goal) => (
+              <li key={goal.name} className="flex items-baseline justify-between gap-3 border-t border-hairline py-[9px] text-[15px]">
+                <Link href={`/library?theme=${encodeURIComponent(goal.name)}`} className="group flex w-full items-baseline justify-between gap-3 font-medium hover:text-accent">
+                  {goal.name}
+                  <span className="flex items-center gap-2 font-mono text-[12px] font-normal text-ink-muted group-hover:text-accent">
+                    {goal.count}
+                    <ChevronRight />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link href="/library" className="sc-link mt-4 self-start text-[14px]">
+            Browse every session
+          </Link>
+        </div>
+        {error && <StatusText status={{ type: 'error', text: error }} />}
+      </div>
+    </div>
+  );
+}
+
+function IncludesList({ items }: { items: string[] }) {
+  return (
+    <ul className="flex flex-col">
+      {items.map((item) => (
+        <li key={item} className="border-t border-hairline py-[9px] text-[15px] leading-[1.5]">
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}

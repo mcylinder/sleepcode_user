@@ -1,0 +1,119 @@
+import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/site';
+import { MixIcon, MoonIcon, RepeatIcon, SpeakerIcon, StopwatchIcon, WidthIcon } from '@/components/ui/icons';
+
+export const metadata: Metadata = pageMeta(
+  'How to listen',
+  'A few practical notes on getting the most from a SleepCode session.',
+);
+
+// Steps that name a player control show that control's icon, as it appears in the player.
+const SECTIONS: { id: string; title: string; body: string; icons?: React.ReactNode }[] = [
+  {
+    id: 'choose-one-goal',
+    title: 'Choose one goal',
+    body: 'Choose the session that fits your goal and make it a habit. The more regularly you hear the same words, the more natural they can start to feel.',
+  },
+  {
+    id: 'set-the-mix',
+    title: 'Set the mix',
+    icons: <MixIcon size={22} instruction={70} />,
+    body: 'Mix balances the voice against the pulse. Start with the voice easy to hear, then find the balance you prefer.',
+  },
+  {
+    id: 'pulse-width',
+    title: 'Pulse width',
+    icons: <WidthIcon size={22} width={66} />,
+    body: 'Width sets how far the pulse alternates between your ears, from narrow to wide. Best experienced with headphones.',
+  },
+  {
+    id: 'repeat-or-set-a-length',
+    title: 'Repeat or set a length',
+    icons: (
+      <>
+        <RepeatIcon size={20} />
+        <StopwatchIcon size={20} />
+      </>
+    ),
+    body: 'Repeat plays each affirmation once, twice or four times. Length sets how long the session runs.',
+  },
+  {
+    id: 'nights-listened',
+    title: 'Sessions this week',
+    body: 'The row of weekday dots under the title marks the days you listened to a session, an easy way to see how your week is going.',
+  },
+  {
+    id: 'keep-the-volume-low',
+    title: 'Keep the volume low',
+    icons: <SpeakerIcon size={22} level={50} />,
+    body: 'A comfortable speaking volume is enough. On a phone, keep the ringer on to hear the session audio. Do Not Disturb can stay on.',
+  },
+  {
+    id: 'dim-the-screen',
+    title: 'Dim the screen',
+    icons: <MoonIcon size={20} />,
+    body: 'Night shade turns the screen fully black while the session keeps playing. Tap anywhere to wake it.',
+  },
+];
+
+const num = (i: number) => String(i + 1).padStart(2, '0');
+
+export default function HowToListenPage() {
+  return (
+    <>
+      <div className="sc-px flex max-w-[760px] flex-col gap-[18px] pb-[clamp(32px,4vw,48px)] pt-[clamp(28px,5vw,72px)]">
+        <span className="sc-eyebrow">Guide</span>
+        <h1 className="sc-h-page">How to listen</h1>
+        <p className="sc-lead">
+          A few practical notes for getting the most from a session.
+        </p>
+      </div>
+
+      <div className="sc-px grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] items-start gap-[clamp(28px,5vw,72px)] pb-[var(--pad-section)]">
+        <nav className="flex flex-col wide:sticky wide:top-5" aria-label="On this page">
+          <span className="sc-eyebrow sc-eyebrow--muted pb-[10px]">
+            On this page
+          </span>
+          {SECTIONS.map((section, i) => (
+            <a
+              key={section.id}
+              href={`#${section.id}`}
+              className="grid grid-cols-[30px_1fr] border-t border-hairline py-[10px] text-[15px]"
+            >
+              <span className="font-mono text-[12px] leading-[1.7] text-ink-muted">{num(i)}</span>
+              <span>{section.title}</span>
+            </a>
+          ))}
+        </nav>
+
+        <div className="flex min-w-[min(100%,300px)] max-w-[680px] flex-col gap-[clamp(36px,4vw,52px)] wide:col-span-3">
+          {SECTIONS.map((section, i) => (
+            <section
+              key={section.id}
+              id={section.id}
+              className="flex scroll-mt-5 flex-col gap-3 border-t border-hairline-strong pt-[22px]"
+            >
+              <span className="font-mono text-[13px] text-ink-muted">{num(i)}</span>
+              <h2 className="flex items-center gap-3 text-[clamp(22px,2.2vw,27px)] font-semibold leading-[1.25] tracking-[-0.015em]">
+                {section.title}
+                {section.icons && (
+                  <span className="flex items-center gap-2 text-accent" aria-hidden="true">
+                    {section.icons}
+                  </span>
+                )}
+              </h2>
+              <p className="text-[17px] leading-[1.7] text-ink-body">{section.body}</p>
+            </section>
+          ))}
+          <div className="flex flex-col gap-[10px] border-y border-hairline-strong py-[22px]">
+            <span className="text-[16px] font-semibold">A note on care</span>
+            <p className="text-[16px] leading-[1.65] text-ink-muted">
+              SleepCode is a tool for everyday habits of mind. It isn&rsquo;t medical treatment and isn&rsquo;t a
+              substitute for professional support. If you&rsquo;re having a hard time, please reach out to a qualified professional.
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

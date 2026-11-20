@@ -1,0 +1,66 @@
+'use client';
+
+import Link from 'next/link';
+import Logo from './Logo';
+import { useMainNav } from '@/lib/useMainNav';
+
+// Desktop: a 200px rail on the left. Mobile: the logo on top and a sticky tab bar at the bottom.
+// Both show the same destinations, in the same order, as the site header (see useMainNav).
+export default function AppShell({
+  maxWidth = 860,
+  children,
+}: {
+  // Kept so existing callers compile; the active item now comes from the URL.
+  active?: 'library' | 'account';
+  maxWidth?: number;
+  children: React.ReactNode;
+}) {
+  const nav = useMainNav();
+
+  return (
+    <div className="flex min-h-screen min-h-[100dvh] flex-col">
+      <div className="flex flex-1">
+        <aside className="sticky top-0 hidden h-screen w-[200px] flex-none flex-col gap-[30px] border-r border-hairline px-6 py-7 wide:flex">
+          <Logo href="/" compact />
+          <nav className="flex flex-col gap-4 text-[15px] text-ink-muted" aria-label="Main">
+            {nav.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                aria-current={item.active ? 'page' : undefined}
+                className={item.active ? 'font-semibold text-accent' : 'hover:text-ink'}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </aside>
+        <main className="flex min-w-0 flex-1 flex-col px-[clamp(22px,4vw,56px)] py-[clamp(26px,4vw,56px)]">
+          <div className="mb-[26px] wide:hidden">
+            <Logo href="/" compact />
+          </div>
+          <div className="flex w-full flex-col" style={{ maxWidth }}>
+            {children}
+          </div>
+        </main>
+      </div>
+      <nav
+        className="sc-app-tabbar sticky bottom-0 z-10 flex border-t border-hairline bg-bg-alt pb-[env(safe-area-inset-bottom,0px)] text-[clamp(11px,3vw,12px)] font-medium text-ink-muted wide:hidden"
+        aria-label="Main"
+      >
+        {nav.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            aria-current={item.active ? 'page' : undefined}
+            className={`flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap px-0.5 pb-[14px] pt-3 text-center ${
+              item.active ? 'font-semibold text-accent' : ''
+            }`}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+    </div>
+  );
+}

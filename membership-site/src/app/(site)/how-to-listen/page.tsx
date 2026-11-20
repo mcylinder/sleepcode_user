@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { pageMeta } from '@/lib/site';
-import HeroCta from '@/components/site/HeroCta';
+import ListenCta from '@/components/site/ListenCta';
 import { MixIcon, MoonIcon, RepeatIcon, SpeakerIcon, StopwatchIcon, WidthIcon } from '@/components/ui/icons';
 
 export const metadata: Metadata = pageMeta(
@@ -152,18 +151,7 @@ export default function HowToListenPage() {
           </section>
         ))}
 
-        <div className="flex flex-col gap-5 rounded-2xl bg-surface p-[clamp(22px,3vw,32px)]">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-[22px] font-semibold leading-[1.3] tracking-[-0.01em]">Ready to listen?</h2>
-            <p className="text-[16px] leading-[1.6] text-ink-muted">Try Fresh Start free, or browse every goal in the library.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            <HeroCta />
-            <Link href="/library" className="text-[15px] font-medium text-ink underline-offset-4 hover:underline">
-              Explore the library
-            </Link>
-          </div>
-        </div>
+        <ListenCta />
 
         <p className="text-[14px] leading-[1.6] text-ink-muted">
           <span className="font-semibold text-ink-body">A note on care. </span>

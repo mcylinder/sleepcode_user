@@ -1,8 +1,14 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useMembership } from '@/hooks/useMembership';
 import {
   FEATURED_FREE_SESSION,
   THEMES,
   findSession,
+  loadLastPlayed,
+  playerHref,
   SESSIONS,
   needsMembership,
   scriptHref,
@@ -18,7 +24,7 @@ const FEATURED_PAID_IDS = ['open-door', 'steady-ground', 'the-presentation'] as 
 
 const ROW = 'flex items-center gap-4 border-t border-hairline py-[15px]';
 
-function FeaturedRow({ session }: { session: Session }) {
+function FeaturedRow({ session, isMember }: { session: Session; isMember: boolean }) {
   const body = (
     <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
       <span className="text-[16px] font-semibold"><SessionName session={session} /></span>
@@ -28,6 +34,17 @@ function FeaturedRow({ session }: { session: Session }) {
     </div>
   );
 
+  if (isMember && needsMembership(session)) {
+    return (
+      <Link href={playerHref(session)} className={`${ROW} group transition-colors hover:bg-[var(--hover-wash)]`}>
+        {body}
+        <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-accent text-on-accent">
+          <PlayIcon size={11} className="translate-x-[1px]" />
+        </span>
+      </Link>
+    );
+  }
+
   if (!needsMembership(session)) {
     return (
       <PlayLink
@@ -36,7 +53,7 @@ function FeaturedRow({ session }: { session: Session }) {
       >
         {body}
         <span className="flex flex-none items-center gap-2 text-[13px] font-medium text-accent">
-          <span className="hidden sm:inline">Play free</span>
+          {!isMember && <span className="hidden sm:inline">Play free</span>}
           <span className="grid h-9 w-9 place-items-center rounded-full bg-accent text-on-accent">
             <PlayIcon size={11} className="translate-x-[1px]" />
           </span>
@@ -61,14 +78,13 @@ function FeaturedRow({ session }: { session: Session }) {
   );
 }
 
-// The free session, given a feature panel with the rings, so a new visitor sees the one thing
-// they can play right now.
-function Spotlight({ session }: { session: Session }) {
-  return (
-    <PlayLink
-      session={session}
-      className="group flex flex-col items-start gap-6 rounded-2xl bg-surface p-[clamp(22px,3vw,36px)] transition-colors hover:bg-p-tile-active sm:flex-row sm:items-center sm:gap-8"
-    >
+// A feature panel with the rings: the free session for visitors and SleepCode plan members,
+// or the last-played session for SleepCode+ members.
+function Spotlight({ session, eyebrow, action }: { session: Session; eyebrow: string; action: string }) {
+  const className =
+    'group flex flex-col items-start gap-6 rounded-2xl bg-surface p-[clamp(22px,3vw,36px)] transition-colors hover:bg-p-tile-active sm:flex-row sm:items-center sm:gap-8';
+  const inner = (
+    <>
       <span className="w-[clamp(104px,14vw,140px)] flex-none">
         <Rings color="var(--accent)" restOpacity={0.45}>
           <span className="grid h-12 w-12 place-items-center rounded-full bg-accent text-on-accent">
@@ -77,18 +93,39 @@ function Spotlight({ session }: { session: Session }) {
         </Rings>
       </span>
       <span className="flex min-w-0 flex-col gap-[10px]">
-        <span className="sc-eyebrow">Free{'\u2002\u00b7\u2002'}{session.theme}</span>
+        <span className="sc-eyebrow">{eyebrow}</span>
         <span className="text-[clamp(24px,2.6vw,30px)] font-medium leading-[1.15] tracking-[-0.02em]">{session.title}</span>
         {session.description ? <span className="text-[15px] leading-[1.5] text-ink-muted">{session.description}</span> : null}
-        <span className="sc-btn mt-1 self-start">Play free</span>
+        <span className="sc-btn mt-1 self-start">{action}</span>
       </span>
+    </>
+  );
+  return needsMembership(session) ? (
+    <Link href={playerHref(session)} className={className}>
+      {inner}
+    </Link>
+  ) : (
+    <PlayLink session={session} className={className}>
+      {inner}
     </PlayLink>
   );
 }
 
 export default function HomeSessions() {
   const free = FEATURED_FREE_SESSION;
-  const paid = FEATURED_PAID_IDS.map((id) => findSession(id)).filter((s): s is Session => !!s);
+  const { isMember } = useMembership();
+  const [last, setLast] = useState<Session | null>(null);
+  useEffect(() => setLast(loadLastPlayed()?.session ?? null), []);
+
+  // SleepCode+ members: spotlight what they last played (or Fresh Start), without "free" labels.
+  const spot = isMember ? (last ?? free) : free;
+  const spotEyebrow = !spot
+    ? ''
+    : isMember
+      ? last ? `Continue${'\u2002\u00b7\u2002'}${spot.theme}` : spot.theme
+      : `Free${'\u2002\u00b7\u2002'}${spot.theme}`;
+  const spotAction = isMember ? (last ? 'Continue' : 'Play') : 'Play free';
+  const paid = FEATURED_PAID_IDS.map((id) => findSession(id)).filter((s): s is Session => !!s && s.id !== spot?.id);
 
   return (
     <div className="flex flex-col gap-10">
@@ -114,10 +151,10 @@ export default function HomeSessions() {
       <div className="flex flex-col gap-4">
         <span className="sc-eyebrow sc-eyebrow--muted">Featured</span>
         <div className="grid grid-cols-1 items-center gap-x-10 gap-y-6 wide:grid-cols-[1.1fr_1fr]">
-          {free && <Spotlight session={free} />}
+          {spot && <Spotlight session={spot} eyebrow={spotEyebrow} action={spotAction} />}
           <div className="flex flex-col border-b border-hairline">
             {paid.map((session) => (
-              <FeaturedRow key={session.id} session={session} />
+              <FeaturedRow key={session.id} session={session} isMember={isMember} />
             ))}
           </div>
         </div>
