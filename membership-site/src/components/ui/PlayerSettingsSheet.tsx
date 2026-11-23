@@ -85,13 +85,6 @@ export default function PlayerSettingsSheet({
     }
   }, [open]);
 
-  useEffect(() => {
-    if (view !== 'background') return;
-    if (prefs.background.group === 'nature') setTab('nature');
-    else if (prefs.background.group === 'music') setTab('music');
-    else setTab('pulse');
-  }, [view, prefs.background]);
-
   function stopPreview() {
     const audio = audioRef.current;
     if (audio) {
