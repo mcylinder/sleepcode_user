@@ -86,10 +86,6 @@ export const FAQ_GROUPS: FaqGroup[] = [
         a: 'Mix sits on the player and balances the narrator against the current background. Fully left is voice only; fully right keeps a little voice under a stronger background. The readout shows voice · background, default 75 · 25.',
       },
       {
-        q: 'What is Spacing?',
-        a: 'Spacing (in Settings) adds a short pause after each affirmation when On. Turn it Off to play lines more tightly; with Music, line starts also snap to the beat.',
-      },
-      {
         q: 'Whose voice is it?',
         a: 'Each narrator is made with a text-to-speech system, chosen and directed for clarity and calm, so the delivery stays even across hours of listening. Change the narrator in Settings. Every affirmation is written, edited and listened to by a person before it’s added to a session.',
       },

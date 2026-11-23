@@ -254,7 +254,8 @@ function Player({ session }: { session: Session }) {
     engine.setVoiceMix(saved.voiceMix);
     engine.setVolume(0.8);
     engine.setRepeat(saved.repeat);
-    engine.setSpacing(saved.spacing);
+    // Spacing toggle deactivated in Settings; always On (see playerPrefs / SessionEngine notes).
+    engine.setSpacing(true);
     engine.setPulseWidth(prefsPulseWidth(saved));
     if (saved.background.group === 'pulse') engine.usePulseBackground();
 
@@ -565,7 +566,7 @@ function Player({ session }: { session: Session }) {
     setPrefs(next);
     savePlayerPrefs(next);
     if (typeof patch.repeat === 'number') engineRef.current?.setRepeat(patch.repeat);
-    if (typeof patch.spacing === 'boolean') engineRef.current?.setSpacing(patch.spacing);
+    // spacing patches ignored while the Settings toggle is deactivated.
     if (typeof patch.voiceMix === 'number') engineRef.current?.setVoiceMix(patch.voiceMix);
   };
 

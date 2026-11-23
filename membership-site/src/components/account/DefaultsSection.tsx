@@ -39,11 +39,6 @@ export default function DefaultsSection() {
       value: backgroundSummary(prefs),
     },
     { label: 'Repeat', icon: <RepeatIcon size={18} />, value: REPEAT_LABELS[prefs.repeat] },
-    {
-      label: 'Spacing',
-      icon: <MixIcon size={18} instruction={50} />,
-      value: prefs.spacing ? 'On' : 'Off',
-    },
   ];
 
   return (

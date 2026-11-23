@@ -22,7 +22,11 @@ export interface PlayerPrefs {
   repeat: RepeatCount;
   voiceId: string | null;
   background: BackgroundSelection;
-  /** true = pause between affirmations (current timing). */
+  /**
+   * true = pause between affirmations (current timing).
+   * UI toggle is disabled for now — always persist/load as On. Off clipped pulse underlay;
+   * re-enable in Settings when SessionEngine can trim gaps without cutting the pulse.
+   */
   spacing: boolean;
 }
 
@@ -86,7 +90,8 @@ export function loadPlayerPrefs(): PlayerPrefs {
       : DEFAULT_PREFS.repeat;
     const voiceId = mediaVoiceId(typeof raw.voiceId === 'string' ? raw.voiceId : null);
     const background = parseBackground(raw);
-    const spacing = typeof raw.spacing === 'boolean' ? raw.spacing : DEFAULT_PREFS.spacing;
+    // Force On while the Spacing control is deactivated in Settings.
+    const spacing = true;
     return { version: PREFS_VERSION, voiceMix, volume, repeat, voiceId, background, spacing };
   } catch {
     return DEFAULT_PREFS;
@@ -95,7 +100,11 @@ export function loadPlayerPrefs(): PlayerPrefs {
 
 export function savePlayerPrefs(prefs: PlayerPrefs): void {
   try {
-    localStorage.setItem(PREFS_KEY, JSON.stringify({ ...prefs, version: PREFS_VERSION }));
+    // Spacing UI deactivated — always persist On.
+    localStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ ...prefs, version: PREFS_VERSION, spacing: true }),
+    );
   } catch {
     // Storage unavailable; preferences reset next visit.
   }

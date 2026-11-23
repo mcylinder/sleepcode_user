@@ -142,6 +142,10 @@ export class SessionEngine {
     if (this.pass >= this.repeat) this.advance();
   }
 
+  /**
+   * Spacing Off is not exposed in the UI yet — Off clipped the pulse underlay.
+   * Prefer leaving this On until gap trimming can keep bilateral pulse intact.
+   */
   setSpacing(on: boolean): void {
     this.spacingOn = on;
   }

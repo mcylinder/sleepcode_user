@@ -234,30 +234,9 @@ export default function PlayerSettingsSheet({
               </p>
             </section>
 
-            <section className="flex flex-col gap-3">
-              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Spacing</p>
-              <div className="flex items-center gap-3 rounded-[14px] border border-hairline bg-p-panel px-4 py-3.5">
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-[15px] font-medium">Pause between affirmations</span>
-                  <span className="text-[12.5px] text-p-muted">A short silence after each line.</span>
-                </span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={prefs.spacing}
-                  onClick={() => onChange({ spacing: !prefs.spacing })}
-                  className={`relative h-7 w-[46px] flex-none rounded-full transition-colors ${
-                    prefs.spacing ? 'bg-p-accent' : 'bg-p-track'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-[3px] h-[22px] w-[22px] rounded-full transition-all ${
-                      prefs.spacing ? 'right-[3px] bg-p-on-accent' : 'left-[3px] bg-p-muted'
-                    }`}
-                  />
-                </button>
-              </div>
-            </section>
+            {/* Spacing toggle deferred: Off clipped the pulse underlay. Keep pause On until
+                SessionEngine can trim gaps without cutting bilateral pulse. Prefs/engine
+                still support spacing for a future pass. */}
           </div>
         </div>
       ) : (

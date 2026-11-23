@@ -75,7 +75,7 @@ const GROUPS: { id: string; title: string; items: Item[] }[] = [
         id: 'settings',
         title: 'Settings',
         glyph: <SettingsIcon size={24} />,
-        body: 'Narrator, Background, Repeat, and Spacing live in Settings. Spacing On keeps a short pause after each line; Off plays them more tightly (and on Music, snaps to the beat).',
+        body: 'Narrator, Background, and Repeat live in Settings. Each affirmation is followed by a short pause before the next line.',
       },
       {
         id: 'repeat',
