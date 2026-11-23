@@ -429,6 +429,8 @@ export class SessionEngine {
 
     while (this.nextWhen < ctx.currentTime + LOOKAHEAD_SEC) {
       if (this.pendingGap) {
+        // Spacing On: pulse-only gap (current behavior). Off: short silence only —
+        // the under-voice pulse still plays on every line below.
         if (this.spacingOn) {
           this.startSource(this.pulse, this.pulseDestination(), this.nextWhen, pulseDur);
           this.nextWhen += pulseDur;
@@ -444,12 +446,11 @@ export class SessionEngine {
       if (voiceDur > 0) {
         this.startSource(clip, this.voiceDestination(), this.nextWhen, voiceDur);
       }
-      if (this.spacingOn) {
-        if (voiceDur > 0) {
-          this.startSource(this.pulse, this.pulseDestination(), this.nextWhen, Math.min(pulseDur, voiceDur));
-        } else {
-          this.startSource(this.pulse, this.pulseDestination(), this.nextWhen, pulseDur);
-        }
+      // Pulse underlay always plays in Pulse mode (Spacing only changes the gap).
+      if (voiceDur > 0) {
+        this.startSource(this.pulse, this.pulseDestination(), this.nextWhen, Math.min(pulseDur, voiceDur));
+      } else {
+        this.startSource(this.pulse, this.pulseDestination(), this.nextWhen, pulseDur);
       }
       this.nextWhen += Math.max(voiceDur, 0);
       this.pass += 1;
