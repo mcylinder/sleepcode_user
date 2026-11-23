@@ -266,16 +266,17 @@ export default function PlayerSettingsSheet({
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex flex-none items-center justify-between gap-3">
-            <button type="button" onClick={() => setView('settings')} className="min-h-[44px] text-[15px] text-p-muted">
+          <div className="relative flex flex-none items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => setView('settings')}
+              className="absolute left-0 min-h-[44px] text-[15px] text-p-muted"
+            >
               ‹ Settings
             </button>
             <span className="text-[18px] font-semibold">
               {BG_OPTIONS.find((o) => o.tab === tab)?.label ?? 'Background'}
             </span>
-            <button type="button" onClick={onClose} className="min-h-[44px] text-[15px] font-medium text-p-accent">
-              Done
-            </button>
           </div>
 
           <div className="mt-5 min-h-0 flex-1 overflow-y-auto pb-2">
