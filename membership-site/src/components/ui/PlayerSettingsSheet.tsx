@@ -270,37 +270,18 @@ export default function PlayerSettingsSheet({
             <button type="button" onClick={() => setView('settings')} className="min-h-[44px] text-[15px] text-p-muted">
               ‹ Settings
             </button>
-            <span className="text-[18px] font-semibold">Background</span>
+            <span className="text-[18px] font-semibold">
+              {BG_OPTIONS.find((o) => o.tab === tab)?.label ?? 'Background'}
+            </span>
             <button type="button" onClick={onClose} className="min-h-[44px] text-[15px] font-medium text-p-accent">
               Done
             </button>
           </div>
 
-          <div className="mt-4 flex flex-none gap-1 rounded-[12px] border border-hairline bg-p-panel p-[3px]">
-            {BG_OPTIONS.map((item) => (
-              <button
-                key={item.tab}
-                type="button"
-                onClick={() => setTab(item.tab)}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-[9px] py-2 text-[13px] ${
-                  tab === item.tab
-                    ? 'bg-p-tile-active text-p-fg shadow-[inset_0_0_0_1px_var(--hairline-strong)]'
-                    : 'text-p-muted'
-                }`}
-              >
-                {item.icon}
-                {item.label}
-              </button>
-            ))}
-          </div>
-
           <div className="mt-5 min-h-0 flex-1 overflow-y-auto pb-2">
             {tab === 'pulse' && (
               <div>
-                <div className="mb-3.5">
-                  <h4 className="text-[17px] font-medium">Pulse</h4>
-                  <p className="mt-0.5 text-[13px] text-p-muted">{pulseSubhead()}</p>
-                </div>
+                <p className="mb-3.5 text-[13px] text-p-muted">{pulseSubhead()}</p>
                 <div className="grid grid-cols-2 gap-2.5">
                   {PULSE_WIDTH_CARDS.map((card) => {
                     const width = card.pulseWidth as PulseWidth;
