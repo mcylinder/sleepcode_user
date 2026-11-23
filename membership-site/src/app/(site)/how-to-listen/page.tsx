@@ -41,7 +41,7 @@ function WeekGlyph() {
 
 type Item = { id: string; title: string; body: string; glyph: React.ReactNode };
 
-// Names match the player: Level, Mix, Width, Repeat, Length, Night shade.
+// Names match the player: Mix, Background, Settings, Repetition, Length, Night shade.
 const GROUPS: { id: string; title: string; items: Item[] }[] = [
   {
     id: 'start-here',
@@ -75,13 +75,13 @@ const GROUPS: { id: string; title: string; items: Item[] }[] = [
         id: 'settings',
         title: 'Settings',
         glyph: <SettingsIcon size={24} />,
-        body: 'Narrator, Background, and Repeat live in Settings. Each affirmation is followed by a short pause before the next line.',
+        body: 'Narrator, Background, and Repetition live in Settings. Each affirmation is followed by a short pause before the next line.',
       },
       {
         id: 'repeat',
-        title: 'Repeat',
+        title: 'Repetition',
         glyph: <RepeatIcon size={24} />,
-        body: 'Repeat plays each affirmation once, twice or four times. Use whichever feels right.',
+        body: 'Repetition plays each affirmation once, twice or four times. Use whichever feels right.',
       },
       {
         id: 'length',

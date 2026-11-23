@@ -1,7 +1,16 @@
-// Four concentric rings and a centre dot. While `glowing`, rings pulse gently on the
+// Concentric rings and a centre dot. While `glowing`, rings pulse gently on the
 // audio beat (inner → outer ripple). At rest they sit at `restOpacity`. Optional
-// `children` replace the centre dot (play/pause in the player).
-const RING_SIZES = [34, 55, 76, 97];
+// `children` replace the centre dot (play/pause in the player). The children
+// layer fills the ring field so a control can use the whole zone as its hit target.
+export const DEFAULT_RING_SIZES = [34, 55, 76, 97];
+/**
+ * Player: five rings. Diameters measured from an ~18% centre ball so the
+ * ball→ring1 gap matches the ring→ring progression (tightening outward):
+ * +22, +18, +16, +14, +12 → 40, 58, 74, 88, 100.
+ */
+export const PLAYER_RING_SIZES = [40, 58, 74, 88, 100];
+/** Centre play disc as % of the ring field (keep in sync with PLAYER_RING_SIZES). */
+export const PLAYER_BALL_PERCENT = 18;
 const DEFAULT_BEAT_SEC = 1;
 
 export default function Rings({
@@ -9,6 +18,7 @@ export default function Rings({
   glowing = false,
   restOpacity,
   beatSec = DEFAULT_BEAT_SEC,
+  sizes = DEFAULT_RING_SIZES,
   shimmer = false,
   halo = false,
   className = '',
@@ -19,6 +29,8 @@ export default function Rings({
   restOpacity: number;
   /** Seconds per beat; matches SessionEngine pulse (pulse.m4a / 2). */
   beatSec?: number;
+  /** Ring diameters as % of the field. */
+  sizes?: readonly number[];
   /** At rest, brighten each ring in turn, inner to outer. */
   shimmer?: boolean;
   /** Soft light behind the rings. */
@@ -41,7 +53,7 @@ export default function Rings({
         />
       )}
       <div aria-hidden="true">
-        {RING_SIZES.map((size, i) => (
+        {sizes.map((size, i) => (
           <div
             key={size}
             className="sc-ring absolute left-1/2 top-1/2 box-border -translate-x-1/2 -translate-y-1/2 rounded-full"
@@ -73,9 +85,7 @@ export default function Rings({
         )}
       </div>
       {children && (
-        <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-          {children}
-        </div>
+        <div className="absolute inset-0 z-10 flex items-center justify-center">{children}</div>
       )}
     </div>
   );

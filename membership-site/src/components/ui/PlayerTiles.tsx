@@ -54,7 +54,7 @@ export default function PlayerTiles({
     },
     {
       id: 'repeat',
-      label: 'Repeat',
+      label: 'Repetition',
       value: REPEAT_TILE_LABELS[repeat],
       spoken: REPEAT_TILE_LABELS[repeat],
       icon: <RepeatIcon size={18} />,

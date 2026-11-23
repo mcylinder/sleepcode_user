@@ -61,6 +61,7 @@ export default function PlayerSettingsSheet({
   prefs,
   onChange,
   onSelectBackground,
+  onStopPulsePreview,
   decodingId,
 }: {
   open: boolean;
@@ -69,6 +70,8 @@ export default function PlayerSettingsSheet({
   onChange: (patch: Partial<PlayerPrefs>) => void;
   /** Load/apply a Nature or Music (or Pulse) selection; may be async decode. */
   onSelectBackground: (selection: BackgroundSelection) => void | Promise<void>;
+  /** Stop one-shot pulse width preview owned by the player page. */
+  onStopPulsePreview?: () => void;
   decodingId?: string | null;
 }) {
   const [view, setView] = useState<View>('settings');
@@ -76,18 +79,20 @@ export default function PlayerSettingsSheet({
   const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
   const [previewingBg, setPreviewingBg] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const unduckRef = useRef<(() => void) | null>(null);
+  const previewGenRef = useRef(0);
 
   useEffect(() => {
     if (!open) {
       setView('settings');
-      stopPreview();
+      stopAllPreviews();
     }
   }, [open]);
 
-  function stopPreview() {
+  function stopSheetAudio() {
+    previewGenRef.current += 1;
     const audio = audioRef.current;
     if (audio) {
+      audio.onended = null;
       audio.pause();
       audio.removeAttribute('src');
       audio.load();
@@ -95,12 +100,21 @@ export default function PlayerSettingsSheet({
     audioRef.current = null;
     setPreviewingVoice(null);
     setPreviewingBg(null);
-    unduckRef.current?.();
-    unduckRef.current = null;
+  }
+
+  function stopAllPreviews() {
+    stopSheetAudio();
+    onStopPulsePreview?.();
+  }
+
+  function leaveLeaf() {
+    stopAllPreviews();
+    setView('settings');
   }
 
   async function playUrl(url: string, kind: 'voice' | 'bg', id: string) {
-    stopPreview();
+    stopSheetAudio();
+    const gen = previewGenRef.current;
     const audio = new Audio();
     audio.crossOrigin = 'anonymous';
     audio.preload = 'none';
@@ -108,48 +122,64 @@ export default function PlayerSettingsSheet({
     audioRef.current = audio;
     if (kind === 'voice') setPreviewingVoice(id);
     else setPreviewingBg(id);
-    audio.onended = () => stopPreview();
+    audio.onended = () => {
+      if (gen === previewGenRef.current) stopSheetAudio();
+    };
     try {
       await audio.play();
+      if (gen !== previewGenRef.current) {
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.load();
+        if (audioRef.current === audio) audioRef.current = null;
+      }
     } catch {
-      stopPreview();
+      if (gen === previewGenRef.current) stopSheetAudio();
     }
   }
 
   async function previewNarrator(voiceId: string) {
     if (previewingVoice === voiceId) {
-      stopPreview();
+      stopSheetAudio();
       return;
     }
+    stopSheetAudio();
+    const gen = previewGenRef.current;
     try {
       const url = await narratorPreviewUrl(voiceId);
+      if (gen !== previewGenRef.current) return;
       if (!url) return;
       await playUrl(url, 'voice', voiceId);
     } catch {
-      stopPreview();
+      if (gen === previewGenRef.current) stopSheetAudio();
     }
   }
 
   async function previewBackground(path: string, id: string) {
     if (previewingBg === id) {
-      stopPreview();
+      stopSheetAudio();
       return;
     }
+    stopSheetAudio();
+    const gen = previewGenRef.current;
     try {
       const signed = await fetchBackgroundMedia();
+      if (gen !== previewGenRef.current) return;
       const relative = path.replace(/^background\//, '');
       const url = `${signed.baseUrl}${relative}?${signed.query}`;
       await playUrl(url, 'bg', id);
     } catch {
-      stopPreview();
+      if (gen === previewGenRef.current) stopSheetAudio();
     }
   }
 
-  function openBackground(tab: BgTab) {
-    setTab(tab);
+  function openBackground(nextTab: BgTab) {
+    // Leaving Settings root (or another leaf via re-entry) — kill any in-flight preview.
+    stopAllPreviews();
+    setTab(nextTab);
     setView('background');
     // Switching to Pulse applies it immediately (width picker is the adjustment).
-    if (tab === 'pulse' && prefs.background.group !== 'pulse') {
+    if (nextTab === 'pulse' && prefs.background.group !== 'pulse') {
       void onSelectBackground({ group: 'pulse', width: DEFAULT_PULSE_WIDTH });
     }
   }
@@ -162,6 +192,35 @@ export default function PlayerSettingsSheet({
             <SheetHeader title="Settings" onCancel={onClose} tone="player" actionLabel="Done" />
           </div>
           <div className="mt-2 flex min-h-0 flex-1 flex-col gap-10 overflow-y-auto pb-2">
+            <section className="flex flex-col gap-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Background</p>
+              <div className="overflow-hidden rounded-[14px] border border-hairline bg-p-panel">
+                {BG_OPTIONS.map((option) => {
+                  const selected = prefs.background.group === option.group;
+                  return (
+                    <button
+                      key={option.tab}
+                      type="button"
+                      onClick={() => openBackground(option.tab)}
+                      aria-current={selected ? 'true' : undefined}
+                      className={`flex w-full items-center gap-3 border-t border-hairline px-4 py-3.5 text-left first:border-t-0 ${
+                        selected ? 'bg-[var(--selected-bg)]' : ''
+                      }`}
+                    >
+                      <span className={selected ? 'text-p-accent' : 'text-p-muted'}>{option.icon}</span>
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="text-[15px] font-medium">{option.label}</span>
+                        <span className="text-[12.5px] text-p-muted">
+                          {backgroundDetail(prefs, option.group)}
+                        </span>
+                      </span>
+                      {selected ? <Check /> : <span className="text-p-muted">›</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
             <section className="flex flex-col gap-3">
               <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Narrator</p>
               <div className="overflow-hidden rounded-[14px] border border-hairline bg-p-panel">
@@ -205,36 +264,7 @@ export default function PlayerSettingsSheet({
             </section>
 
             <section className="flex flex-col gap-3">
-              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Background</p>
-              <div className="overflow-hidden rounded-[14px] border border-hairline bg-p-panel">
-                {BG_OPTIONS.map((option) => {
-                  const selected = prefs.background.group === option.group;
-                  return (
-                    <button
-                      key={option.tab}
-                      type="button"
-                      onClick={() => openBackground(option.tab)}
-                      aria-current={selected ? 'true' : undefined}
-                      className={`flex w-full items-center gap-3 border-t border-hairline px-4 py-3.5 text-left first:border-t-0 ${
-                        selected ? 'bg-[var(--selected-bg)]' : ''
-                      }`}
-                    >
-                      <span className={selected ? 'text-p-accent' : 'text-p-muted'}>{option.icon}</span>
-                      <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="text-[15px] font-medium">{option.label}</span>
-                        <span className="text-[12.5px] text-p-muted">
-                          {backgroundDetail(prefs, option.group)}
-                        </span>
-                      </span>
-                      {selected ? <Check /> : <span className="text-p-muted">›</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section className="flex flex-col gap-3">
-              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Repeat</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Repetition</p>
               <div className="flex gap-1 rounded-[12px] border border-hairline bg-p-panel p-[3px]">
                 {REPEAT_OPTIONS.map((count) => {
                   const on = prefs.repeat === count;
@@ -269,7 +299,7 @@ export default function PlayerSettingsSheet({
           <div className="relative flex flex-none items-center justify-center gap-3">
             <button
               type="button"
-              onClick={() => setView('settings')}
+              onClick={leaveLeaf}
               className="absolute left-0 min-h-[44px] text-[15px] text-p-muted"
             >
               ‹ Settings

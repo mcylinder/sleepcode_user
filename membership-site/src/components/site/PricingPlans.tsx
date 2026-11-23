@@ -45,7 +45,7 @@ export default function PricingPlans({ resumeCheckout = false }: { resumeCheckou
           {free ? `${free.title}, yours free.` : 'A free session.'}
         </p>
         <IncludesList
-          items={['Listen as often as you like', 'Every player setting: length, mix, repeat, narrator']}
+          items={['Listen as often as you like', 'Every player setting: length, mix, repetition, narrator']}
         />
         {free && (
           <PlayLink session={free} className="sc-btn-outline mt-auto self-start">

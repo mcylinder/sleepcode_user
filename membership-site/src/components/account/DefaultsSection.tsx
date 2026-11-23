@@ -38,7 +38,7 @@ export default function DefaultsSection() {
       icon: <MixIcon size={18} instruction={prefs.voiceMix} />,
       value: backgroundSummary(prefs),
     },
-    { label: 'Repeat', icon: <RepeatIcon size={18} />, value: REPEAT_LABELS[prefs.repeat] },
+    { label: 'Repetition', icon: <RepeatIcon size={18} />, value: REPEAT_LABELS[prefs.repeat] },
   ];
 
   return (

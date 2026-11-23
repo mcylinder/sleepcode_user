@@ -160,7 +160,8 @@ export class SessionEngine {
 
   /**
    * Decode-ready Nature/Music buffer as the looping background. Crossfades ~1s from
-   * the previous loop (or from silence). Pulse underlay is disabled while active.
+   * the previous loop while playing. When idle, only arms the buffer — audio stays
+   * silent until play() (avoids autoplay on prefs restore / background pick).
    */
   setBackgroundBuffer(buffer: AudioBuffer | null, opts?: { bpm?: number }): void {
     this.ensureContext();
@@ -171,7 +172,11 @@ export class SessionEngine {
     this.backgroundMode = 'loop';
     this.loopBuffer = buffer;
     this.loopBpm = typeof opts?.bpm === 'number' && opts.bpm > 0 ? opts.bpm : null;
-    this.startLoop(BG_CROSSFADE_SEC);
+    if (this.playing) {
+      this.startLoop(BG_CROSSFADE_SEC);
+    } else {
+      this.stopLoop(0);
+    }
   }
 
   async play(): Promise<void> {

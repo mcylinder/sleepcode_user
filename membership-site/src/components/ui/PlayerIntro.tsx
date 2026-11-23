@@ -17,7 +17,7 @@ const TIPS = [
     body: 'Level, mix (voice against pulse) and width of the pulse.',
   },
   {
-    title: 'Choose repeats.',
+    title: 'Repetition.',
     body: 'Hear each affirmation once, twice or four times.',
   },
   {

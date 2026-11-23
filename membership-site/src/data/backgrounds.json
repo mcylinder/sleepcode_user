@@ -23,44 +23,70 @@
       "notes": "Dev upload — replace when final master is ready."
     },
     {
-      "id": "fireplace",
-      "name": "Fireplace",
-      "file": "fireplace.m4a",
-      "path": "background/nature/fireplace.m4a",
+      "id": "fire-crackling",
+      "name": "Fire Crackling",
+      "file": "fire_crackling.m4a",
+      "path": "background/nature/fire_crackling.m4a",
       "loopSeconds": 30,
-      "ready": false
+      "ready": true
     },
     {
-      "id": "wind",
-      "name": "Wind",
-      "file": "wind.m4a",
-      "path": "background/nature/wind.m4a",
+      "id": "ocean-big-surf",
+      "name": "Ocean Big Surf",
+      "file": "ocean_big_surf.m4a",
+      "path": "background/nature/ocean_big_surf.m4a",
       "loopSeconds": 30,
-      "ready": false
+      "ready": true
     },
     {
-      "id": "ocean",
-      "name": "Ocean",
-      "file": "ocean.m4a",
-      "path": "background/nature/ocean.m4a",
+      "id": "ocean-large",
+      "name": "Ocean Large",
+      "file": "ocean_large.m4a",
+      "path": "background/nature/ocean_large.m4a",
       "loopSeconds": 30,
-      "ready": false
+      "ready": true
     },
     {
-      "id": "stream",
-      "name": "Stream",
-      "file": "stream.m4a",
-      "path": "background/nature/stream.m4a",
+      "id": "rain-forest",
+      "name": "Rain Forest",
+      "file": "rain_forrest.m4a",
+      "path": "background/nature/rain_forrest.m4a",
       "loopSeconds": 30,
-      "ready": false
+      "ready": true,
+      "notes": "Filename keeps source spelling (forrest)."
     },
     {
-      "id": "night-crickets",
-      "name": "Night Crickets",
-      "file": "night-crickets.m4a",
-      "path": "background/nature/night-crickets.m4a",
+      "id": "rain-large",
+      "name": "Rain Large",
+      "file": "rain_large.m4a",
+      "path": "background/nature/rain_large.m4a",
       "loopSeconds": 30,
-      "ready": false
+      "ready": true
+    },
+    {
+      "id": "rain-small",
+      "name": "Rain Small",
+      "file": "rain_small.m4a",
+      "path": "background/nature/rain_small.m4a",
+      "loopSeconds": 30,
+      "ready": true
+    },
+    {
+      "id": "river-merged",
+      "name": "River",
+      "file": "river_merged.m4a",
+      "path": "background/nature/river_merged.m4a",
+      "loopSeconds": 30,
+      "ready": true,
+      "notes": "Source was 'river merged.m4a' — upload as river_merged.m4a (no space)."
+    },
+    {
+      "id": "wind-rain",
+      "name": "Wind Rain",
+      "file": "wind_rain.m4a",
+      "path": "background/nature/wind_rain.m4a",
+      "loopSeconds": 30,
+      "ready": true
     }
   ],
   "music": [
@@ -75,103 +101,81 @@
       "notes": "Dev upload — 90 BPM; loop length should be a multiple of 4s/8s."
     },
     {
-      "id": "low-tide",
-      "name": "Low Tide",
-      "file": "low-tide.m4a",
-      "path": "background/music/low-tide.m4a",
+      "id": "glass-shore",
+      "name": "Glass Shore",
+      "file": "amb_0512.m4a",
+      "path": "background/music/amb_0512.m4a",
       "loopSeconds": 96,
-      "bpm": 90,
-      "ready": false
+      "ready": true
     },
     {
-      "id": "lantern",
-      "name": "Lantern",
-      "file": "lantern.m4a",
-      "path": "background/music/lantern.m4a",
+      "id": "soft-horizon",
+      "name": "Soft Horizon",
+      "file": "amb_0521.m4a",
+      "path": "background/music/amb_0521.m4a",
       "loopSeconds": 96,
-      "bpm": 90,
-      "ready": false
+      "ready": true
     },
     {
-      "id": "long-field",
-      "name": "Long Field",
-      "file": "long-field.m4a",
-      "path": "background/music/long-field.m4a",
+      "id": "dusk-meadow",
+      "name": "Dusk Meadow",
+      "file": "amb_1108.m4a",
+      "path": "background/music/amb_1108.m4a",
       "loopSeconds": 96,
-      "bpm": 90,
-      "ready": false
+      "ready": true
     },
     {
-      "id": "soft-static",
-      "name": "Soft Static",
-      "file": "soft-static.m4a",
-      "path": "background/music/soft-static.m4a",
+      "id": "silver-drift",
+      "name": "Silver Drift",
+      "file": "amb_1110.m4a",
+      "path": "background/music/amb_1110.m4a",
       "loopSeconds": 96,
-      "bpm": 90,
-      "ready": false
+      "ready": true
     },
     {
-      "id": "north-window",
-      "name": "North Window",
-      "file": "north-window.m4a",
-      "path": "background/music/north-window.m4a",
+      "id": "quiet-current",
+      "name": "Quiet Current",
+      "file": "amb_1111.m4a",
+      "path": "background/music/amb_1111.m4a",
       "loopSeconds": 96,
-      "bpm": 90,
-      "ready": false
+      "ready": true
     },
     {
-      "id": "undertow",
-      "name": "Undertow",
-      "file": "undertow.m4a",
-      "path": "background/music/undertow.m4a",
+      "id": "amber-tide",
+      "name": "Amber Tide",
+      "file": "0223_A_70bpm_merged.m4a",
+      "path": "background/music/0223_A_70bpm_merged.m4a",
       "loopSeconds": 96,
-      "bpm": 90,
-      "ready": false
+      "bpm": 70,
+      "ready": true
     },
     {
-      "id": "ember-hours",
-      "name": "Ember Hours",
-      "file": "ember-hours.m4a",
-      "path": "background/music/ember-hours.m4a",
+      "id": "night-harbor",
+      "name": "Night Harbor",
+      "file": "0207_A_70bpm_merged.m4a",
+      "path": "background/music/0207_A_70bpm_merged.m4a",
       "loopSeconds": 96,
-      "bpm": 90,
-      "ready": false
+      "bpm": 70,
+      "ready": true
     },
     {
-      "id": "still-water",
-      "name": "Still Water",
-      "file": "still-water.m4a",
-      "path": "background/music/still-water.m4a",
+      "id": "low-lantern",
+      "name": "Low Lantern",
+      "file": "0210_A_70bpm_print_merged.m4a",
+      "path": "background/music/0210_A_70bpm_print_merged.m4a",
       "loopSeconds": 96,
-      "bpm": 90,
-      "ready": false
+      "bpm": 70,
+      "ready": true
     },
     {
-      "id": "quiet-room",
-      "name": "Quiet Room",
-      "file": "quiet-room.m4a",
-      "path": "background/music/quiet-room.m4a",
+      "id": "pale-ember",
+      "name": "Pale Ember",
+      "file": "0212_A_70bpm_print_merged.m4a",
+      "path": "background/music/0212_A_70bpm_print_merged.m4a",
       "loopSeconds": 96,
-      "bpm": 90,
-      "ready": false
-    },
-    {
-      "id": "pale-current",
-      "name": "Pale Current",
-      "file": "pale-current.m4a",
-      "path": "background/music/pale-current.m4a",
-      "loopSeconds": 96,
-      "bpm": 90,
-      "ready": false
-    },
-    {
-      "id": "late-harbor",
-      "name": "Late Harbor",
-      "file": "late-harbor.m4a",
-      "path": "background/music/late-harbor.m4a",
-      "loopSeconds": 96,
-      "bpm": 90,
-      "ready": false
+      "bpm": 70,
+      "ready": true,
+      "notes": "Source was '0212_A_70bpm_print merged.m4a' — S3 key uses underscore."
     }
   ]
 }

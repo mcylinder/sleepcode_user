@@ -57,7 +57,7 @@ import ListenHistory from '@/components/ui/ListenHistory';
 import MixFader from '@/components/ui/MixFader';
 import PlayerCtas from '@/components/ui/PlayerCtas';
 import PlayerSettingsSheet from '@/components/ui/PlayerSettingsSheet';
-import Rings from '@/components/ui/Rings';
+import Rings, { PLAYER_BALL_PERCENT, PLAYER_RING_SIZES } from '@/components/ui/Rings';
 import Sheet, { SheetHeader } from '@/components/ui/Sheet';
 import PlayerIntro from '@/components/ui/PlayerIntro';
 import StatementsOverlay from '@/components/ui/StatementsOverlay';
@@ -202,7 +202,6 @@ function Player({ session }: { session: Session }) {
   const [historyKey, setHistoryKey] = useState(0);
   const [beatSec, setBeatSec] = useState(1);
   const [chromeVisible, setChromeVisible] = useState(true);
-  const [chromeEpoch, setChromeEpoch] = useState(0);
   const wasEnding = useRef(false);
   const listenedEnough = useRef(false);
   const lastPlayedSaved = useRef(false);
@@ -211,7 +210,6 @@ function Player({ session }: { session: Session }) {
   const sessionEndedCleanly = useRef(false);
   const promptOpenRef = useRef(false);
   const pendingVoiceNoticeRef = useRef<string | null>(null);
-  const chromeIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   promptOpenRef.current = promptOpen;
 
   usePageBackground(shadeOn ? '#000000' : playing ? 'var(--p-bg-playing)' : 'var(--p-bg)');
@@ -529,8 +527,9 @@ function Player({ session }: { session: Session }) {
     if (!playing) wakeRef.current?.disable();
   }, [playing]);
 
-  // After 10s untouched while playing, turn on Night shade (screen goes black, audio keeps
-  // playing). Tap to wake; the timer starts again. Open sheets and overlays hold it off.
+  // After 10s idle while playing, turn on Night shade (screen goes black, audio keeps
+  // playing). Any press/drag/scroll/key holds or resets the timer; the countdown only
+  // runs once every pointer is up. Open sheets and overlays hold it off.
   const chromeBlocked =
     !playing ||
     shadeOn ||
@@ -540,27 +539,72 @@ function Player({ session }: { session: Session }) {
     panel !== null;
 
   useEffect(() => {
-    if (chromeIdleTimer.current) {
-      clearTimeout(chromeIdleTimer.current);
-      chromeIdleTimer.current = null;
-    }
     if (chromeBlocked) {
       setChromeVisible(true);
       return;
     }
-    chromeIdleTimer.current = setTimeout(() => setShadeOn(true), CHROME_IDLE_MS);
-    return () => {
-      if (chromeIdleTimer.current) {
-        clearTimeout(chromeIdleTimer.current);
-        chromeIdleTimer.current = null;
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const activePointers = new Set<number>();
+
+    const clearTimer = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
       }
     };
-  }, [chromeBlocked, chromeEpoch]);
 
-  const noteChromeActivity = () => {
-    setChromeVisible(true);
-    setChromeEpoch((n) => n + 1);
-  };
+    const armTimer = () => {
+      clearTimer();
+      setChromeVisible(true);
+      timer = setTimeout(() => setShadeOn(true), CHROME_IDLE_MS);
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      activePointers.add(event.pointerId);
+      clearTimer();
+      setChromeVisible(true);
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      activePointers.delete(event.pointerId);
+      if (activePointers.size === 0) armTimer();
+    };
+
+    // Hover alone must not reset; only count move while a press/drag is held.
+    const onPointerMove = () => {
+      if (activePointers.size === 0) return;
+      clearTimer();
+      setChromeVisible(true);
+    };
+
+    const onDiscreteActivity = () => {
+      if (activePointers.size > 0) {
+        clearTimer();
+        setChromeVisible(true);
+        return;
+      }
+      armTimer();
+    };
+
+    armTimer();
+    window.addEventListener('pointerdown', onPointerDown, true);
+    window.addEventListener('pointerup', onPointerUp, true);
+    window.addEventListener('pointercancel', onPointerUp, true);
+    window.addEventListener('pointermove', onPointerMove, true);
+    window.addEventListener('wheel', onDiscreteActivity, { capture: true, passive: true });
+    window.addEventListener('keydown', onDiscreteActivity, true);
+
+    return () => {
+      clearTimer();
+      window.removeEventListener('pointerdown', onPointerDown, true);
+      window.removeEventListener('pointerup', onPointerUp, true);
+      window.removeEventListener('pointercancel', onPointerUp, true);
+      window.removeEventListener('pointermove', onPointerMove, true);
+      window.removeEventListener('wheel', onDiscreteActivity, true);
+      window.removeEventListener('keydown', onDiscreteActivity, true);
+    };
+  }, [chromeBlocked]);
 
   const chromeStyle = {
     opacity: chromeVisible ? 1 : 0,
@@ -706,7 +750,6 @@ function Player({ session }: { session: Session }) {
     <main
       className="flex min-h-screen min-h-[100dvh] flex-col text-p-fg"
       style={{ background: playing ? 'var(--p-bg-playing)' : 'var(--p-bg)', transition: 'background 2.6s ease' }}
-      onPointerDown={noteChromeActivity}
     >
       <div
         className="flex items-center justify-between gap-3 px-[clamp(22px,4vw,48px)] pb-3 pt-[calc(12px+env(safe-area-inset-top,0px))] text-[15px] text-p-muted [@media(min-height:760px)]:pb-2 [@media(min-height:760px)]:pt-[calc(8px+env(safe-area-inset-top,0px))]"
@@ -765,7 +808,13 @@ function Player({ session }: { session: Session }) {
           <div className="flex w-full flex-col items-center gap-5 pt-1">
             {/* Height-capped so larger rings don’t shove tiles off short screens. */}
             <div style={{ width: 'min(72vw, 42dvh, 300px)' }}>
-              <Rings color="var(--p-accent)" glowing={playing} restOpacity={0.26} beatSec={beatSec}>
+              <Rings
+                color="var(--p-accent)"
+                glowing={playing}
+                restOpacity={0.26}
+                beatSec={beatSec}
+                sizes={PLAYER_RING_SIZES}
+              >
                 <button
                   type="button"
                   onClick={(e) => {
@@ -774,9 +823,18 @@ function Player({ session }: { session: Session }) {
                   }}
                   disabled={!ready}
                   aria-label={playing ? 'Pause' : 'Play'}
-                  className="grid h-[84px] w-[84px] place-items-center rounded-full bg-p-accent text-p-on-accent disabled:opacity-40"
+                  className="absolute inset-0 grid place-items-center rounded-full disabled:opacity-40"
                 >
-                  {playing ? <PauseIcon size={27} /> : <PlayIcon size={27} className="translate-x-[3px]" />}
+                  <span
+                    className="grid place-items-center rounded-full bg-p-accent text-p-on-accent"
+                    style={{ width: `${PLAYER_BALL_PERCENT}%`, height: `${PLAYER_BALL_PERCENT}%` }}
+                  >
+                    {playing ? (
+                      <PauseIcon size={18} />
+                    ) : (
+                      <PlayIcon size={18} className="translate-x-[2px]" />
+                    )}
+                  </span>
                 </button>
               </Rings>
             </div>
@@ -906,6 +964,7 @@ function Player({ session }: { session: Session }) {
         prefs={prefs}
         onChange={updatePrefs}
         onSelectBackground={selectBackground}
+        onStopPulsePreview={() => pulsePreviewRef.current?.stop()}
         decodingId={decodingId}
       />
 
