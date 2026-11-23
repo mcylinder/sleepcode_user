@@ -26,7 +26,7 @@ export default function MixFader({
   const bgShare = backgroundShare(voiceMix);
 
   return (
-    <div className="flex w-full flex-col gap-3 px-[clamp(22px,4vw,48px)]">
+    <div className="flex w-full flex-col gap-3">
       <div className="flex items-center justify-between gap-3 text-[13px] text-p-muted">
         <span className="flex items-center gap-1.5 font-medium text-p-fg">
           <VoiceIcon size={16} />
