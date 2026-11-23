@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { pageMeta } from '@/lib/site';
 import ListenCta from '@/components/site/ListenCta';
-import { MixIcon, MoonIcon, RepeatIcon, SpeakerIcon, StopwatchIcon, WidthIcon } from '@/components/ui/icons';
+import { MixIcon, MoonIcon, NatureIcon, RepeatIcon, SettingsIcon, StopwatchIcon } from '@/components/ui/icons';
 
 export const metadata: Metadata = pageMeta(
   'How to listen',
@@ -60,22 +60,22 @@ const GROUPS: { id: string; title: string; items: Item[] }[] = [
     title: 'Adjust the sound',
     items: [
       {
-        id: 'level',
-        title: 'Level',
-        glyph: <SpeakerIcon size={26} level={50} />,
-        body: 'A comfortable speaking volume is enough. On a smartphone, set the ringer to “on” to hear the session audio. Do Not Disturb can be active.',
-      },
-      {
         id: 'mix',
         title: 'Mix',
-        glyph: <MixIcon size={26} instruction={70} />,
-        body: 'Mix balances the voice against the pulse. The pulse is there to gently carry the words, so start with the voice easy to hear, then find the balance you prefer.',
+        glyph: <MixIcon size={26} instruction={75} />,
+        body: 'Mix sits on the player and balances the narrator against the current background. Start with the voice easy to hear (default 75 · 25), then find the balance you prefer. Volume is your device’s own control.',
       },
       {
-        id: 'width',
-        title: 'Width',
-        glyph: <WidthIcon size={26} width={66} />,
-        body: 'Width sets how far the pulse alternates between your ears, from narrow to wide. This left-right rhythm is a form of auditory bilateral stimulation, which many people use to settle, ease physical tension and feel calmer.',
+        id: 'background',
+        title: 'Background',
+        glyph: <NatureIcon size={26} />,
+        body: 'In Settings, choose Pulse (bilateral audio stimulation with four stereo widths), Nature, or Music. The status line under the title shows the narrator and background in use.',
+      },
+      {
+        id: 'settings',
+        title: 'Settings',
+        glyph: <SettingsIcon size={24} />,
+        body: 'Narrator, Background, Repeat, and Spacing live in Settings. Spacing On keeps a short pause after each line; Off plays them more tightly (and on Music, snaps to the beat).',
       },
       {
         id: 'repeat',
@@ -87,7 +87,7 @@ const GROUPS: { id: string; title: string; items: Item[] }[] = [
         id: 'length',
         title: 'Length',
         glyph: <StopwatchIcon size={24} />,
-        body: 'Length sets how long the session runs.',
+        body: 'Length sets how long the session runs. Voice and background stop together with a short fade when the time is up.',
       },
     ],
   },

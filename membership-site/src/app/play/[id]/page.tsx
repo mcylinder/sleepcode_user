@@ -16,27 +16,30 @@ import {
   type Session,
 } from '@/lib/catalog';
 import { useMembership } from '@/hooks/useMembership';
-import { fetchSessionMedia, RequestError } from '@/lib/authedFetch';
+import { fetchBackgroundMedia, fetchSessionMedia, RequestError } from '@/lib/authedFetch';
 import { buildPlayPlan, buildScript, type ScriptConcept, type SessionManifest } from '@/lib/audio/playPlan';
-import { PulseWidthPreview } from '@/lib/audio/PulseWidthPreview';
 import { SessionEngine } from '@/lib/audio/SessionEngine';
 import { StayAwake } from '@/lib/audio/StayAwake';
 import { MediaSessionController } from '@/lib/audio/MediaSessionController';
-import { pulseWidthLabel, type PulseWidth } from '@/lib/audio/pulseWidth';
+import {
+  backgroundMixLabel,
+  backgroundStatusLabel,
+  findMusic,
+  findNature,
+  s3PathFor,
+  type BackgroundSelection,
+} from '@/lib/backgrounds';
 import {
   DEFAULT_PREFS,
   LENGTH_HOURS,
   LENGTH_MINUTES,
-  engineBalance,
-  fmtLength,
+  formatLengthCountdown,
+  formatLengthIdle,
   formatPlaybackClock,
   loadPlayerPrefs,
   prefsPulseWidth,
-  REPEAT_LABELS,
-  REPEAT_OPTIONS,
   savePlayerPrefs,
   type PlayerPrefs,
-  type RepeatCount,
 } from '@/lib/playerPrefs';
 import { recordListenNight } from '@/lib/listenNights';
 import {
@@ -50,25 +53,27 @@ import {
 } from '@/lib/visitFlags';
 
 import ListenHistory from '@/components/ui/ListenHistory';
-import PlayerTiles, { type PlayerPanel } from '@/components/ui/PlayerTiles';
+import MixFader from '@/components/ui/MixFader';
+import PlayerCtas from '@/components/ui/PlayerCtas';
+import PlayerSettingsSheet from '@/components/ui/PlayerSettingsSheet';
 import Rings from '@/components/ui/Rings';
 import Sheet, { SheetHeader } from '@/components/ui/Sheet';
 import PlayerIntro from '@/components/ui/PlayerIntro';
 import StatementsOverlay from '@/components/ui/StatementsOverlay';
 import SaveSettingsPrompt from '@/components/ui/SaveSettingsPrompt';
 import VoicePicker from '@/components/ui/VoicePicker';
-import RangeSlider, { SoundRow, mixValueText } from '@/components/ui/RangeSlider';
 import WheelPicker from '@/components/ui/WheelPicker';
-import PulseWidthPicker from '@/components/ui/PulseWidthPicker';
-import { MixIcon, MoonIcon, PauseIcon, PlayIcon, SpeakerIcon, StatementsIcon, VoiceIcon, WidthIcon } from '@/components/ui/icons';
+import { MoonIcon, PauseIcon, PlayIcon, StatementsIcon } from '@/components/ui/icons';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const LAST_PLAYED_AFTER_SEC = 60;
 const LISTEN_NIGHT_AFTER_SEC = 180;
 const FADE_OUT_SECONDS = 8;
-// Every session starts at 2 hours. Not saved to preferences.
 const DEFAULT_LENGTH_MINUTES = 120;
+const LENGTH_PRESETS_MIN = [30, 60, 120, 240, 480] as const;
 const CHROME_IDLE_MS = 10_000;
+
+type PlayerPanel = 'length' | 'custom' | 'settings' | 'narrator' | null;
 
 type LoadState =
   | { kind: 'loading'; loaded: number; total: number }
@@ -172,8 +177,8 @@ function Player({ session }: { session: Session }) {
   const engineRef = useRef<SessionEngine | null>(null);
   const wakeRef = useRef<StayAwake | null>(null);
   const mediaRef = useRef<MediaSessionController | null>(null);
-  const previewRef = useRef<PulseWidthPreview | null>(null);
   const pulseUrlRef = useRef<string | null>(null);
+  // Kept for load cleanup typing; pulse preview removed with Sound sheet.
   const [load, setLoad] = useState<LoadState>({ kind: 'loading', loaded: 0, total: 0 });
   const [attempt, setAttempt] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -183,8 +188,9 @@ function Player({ session }: { session: Session }) {
   const [remainingSec, setRemainingSec] = useState(0);
   const [ending, setEnding] = useState(false);
   const [panel, setPanel] = useState<PlayerPanel>(null);
-  const [draftH, setDraftH] = useState(1);
+  const [draftH, setDraftH] = useState(2);
   const [draftM, setDraftM] = useState(0);
+  const [decodingId, setDecodingId] = useState<string | null>(null);
   const [shadeOn, setShadeOn] = useState(false);
   const [introOpen, setIntroOpen] = useState(false);
   const [statementsOpen, setStatementsOpen] = useState(false);
@@ -230,7 +236,6 @@ function Player({ session }: { session: Session }) {
       play: async () => {
         const current = engineRef.current;
         if (!current?.ready || current.playing) return;
-        previewRef.current?.stop();
         wakeRef.current?.enable();
         await current.play();
       },
@@ -242,15 +247,16 @@ function Player({ session }: { session: Session }) {
     });
 
     const saved = loadPlayerPrefs();
-    // Persist default Owen (first catalog voice) so Account / next visit match.
     if (saved.voiceId) savePlayerPrefs(saved);
     setPrefs(saved);
     setLengthSec(DEFAULT_LENGTH_MINUTES * 60);
     setRemainingSec(DEFAULT_LENGTH_MINUTES * 60);
-    engine.setBalance(engineBalance(saved.voiceMix));
-    engine.setVolume(saved.volume / 100);
+    engine.setVoiceMix(saved.voiceMix);
+    engine.setVolume(0.8);
     engine.setRepeat(saved.repeat);
+    engine.setSpacing(saved.spacing);
     engine.setPulseWidth(prefsPulseWidth(saved));
+    if (saved.background.group === 'pulse') engine.usePulseBackground();
 
     const onVisibility = () => {
       if (document.visibilityState === 'visible') engine.resumeIfPlaying();
@@ -261,8 +267,6 @@ function Player({ session }: { session: Session }) {
       engine.dispose();
       wake.dispose();
       media.dispose();
-      previewRef.current?.dispose();
-      previewRef.current = null;
       engineRef.current = null;
       wakeRef.current = null;
       mediaRef.current = null;
@@ -273,10 +277,10 @@ function Player({ session }: { session: Session }) {
     mediaRef.current?.setMetadata({
       title: sessionLabel(session),
       artist: 'SleepCode',
-      album: session.theme,
+      album: backgroundMixLabel(prefs.background).name,
       artworkPath: '/og.jpg',
     });
-  }, [session]);
+  }, [session, prefs.background]);
 
   useEffect(() => {
     mediaRef.current?.setPlaying(playing);
@@ -321,6 +325,34 @@ function Player({ session }: { session: Session }) {
         await loadWithVoice(voiceId);
         if (cancelled) return;
         setBeatSec(engine!.pulseBeatSeconds ?? 1);
+        const bg = loadPlayerPrefs().background;
+        if (bg.group !== 'pulse') {
+          // Fire-and-forget restore of Nature/Music after session clips load.
+          void (async () => {
+            try {
+              const item = bg.group === 'nature' ? findNature(bg.id) : findMusic(bg.id);
+              const path = s3PathFor(bg);
+              if (!item || !path) return;
+              const signed = await fetchBackgroundMedia();
+              const relative = path.replace(/^background\//, '');
+              const url = `${signed.baseUrl}${relative}?${signed.query}`;
+              const res = await fetch(url);
+              if (!res.ok) return;
+              const actx = new (window.AudioContext ||
+                (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+              const buffer = await actx.decodeAudioData(await res.arrayBuffer());
+              await actx.close().catch(() => {});
+              if (cancelled) return;
+              const bpm = bg.group === 'music' && 'bpm' in item ? Number(item.bpm) : undefined;
+              engine!.setBackgroundBuffer(buffer, { bpm });
+            } catch {
+              // Stay on pulse.
+            }
+          })();
+        } else {
+          engine!.usePulseBackground();
+          engine!.setPulseWidth(bg.width);
+        }
         setLoad({ kind: 'ready' });
       } catch (error) {
         if (cancelled) return;
@@ -528,65 +560,54 @@ function Player({ session }: { session: Session }) {
     transition: 'opacity 0.6s ease',
   };
 
-  // Width panel: if the session is already playing, hear width on the live engine.
-  // Only start a separate pulse demo when idle.
-  useEffect(() => {
-    if (panel !== 'sound') {
-      previewRef.current?.stop();
-      return;
-    }
-    const engine = engineRef.current;
-    if (engine?.playing) {
-      previewRef.current?.stop();
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      const preview = previewRef.current ?? new PulseWidthPreview();
-      previewRef.current = preview;
-      const current = loadPlayerPrefs();
-      preview.setPrefsVolume(current.volume, current.voiceMix);
-      preview.setWidth(prefsPulseWidth(current));
-      const url = pulseUrlRef.current;
-      if (!url || cancelled) return;
-      try {
-        await preview.start(url);
-      } catch {
-        // Panel still usable without audio.
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [panel, playing]);
-
   const updatePrefs = (patch: Partial<PlayerPrefs>) => {
     const next = { ...prefs, ...patch };
     setPrefs(next);
     savePlayerPrefs(next);
+    if (typeof patch.repeat === 'number') engineRef.current?.setRepeat(patch.repeat);
+    if (typeof patch.spacing === 'boolean') engineRef.current?.setSpacing(patch.spacing);
+    if (typeof patch.voiceMix === 'number') engineRef.current?.setVoiceMix(patch.voiceMix);
   };
 
   const setVoiceMix = (voiceMix: number) => {
-    engineRef.current?.setBalance(engineBalance(voiceMix));
-    if (panel === 'sound') previewRef.current?.setPrefsVolume(prefs.volume, voiceMix);
+    engineRef.current?.setVoiceMix(voiceMix);
     updatePrefs({ voiceMix });
   };
 
-  const setRepeat = (repeat: RepeatCount) => {
-    engineRef.current?.setRepeat(repeat);
-    updatePrefs({ repeat });
-  };
-
-  const setVolume = (volume: number) => {
-    engineRef.current?.setVolume(volume / 100);
-    if (panel === 'sound') previewRef.current?.setPrefsVolume(volume, prefs.voiceMix);
-    updatePrefs({ volume });
-  };
-
-  function chooseWidth(pulseWidth: PulseWidth) {
-    engineRef.current?.setPulseWidth(pulseWidth);
-    previewRef.current?.setWidth(pulseWidth);
-    updatePrefs({ background: { group: 'pulse', width: pulseWidth } });
+  async function selectBackground(selection: BackgroundSelection) {
+    const engine = engineRef.current;
+    if (!engine) {
+      updatePrefs({ background: selection });
+      return;
+    }
+    if (selection.group === 'pulse') {
+      engine.usePulseBackground();
+      engine.setPulseWidth(selection.width);
+      updatePrefs({ background: selection });
+      return;
+    }
+    const item = selection.group === 'nature' ? findNature(selection.id) : findMusic(selection.id);
+    const path = s3PathFor(selection);
+    if (!item || !path) return;
+    setDecodingId(selection.id);
+    try {
+      const signed = await fetchBackgroundMedia();
+      const relative = path.replace(/^background\//, '');
+      const url = `${signed.baseUrl}${relative}?${signed.query}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Background request failed');
+      const ctx = new (window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
+      await ctx.close().catch(() => {});
+      const bpm = selection.group === 'music' && 'bpm' in item ? Number(item.bpm) : undefined;
+      engine.setBackgroundBuffer(buffer, { bpm });
+      updatePrefs({ background: selection });
+    } catch {
+      // Keep previous background.
+    } finally {
+      setDecodingId(null);
+    }
   }
 
   const cancelEnding = () => {
@@ -602,14 +623,21 @@ function Player({ session }: { session: Session }) {
     setPanel(null);
   };
 
-  const openLength = () => {
+  const openLength = () => setPanel('length');
+
+  const openCustomLength = () => {
     let minutes = DEFAULT_LENGTH_MINUTES;
-    if (lengthSec > 0) minutes = Math.ceil(remainingSec / 60);
+    if (lengthSec > 0) minutes = Math.round(lengthSec / 60);
     const hours = Math.min(10, Math.floor(minutes / 60));
     setDraftH(hours);
     setDraftM(Math.min(50, Math.round((minutes % 60) / 10) * 10));
-    setPanel('length');
+    setPanel('custom');
   };
+
+  function stopsAroundLabel(sec: number): string {
+    const end = new Date(Date.now() + sec * 1000);
+    return end.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  }
 
   const togglePlay = async () => {
     const engine = engineRef.current;
@@ -618,8 +646,6 @@ function Player({ session }: { session: Session }) {
       await engine.pause();
       return;
     }
-    // Starting session playback: drop any idle width demo so they don't overlap.
-    previewRef.current?.stop();
     wakeRef.current?.enable();
     await engine.play();
   };
@@ -627,16 +653,16 @@ function Player({ session }: { session: Session }) {
   const ready = load.kind === 'ready';
   const hasLength = lengthSec > 0;
   const draftMinutes = draftH * 60 + draftM;
-  // Only a countdown that has actually started shows as "remaining".
-  const lengthStarted = hasLength && remainingSec > 0 && remainingSec < lengthSec;
-  // The Length tile is the one place time shows: the set length, then what's left once it starts.
+  const lengthStarted = hasLength && remainingSec > 0 && remainingSec < lengthSec && playing;
   const lengthLabel = !hasLength
-    ? 'No end'
+    ? 'Length'
     : lengthStarted
-      ? fmtLength(Math.ceil(remainingSec / 60))
-      : fmtLength(Math.round(lengthSec / 60));
+      ? formatLengthCountdown(remainingSec)
+      : formatLengthIdle(lengthSec);
   const closePanel = () => setPanel(null);
-  const voiceName = findVoice(prefs.voiceId)?.name ?? 'the narrator';
+  const voiceName = findVoice(prefs.voiceId)?.name ?? VOICES[0]?.name ?? 'Owen';
+  const mixLabel = backgroundMixLabel(prefs.background);
+  const statusLine = backgroundStatusLabel(prefs.background, voiceName);
 
   let status: ReactNode = null;
   if (load.kind === 'loading') {
@@ -736,11 +762,11 @@ function Player({ session }: { session: Session }) {
               </Rings>
             </div>
 
-            {/* Priority, top to bottom: title, sessions this week, narrator. Time left lives on the Length tile. */}
             <div className="flex flex-col items-center gap-2">
               <h1 className="text-center text-[clamp(24px,2.8vw,30px)] font-medium tracking-[-0.02em]">
                 {sessionLabel(session)}
               </h1>
+              <p className="text-center text-[14px] text-p-muted">{statusLine}</p>
             </div>
 
             <div className="flex flex-col items-center gap-2">
@@ -749,47 +775,77 @@ function Player({ session }: { session: Session }) {
                 {status}
               </p>
             </div>
-
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setPanel('narrator');
-              }}
-              className="flex min-h-[44px] items-center gap-2 px-2 text-[13px] text-p-muted hover:text-p-fg"
-              aria-label={`Narrator: ${voiceName}. Change narrator`}
-            >
-              <VoiceIcon size={14} />
-              <span>{voiceName}</span>
-              <span className="underline underline-offset-4">Change</span>
-            </button>
           </div>
 
           <div className="flex-1" />
         </div>
 
         <div
-          className="flex w-full flex-col gap-3"
+          className="flex w-full flex-col gap-5"
           style={chromeStyle}
           aria-hidden={!chromeVisible}
           onClick={(e) => e.stopPropagation()}
         >
           <PlayerIntro open={introOpen} onClose={() => setIntroOpen(false)} />
-          <PlayerTiles
-            open={panel}
-            onOpen={(next) => (next === 'length' ? openLength() : setPanel(next))}
+          <MixFader
+            voiceMix={prefs.voiceMix}
+            backgroundName={mixLabel.name}
+            backgroundGroup={mixLabel.group}
+            onChange={setVoiceMix}
+          />
+          <PlayerCtas
+            onSettings={() => setPanel('settings')}
+            onLength={openLength}
             lengthLabel={lengthLabel}
-            lengthTitle={lengthStarted ? 'Remaining' : 'Length'}
-            repeat={prefs.repeat}
-            volume={prefs.volume}
-            instruction={prefs.voiceMix}
-            pulseWidth={prefsPulseWidth(prefs)}
+            lengthActive={hasLength}
           />
         </div>
       </div>
 
-      <Sheet open={panel === 'length'} onClose={closePanel} label="Session length" tone="player">
-        <SheetHeader title="Session length" onCancel={closePanel} tone="player" />
+      <Sheet open={panel === 'length'} onClose={closePanel} label="Length" tone="player">
+        <SheetHeader title="Length" onCancel={closePanel} tone="player" actionLabel="Done" />
+        <p className="-mt-2 text-center text-[13px] text-p-muted">
+          Stops around <span className="font-mono">{stopsAroundLabel(lengthSec > 0 ? lengthSec : DEFAULT_LENGTH_MINUTES * 60)}</span>
+        </p>
+        <div className="overflow-hidden rounded-[14px] border border-hairline bg-p-panel">
+          {LENGTH_PRESETS_MIN.map((minutes) => {
+            const selected = lengthSec === minutes * 60;
+            return (
+              <button
+                key={minutes}
+                type="button"
+                onClick={() => applyLength(minutes)}
+                className={`flex w-full items-center justify-between border-t border-hairline px-4 py-3.5 text-left text-[15px] first:border-t-0 ${
+                  selected ? 'bg-[var(--selected-bg)]' : ''
+                }`}
+              >
+                <span>
+                  {minutes < 60 ? `${minutes} minutes` : minutes === 60 ? '1 hour' : `${minutes / 60} hours`}
+                </span>
+                {selected ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="text-p-accent" aria-hidden="true">
+                    <path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : null}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={openCustomLength}
+            className="flex w-full items-center justify-between border-t border-hairline px-4 py-3.5 text-left text-[15px]"
+          >
+            <span>Custom</span>
+            <span className="text-[14px] text-p-muted">up to 10 hr ›</span>
+          </button>
+        </div>
+        <p className="text-[12.5px] leading-snug text-p-muted">
+          Voice and background stop together when the time is up, with a short fade.
+        </p>
+      </Sheet>
+
+      <Sheet open={panel === 'custom'} onClose={() => setPanel('length')} label="Custom length" tone="player">
+        <SheetHeader title="Custom" onCancel={() => setPanel('length')} tone="player" actionLabel="Back" />
         <div className="flex gap-3">
           <WheelPicker
             options={LENGTH_HOURS}
@@ -810,55 +866,29 @@ function Player({ session }: { session: Session }) {
         </div>
         <p className="-mt-2 min-h-[20px] text-center text-[13px] text-p-muted">
           {draftMinutes === 0
-            ? 'Plays until you stop'
-            : lengthStarted
-              ? `${formatPlaybackClock(remainingSec)} remaining now`
-              : `Stops after ${[draftH ? `${draftH} hr` : '', draftM ? `${draftM} min` : ''].filter(Boolean).join(' ')}`}
+            ? 'Choose a length up to 10 hours'
+            : `Stops around ${stopsAroundLabel(draftMinutes * 60)}`}
         </p>
         <div className="flex justify-end pt-1">
           <button
             type="button"
-            onClick={() => applyLength(draftMinutes)}
-            className="min-h-[48px] rounded-full bg-p-accent px-[26px] text-[15px] font-semibold text-p-on-accent"
+            disabled={draftMinutes === 0 || draftMinutes > 600}
+            onClick={() => applyLength(Math.min(600, draftMinutes))}
+            className="min-h-[48px] rounded-full bg-p-accent px-[26px] text-[15px] font-semibold text-p-on-accent disabled:opacity-40"
           >
-            {draftMinutes === 0 ? 'Play until I stop' : 'Set length'}
+            Set length
           </button>
         </div>
       </Sheet>
 
-      <Sheet open={panel === 'sound'} onClose={closePanel} label="Sound" tone="player">
-        <SheetHeader title="Sound" onCancel={closePanel} tone="player" actionLabel="Done" />
-        <SoundRow name="Level" icon={<SpeakerIcon size={18} level={prefs.volume} />} value={`${prefs.volume}%`}>
-          <RangeSlider value={prefs.volume} onChange={setVolume} label="Level" valueText={`${prefs.volume}%`} />
-        </SoundRow>
-        <SoundRow name="Mix" icon={<MixIcon size={18} instruction={prefs.voiceMix} />} value={mixValueText(prefs.voiceMix)} hint="Start with the voice easy to hear, then find the balance you prefer.">
-          <RangeSlider
-            value={100 - prefs.voiceMix}
-            onChange={(v) => setVoiceMix(100 - v)}
-            label="Mix"
-            valueText={mixValueText(prefs.voiceMix)}
-            startLabel="Voice"
-            endLabel="Pulse"
-            fill={false}
-          />
-        </SoundRow>
-        <SoundRow name="Width" icon={<WidthIcon size={18} width={prefsPulseWidth(prefs)} />} value={pulseWidthLabel(prefsPulseWidth(prefs))} hint="Works best with headphones or stereo speakers.">
-          <div className="pt-2">
-            <PulseWidthPicker selected={prefsPulseWidth(prefs)} onSelect={chooseWidth} tone="player" layout="glyphs" showHeader={false} />
-          </div>
-        </SoundRow>
-      </Sheet>
-
-      <Sheet open={panel === 'repeat'} onClose={closePanel} label="Repeat" tone="player">
-        <SheetHeader title="Repeat each affirmation" onCancel={closePanel} tone="player" actionLabel="Done" />
-        <ChipRow
-          label="Repeat each affirmation"
-          options={[...REPEAT_OPTIONS]}
-          value={prefs.repeat}
-          format={(count) => REPEAT_LABELS[count as RepeatCount]}
-          onChange={(count) => setRepeat(count as RepeatCount)}
-        />
-      </Sheet>
+      <PlayerSettingsSheet
+        open={panel === 'settings'}
+        onClose={closePanel}
+        prefs={prefs}
+        onChange={updatePrefs}
+        onSelectBackground={selectBackground}
+        decodingId={decodingId}
+      />
 
 
       <Sheet open={panel === 'narrator'} onClose={closePanel} label="Narrator" tone="player">

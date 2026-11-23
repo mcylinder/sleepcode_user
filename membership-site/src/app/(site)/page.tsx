@@ -36,7 +36,7 @@ const STEPS = [
   },
   {
     title: 'Side to side.',
-    body: 'Inspired by the alternating left-right sound used in bilateral audio, the pulse travels between your ears. Follow it, or let it fade into the background. Adjust the width to whatever feels comfortable.',
+    body: 'Inspired by bilateral audio stimulation, the pulse travels between your ears. Follow it, or let it fade into the background. Choose a width in Settings → Background, or layer Nature or Music instead.',
   },
 ];
 

@@ -78,12 +78,20 @@ export const FAQ_GROUPS: FaqGroup[] = [
         a: 'A soft 111 Hz tone that keeps time with the affirmations. It’s there to gently carry the words and give your attention a quiet place to rest.',
       },
       {
-        q: 'What is the Width setting?',
-        a: 'Width sets how far the pulse alternates between your ears, from Center to Full. This left-right rhythm is a form of auditory bilateral stimulation, which many people use to settle, ease physical tension and feel calmer. It works best with headphones or stereo speakers.',
+        q: 'What backgrounds can I use?',
+        a: 'Choose Pulse, Nature, or Music in Settings → Background. Pulse is bilateral audio stimulation with four stereo widths (Center to Full). Nature and Music are looping beds mixed under the voice. Volume is your device’s own control; SleepCode no longer has a separate Level slider.',
+      },
+      {
+        q: 'What is Mix?',
+        a: 'Mix sits on the player and balances the narrator against the current background. Fully left is voice only; fully right keeps a little voice under a stronger background. The readout shows voice · background, default 75 · 25.',
+      },
+      {
+        q: 'What is Spacing?',
+        a: 'Spacing (in Settings) adds a short pause after each affirmation when On. Turn it Off to play lines more tightly; with Music, line starts also snap to the beat.',
       },
       {
         q: 'Whose voice is it?',
-        a: 'Each narrator is made with a text-to-speech system, chosen and directed for clarity and calm, so the delivery stays even across hours of listening. Tap the narrator’s name under the session title in the player to choose another. Every affirmation is written, edited and listened to by a person before it’s added to a session.',
+        a: 'Each narrator is made with a text-to-speech system, chosen and directed for clarity and calm, so the delivery stays even across hours of listening. Change the narrator in Settings. Every affirmation is written, edited and listened to by a person before it’s added to a session.',
       },
       {
         q: 'Can I use headphones?',
