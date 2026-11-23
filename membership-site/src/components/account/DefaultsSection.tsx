@@ -2,12 +2,20 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { mixValueText } from '@/components/ui/RangeSlider';
-import { MixIcon, PlayIcon, RepeatIcon, SpeakerIcon, VoiceIcon, WidthIcon } from '@/components/ui/icons';
+import { MixIcon, PlayIcon, RepeatIcon, VoiceIcon } from '@/components/ui/icons';
 import { pulseWidthLabel } from '@/lib/audio/pulseWidth';
+import { backgroundMixLabel } from '@/lib/backgrounds';
 import { FEATURED_FREE_SESSION, findVoice, loadLastPlayed, playerHref } from '@/lib/catalog';
 import { DEFAULT_PREFS, REPEAT_LABELS, loadPlayerPrefs, type PlayerPrefs } from '@/lib/playerPrefs';
 import { AccountSection } from './Section';
+
+function backgroundSummary(prefs: PlayerPrefs): string {
+  if (prefs.background.group === 'pulse') {
+    return `Pulse (${pulseWidthLabel(prefs.background.width)})`;
+  }
+  const bg = backgroundMixLabel(prefs.background);
+  return `${bg.name} · ${bg.group === 'nature' ? 'Nature' : 'Music'}`;
+}
 
 // A read-only summary. The player remembers your last choices; this shows what they are.
 export default function DefaultsSection() {
@@ -22,12 +30,20 @@ export default function DefaultsSection() {
     if (last) setPlayerLink(playerHref(last.session));
   }, []);
 
+  const narrator = findVoice(prefs.voiceId)?.name ?? 'Not set';
   const rows: { label: string; icon: React.ReactNode; value: string }[] = [
-    { label: 'Level', icon: <SpeakerIcon size={18} level={prefs.volume} />, value: `${prefs.volume}%` },
-    { label: 'Mix', icon: <MixIcon size={18} instruction={prefs.instruction} />, value: mixValueText(prefs.instruction) },
-    { label: 'Width', icon: <WidthIcon size={18} width={100} />, value: pulseWidthLabel(prefs.pulseWidth) },
+    { label: 'Narrator', icon: <VoiceIcon size={18} />, value: narrator },
+    {
+      label: 'Background',
+      icon: <MixIcon size={18} instruction={prefs.voiceMix} />,
+      value: backgroundSummary(prefs),
+    },
     { label: 'Repeat', icon: <RepeatIcon size={18} />, value: REPEAT_LABELS[prefs.repeat] },
-    { label: 'Narrator', icon: <VoiceIcon size={18} />, value: findVoice(prefs.voiceId)?.name ?? 'Not set' },
+    {
+      label: 'Spacing',
+      icon: <MixIcon size={18} instruction={50} />,
+      value: prefs.spacing ? 'On' : 'Off',
+    },
   ];
 
   return (

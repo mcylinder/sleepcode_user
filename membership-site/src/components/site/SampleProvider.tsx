@@ -5,7 +5,7 @@ import { FEATURED_FREE_SESSION, mediaVoiceId } from '@/lib/catalog';
 import { fetchSessionMedia } from '@/lib/authedFetch';
 import { buildPlayPlan, buildScript, type SessionManifest } from '@/lib/audio/playPlan';
 import { SessionEngine } from '@/lib/audio/SessionEngine';
-import { loadPlayerPrefs, engineBalance } from '@/lib/playerPrefs';
+import { loadPlayerPrefs, engineBalance, prefsPulseWidth } from '@/lib/playerPrefs';
 
 export const SAMPLE_SECONDS = 25;
 const SAMPLE_SIZE = 5;
@@ -54,10 +54,10 @@ export default function SampleProvider({ children }: { children: React.ReactNode
 
         const plan = buildPlayPlan(manifest, fileUrl);
         if (!plan.statementUrls.length) return;
-        engine.setBalance(engineBalance(prefs.instruction));
+        engine.setBalance(engineBalance(prefs.voiceMix));
         engine.setVolume(prefs.volume / 100);
         engine.setRepeat(1);
-        engine.setPulseWidth(prefs.pulseWidth);
+        engine.setPulseWidth(prefsPulseWidth(prefs));
         await engine.load(plan);
         if (!cancelled) setReady(true);
       } catch {

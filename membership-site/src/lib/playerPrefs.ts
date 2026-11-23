@@ -1,3 +1,7 @@
+import {
+  DEFAULT_BACKGROUND,
+  type BackgroundSelection,
+} from '@/lib/backgrounds';
 import { DEFAULT_PULSE_WIDTH, normalizePulseWidth, type PulseWidth } from '@/lib/audio/pulseWidth';
 import { mediaVoiceId } from '@/lib/catalog';
 
@@ -7,53 +11,83 @@ export type RepeatCount = (typeof REPEAT_OPTIONS)[number];
 export const LENGTH_HOURS = Array.from({ length: 11 }, (_, i) => i);
 export const LENGTH_MINUTES = [0, 10, 20, 30, 40, 50];
 
-// Shared by the player and Account > Defaults; changing either updates both.
+export const PREFS_VERSION = 2;
+
 export interface PlayerPrefs {
-  // Instruction share, 0-100. Pulse is the remainder.
-  instruction: number;
-  // Overall level, 0-100.
+  version: number;
+  /** Voice share 0–100. Background share is `100 - voiceMix`. Default 75. */
+  voiceMix: number;
+  /** Fixed master percent (no UI). Default 80 → gain 0.8. */
   volume: number;
   repeat: RepeatCount;
-  // Global voice. Defaults to the first catalog voice (Owen) when unset.
   voiceId: string | null;
-  // Pulse stereo image: 0 Center … 100 Full. Default Narrow (33).
-  pulseWidth: PulseWidth;
+  background: BackgroundSelection;
+  /** true = pause between affirmations (current timing). */
+  spacing: boolean;
 }
 
-// Single default for signed-in and signed-out (Instruction 75 / Pulse 25; 5% Voice steps).
 export const DEFAULT_PREFS: PlayerPrefs = {
-  instruction: 75,
+  version: PREFS_VERSION,
+  voiceMix: 75,
   volume: 80,
   repeat: 2,
   voiceId: null,
-  pulseWidth: DEFAULT_PULSE_WIDTH,
+  background: DEFAULT_BACKGROUND,
+  spacing: true,
 };
 
-function roundInstruction(value: number): number {
+function roundVoiceMix(value: number): number {
   return Math.min(100, Math.max(0, Math.round(value / 5) * 5));
 }
 
 const PREFS_KEY = 'sleepcode_player_prefs';
 
-interface StoredPrefs extends Partial<PlayerPrefs> {
-  // Earlier versions stored the pulse share. Session length is no longer a preference.
+interface StoredPrefs {
+  version?: number;
+  voiceMix?: number;
+  instruction?: number;
   blend?: number;
+  volume?: number;
+  repeat?: number;
+  voiceId?: string | null;
+  pulseWidth?: unknown;
+  background?: unknown;
+  spacing?: unknown;
+}
+
+function parseBackground(raw: StoredPrefs): BackgroundSelection {
+  const bg = raw.background;
+  if (bg && typeof bg === 'object') {
+    const obj = bg as { group?: string; width?: unknown; id?: unknown };
+    if (obj.group === 'pulse') {
+      return { group: 'pulse', width: normalizePulseWidth(obj.width) };
+    }
+    if ((obj.group === 'nature' || obj.group === 'music') && typeof obj.id === 'string') {
+      return { group: obj.group, id: obj.id };
+    }
+  }
+  if (raw.pulseWidth !== undefined) {
+    return { group: 'pulse', width: normalizePulseWidth(raw.pulseWidth) };
+  }
+  return DEFAULT_BACKGROUND;
 }
 
 export function loadPlayerPrefs(): PlayerPrefs {
   if (typeof window === 'undefined') return DEFAULT_PREFS;
   try {
     const raw = JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') as StoredPrefs;
-    const instructionRaw =
-      typeof raw.instruction === 'number' ? raw.instruction : typeof raw.blend === 'number' ? 100 - raw.blend : null;
-    const instruction =
-      instructionRaw === null ? DEFAULT_PREFS.instruction : roundInstruction(instructionRaw);
+    const isV2 = raw.version === PREFS_VERSION;
+    // v2: use stored voiceMix. Older prefs: reset to 75 (no blend migration).
+    const voiceMix = isV2 && typeof raw.voiceMix === 'number' ? roundVoiceMix(raw.voiceMix) : DEFAULT_PREFS.voiceMix;
     const volume =
       typeof raw.volume === 'number' ? Math.min(100, Math.max(0, Math.round(raw.volume))) : DEFAULT_PREFS.volume;
-    const repeat = REPEAT_OPTIONS.includes(raw.repeat as RepeatCount) ? (raw.repeat as RepeatCount) : DEFAULT_PREFS.repeat;
+    const repeat = REPEAT_OPTIONS.includes(raw.repeat as RepeatCount)
+      ? (raw.repeat as RepeatCount)
+      : DEFAULT_PREFS.repeat;
     const voiceId = mediaVoiceId(typeof raw.voiceId === 'string' ? raw.voiceId : null);
-    const pulseWidth = normalizePulseWidth(raw.pulseWidth);
-    return { instruction, volume, repeat, voiceId, pulseWidth };
+    const background = parseBackground(raw);
+    const spacing = typeof raw.spacing === 'boolean' ? raw.spacing : DEFAULT_PREFS.spacing;
+    return { version: PREFS_VERSION, voiceMix, volume, repeat, voiceId, background, spacing };
   } catch {
     return DEFAULT_PREFS;
   }
@@ -61,23 +95,36 @@ export function loadPlayerPrefs(): PlayerPrefs {
 
 export function savePlayerPrefs(prefs: PlayerPrefs): void {
   try {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    localStorage.setItem(PREFS_KEY, JSON.stringify({ ...prefs, version: PREFS_VERSION }));
   } catch {
     // Storage unavailable; preferences reset next visit.
   }
 }
 
-// Engine balance: 0 = all instruction, 100 = all pulse.
-export function engineBalance(instruction: number): number {
-  return 100 - instruction;
+/** Background share 0–100 for Mix fader fill/knob. */
+export function backgroundShare(voiceMix: number): number {
+  return 100 - Math.min(100, Math.max(0, voiceMix));
 }
 
-// H:MM
+export function mixReadout(voiceMix: number): string {
+  const v = Math.min(100, Math.max(0, Math.round(voiceMix)));
+  return `${v} · ${100 - v}`;
+}
+
+/** Pulse width when background is Pulse; otherwise default Narrow. */
+export function prefsPulseWidth(prefs: PlayerPrefs): PulseWidth {
+  return prefs.background.group === 'pulse' ? prefs.background.width : DEFAULT_PULSE_WIDTH;
+}
+
+// Engine balance: 0 = all voice, 100 = all background (legacy SessionEngine.setBalance).
+export function engineBalance(voiceMix: number): number {
+  return 100 - voiceMix;
+}
+
 export function formatHoursMinutes(totalMinutes: number): string {
   return `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, '0')}`;
 }
 
-// Timer tile label: null → "Length", <60 → "45 min", whole hours → "8 hr", else "1:30".
 export function fmtLength(lengthMinutes: number | null): string {
   if (lengthMinutes === null || lengthMinutes <= 0) return 'Length';
   if (lengthMinutes < 60) return `${lengthMinutes} min`;
@@ -87,7 +134,6 @@ export function fmtLength(lengthMinutes: number | null): string {
   return `${h}:${String(m).padStart(2, '0')}`;
 }
 
-// Sheet title when a countdown is active, e.g. "Session length: 3hr 2min remaining".
 export function formatRemainingTitle(remainingSec: number): string {
   const totalMin = Math.max(0, Math.ceil(remainingSec / 60));
   const h = Math.floor(totalMin / 60);
@@ -106,6 +152,22 @@ export function formatPlaybackClock(totalSec: number): string {
   const s = sec % 60;
   if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+/** Length CTA countdown: `H:MM`. */
+export function formatLengthCountdown(remainingSec: number): string {
+  const totalMin = Math.max(0, Math.ceil(remainingSec / 60));
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return `${h}:${String(m).padStart(2, '0')}`;
+}
+
+/** Length CTA idle label: `30m` / `2h`. */
+export function formatLengthIdle(lengthSec: number): string {
+  const min = Math.round(lengthSec / 60);
+  if (min < 60) return `${min}m`;
+  if (min % 60 === 0) return `${min / 60}h`;
+  return formatLengthCountdown(lengthSec);
 }
 
 export const REPEAT_LABELS: Record<RepeatCount, string> = {

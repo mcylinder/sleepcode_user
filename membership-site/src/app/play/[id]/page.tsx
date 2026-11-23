@@ -31,6 +31,7 @@ import {
   fmtLength,
   formatPlaybackClock,
   loadPlayerPrefs,
+  prefsPulseWidth,
   REPEAT_LABELS,
   REPEAT_OPTIONS,
   savePlayerPrefs,
@@ -246,10 +247,10 @@ function Player({ session }: { session: Session }) {
     setPrefs(saved);
     setLengthSec(DEFAULT_LENGTH_MINUTES * 60);
     setRemainingSec(DEFAULT_LENGTH_MINUTES * 60);
-    engine.setBalance(engineBalance(saved.instruction));
+    engine.setBalance(engineBalance(saved.voiceMix));
     engine.setVolume(saved.volume / 100);
     engine.setRepeat(saved.repeat);
-    engine.setPulseWidth(saved.pulseWidth);
+    engine.setPulseWidth(prefsPulseWidth(saved));
 
     const onVisibility = () => {
       if (document.visibilityState === 'visible') engine.resumeIfPlaying();
@@ -544,8 +545,8 @@ function Player({ session }: { session: Session }) {
       const preview = previewRef.current ?? new PulseWidthPreview();
       previewRef.current = preview;
       const current = loadPlayerPrefs();
-      preview.setPrefsVolume(current.volume, current.instruction);
-      preview.setWidth(current.pulseWidth);
+      preview.setPrefsVolume(current.volume, current.voiceMix);
+      preview.setWidth(prefsPulseWidth(current));
       const url = pulseUrlRef.current;
       if (!url || cancelled) return;
       try {
@@ -565,10 +566,10 @@ function Player({ session }: { session: Session }) {
     savePlayerPrefs(next);
   };
 
-  const setInstruction = (instruction: number) => {
-    engineRef.current?.setBalance(engineBalance(instruction));
-    if (panel === 'sound') previewRef.current?.setPrefsVolume(prefs.volume, instruction);
-    updatePrefs({ instruction });
+  const setVoiceMix = (voiceMix: number) => {
+    engineRef.current?.setBalance(engineBalance(voiceMix));
+    if (panel === 'sound') previewRef.current?.setPrefsVolume(prefs.volume, voiceMix);
+    updatePrefs({ voiceMix });
   };
 
   const setRepeat = (repeat: RepeatCount) => {
@@ -578,14 +579,14 @@ function Player({ session }: { session: Session }) {
 
   const setVolume = (volume: number) => {
     engineRef.current?.setVolume(volume / 100);
-    if (panel === 'sound') previewRef.current?.setPrefsVolume(volume, prefs.instruction);
+    if (panel === 'sound') previewRef.current?.setPrefsVolume(volume, prefs.voiceMix);
     updatePrefs({ volume });
   };
 
   function chooseWidth(pulseWidth: PulseWidth) {
     engineRef.current?.setPulseWidth(pulseWidth);
     previewRef.current?.setWidth(pulseWidth);
-    updatePrefs({ pulseWidth });
+    updatePrefs({ background: { group: 'pulse', width: pulseWidth } });
   }
 
   const cancelEnding = () => {
@@ -781,8 +782,8 @@ function Player({ session }: { session: Session }) {
             lengthTitle={lengthStarted ? 'Remaining' : 'Length'}
             repeat={prefs.repeat}
             volume={prefs.volume}
-            instruction={prefs.instruction}
-            pulseWidth={prefs.pulseWidth}
+            instruction={prefs.voiceMix}
+            pulseWidth={prefsPulseWidth(prefs)}
           />
         </div>
       </div>
@@ -830,20 +831,20 @@ function Player({ session }: { session: Session }) {
         <SoundRow name="Level" icon={<SpeakerIcon size={18} level={prefs.volume} />} value={`${prefs.volume}%`}>
           <RangeSlider value={prefs.volume} onChange={setVolume} label="Level" valueText={`${prefs.volume}%`} />
         </SoundRow>
-        <SoundRow name="Mix" icon={<MixIcon size={18} instruction={prefs.instruction} />} value={mixValueText(prefs.instruction)} hint="Start with the voice easy to hear, then find the balance you prefer.">
+        <SoundRow name="Mix" icon={<MixIcon size={18} instruction={prefs.voiceMix} />} value={mixValueText(prefs.voiceMix)} hint="Start with the voice easy to hear, then find the balance you prefer.">
           <RangeSlider
-            value={100 - prefs.instruction}
-            onChange={(v) => setInstruction(100 - v)}
+            value={100 - prefs.voiceMix}
+            onChange={(v) => setVoiceMix(100 - v)}
             label="Mix"
-            valueText={mixValueText(prefs.instruction)}
+            valueText={mixValueText(prefs.voiceMix)}
             startLabel="Voice"
             endLabel="Pulse"
             fill={false}
           />
         </SoundRow>
-        <SoundRow name="Width" icon={<WidthIcon size={18} width={prefs.pulseWidth} />} value={pulseWidthLabel(prefs.pulseWidth)} hint="Works best with headphones or stereo speakers.">
+        <SoundRow name="Width" icon={<WidthIcon size={18} width={prefsPulseWidth(prefs)} />} value={pulseWidthLabel(prefsPulseWidth(prefs))} hint="Works best with headphones or stereo speakers.">
           <div className="pt-2">
-            <PulseWidthPicker selected={prefs.pulseWidth} onSelect={chooseWidth} tone="player" layout="glyphs" showHeader={false} />
+            <PulseWidthPicker selected={prefsPulseWidth(prefs)} onSelect={chooseWidth} tone="player" layout="glyphs" showHeader={false} />
           </div>
         </SoundRow>
       </Sheet>
