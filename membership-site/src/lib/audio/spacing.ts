@@ -1,3 +1,8 @@
+/**
+ * Spacing Off helpers — kept for a future Settings toggle.
+ * Currently deactivated in the UI: Off clipped the pulse underlay; pause stays On.
+ */
+
 /** End offset (seconds) after trimming trailing near-silence. */
 export function trimmedDuration(buffer: AudioBuffer, threshold = 0.01): number {
   const ch = buffer.getChannelData(0);
