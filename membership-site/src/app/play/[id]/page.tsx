@@ -18,6 +18,7 @@ import {
 import { useMembership } from '@/hooks/useMembership';
 import { fetchBackgroundMedia, fetchSessionMedia, RequestError } from '@/lib/authedFetch';
 import { buildPlayPlan, buildScript, type ScriptConcept, type SessionManifest } from '@/lib/audio/playPlan';
+import { PulseWidthPreview } from '@/lib/audio/PulseWidthPreview';
 import { SessionEngine } from '@/lib/audio/SessionEngine';
 import { StayAwake } from '@/lib/audio/StayAwake';
 import { MediaSessionController } from '@/lib/audio/MediaSessionController';
@@ -177,8 +178,8 @@ function Player({ session }: { session: Session }) {
   const engineRef = useRef<SessionEngine | null>(null);
   const wakeRef = useRef<StayAwake | null>(null);
   const mediaRef = useRef<MediaSessionController | null>(null);
+  const pulsePreviewRef = useRef<PulseWidthPreview | null>(null);
   const pulseUrlRef = useRef<string | null>(null);
-  // Kept for load cleanup typing; pulse preview removed with Sound sheet.
   const [load, setLoad] = useState<LoadState>({ kind: 'loading', loaded: 0, total: 0 });
   const [attempt, setAttempt] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -227,15 +228,18 @@ function Player({ session }: { session: Session }) {
     const engine = new SessionEngine();
     const wake = new StayAwake();
     const media = new MediaSessionController();
+    const pulsePreview = new PulseWidthPreview();
     engine.onPlayingChange = setPlaying;
     engineRef.current = engine;
     wakeRef.current = wake;
     mediaRef.current = media;
+    pulsePreviewRef.current = pulsePreview;
 
     media.setHandlers({
       play: async () => {
         const current = engineRef.current;
         if (!current?.ready || current.playing) return;
+        pulsePreviewRef.current?.stop();
         wakeRef.current?.enable();
         await current.play();
       },
@@ -258,6 +262,7 @@ function Player({ session }: { session: Session }) {
     engine.setSpacing(true);
     engine.setPulseWidth(prefsPulseWidth(saved));
     if (saved.background.group === 'pulse') engine.usePulseBackground();
+    pulsePreview.setPrefsVolume(80, saved.voiceMix);
 
     const onVisibility = () => {
       if (document.visibilityState === 'visible') engine.resumeIfPlaying();
@@ -268,9 +273,11 @@ function Player({ session }: { session: Session }) {
       engine.dispose();
       wake.dispose();
       media.dispose();
+      pulsePreview.dispose();
       engineRef.current = null;
       wakeRef.current = null;
       mediaRef.current = null;
+      pulsePreviewRef.current = null;
     };
   }, []);
 
@@ -585,8 +592,15 @@ function Player({ session }: { session: Session }) {
       engine.usePulseBackground();
       engine.setPulseWidth(selection.width);
       updatePrefs({ background: selection });
+      // One-shot stereo preview while idle; live session already hears setPulseWidth.
+      // Rapid picks cancel the previous shot and restart with the new width.
+      const url = pulseUrlRef.current;
+      if (url && !engine.playing) {
+        void pulsePreviewRef.current?.playOnce(url, selection.width).catch(() => {});
+      }
       return;
     }
+    pulsePreviewRef.current?.stop();
     const item = selection.group === 'nature' ? findNature(selection.id) : findMusic(selection.id);
     const path = s3PathFor(selection);
     if (!item || !path) return;
@@ -647,6 +661,7 @@ function Player({ session }: { session: Session }) {
       await engine.pause();
       return;
     }
+    pulsePreviewRef.current?.stop();
     wakeRef.current?.enable();
     await engine.play();
   };
@@ -660,7 +675,10 @@ function Player({ session }: { session: Session }) {
     : lengthStarted
       ? formatLengthCountdown(remainingSec)
       : formatLengthIdle(lengthSec);
-  const closePanel = () => setPanel(null);
+  const closePanel = () => {
+    pulsePreviewRef.current?.stop();
+    setPanel(null);
+  };
   const voiceName = findVoice(prefs.voiceId)?.name ?? VOICES[0]?.name ?? 'Owen';
   const mixLabel = backgroundMixLabel(prefs.background);
   const statusLine = backgroundStatusLabel(prefs.background, voiceName);

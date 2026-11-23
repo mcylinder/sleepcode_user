@@ -12,15 +12,20 @@ function audioContextClass(): typeof AudioContext {
   return window.AudioContext ?? legacy;
 }
 
+/**
+ * Short pulse demo for width picking. Prefer playOnce — stops any in-flight shot
+ * when the user picks another width quickly.
+ */
 export class PulseWidthPreview {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private widthNode: PulseWidthNode | null = null;
   private source: AudioBufferSourceNode | null = null;
   private buffer: AudioBuffer | null = null;
+  private loadedUrl: string | null = null;
   private width: PulseWidth = DEFAULT_PULSE_WIDTH;
   private masterLevel = 0.5;
-  private loadId = 0;
+  private playId = 0;
   private disposed = false;
 
   setPrefsVolume(volume: number, instruction: number): void {
@@ -35,22 +40,34 @@ export class PulseWidthPreview {
     this.widthNode?.setWidth(this.width);
   }
 
-  async start(pulseUrl: string): Promise<void> {
+  /** One-shot pulse at `width`. Cancels any previous shot still playing. */
+  async playOnce(pulseUrl: string, width: PulseWidth): Promise<void> {
     if (this.disposed || !pulseUrl) return;
-    const id = ++this.loadId;
+    const id = ++this.playId;
     this.stopSource();
+    this.setWidth(width);
     const ctx = this.ensure();
     await ctx.resume().catch(() => {});
-    const response = await fetch(pulseUrl);
-    if (!response.ok) throw new Error(`Pulse preview failed (${response.status}).`);
-    const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
-    if (id !== this.loadId || this.disposed) return;
-    this.buffer = buffer;
-    this.startLoop();
+
+    if (!this.buffer || this.loadedUrl !== pulseUrl) {
+      const response = await fetch(pulseUrl);
+      if (!response.ok) throw new Error(`Pulse preview failed (${response.status}).`);
+      const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
+      if (id !== this.playId || this.disposed) return;
+      this.buffer = buffer;
+      this.loadedUrl = pulseUrl;
+    }
+    if (id !== this.playId || this.disposed) return;
+    this.startOnce(id);
+  }
+
+  /** @deprecated Prefer playOnce for width picking. */
+  async start(pulseUrl: string): Promise<void> {
+    await this.playOnce(pulseUrl, this.width);
   }
 
   stop(): void {
-    this.loadId += 1;
+    this.playId += 1;
     this.stopSource();
   }
 
@@ -63,6 +80,7 @@ export class PulseWidthPreview {
     this.ctx = null;
     this.master = null;
     this.buffer = null;
+    this.loadedUrl = null;
   }
 
   private ensure(): AudioContext {
@@ -77,13 +95,18 @@ export class PulseWidthPreview {
     return ctx;
   }
 
-  private startLoop(): void {
+  private startOnce(id: number): void {
     if (!this.ctx || !this.buffer || !this.widthNode) return;
     this.stopSource();
+    this.widthNode.setWidth(this.width);
     const source = this.ctx.createBufferSource();
     source.buffer = this.buffer;
-    source.loop = true;
+    source.loop = false;
     source.connect(this.widthNode.input);
+    source.onended = () => {
+      if (id !== this.playId) return;
+      this.source = null;
+    };
     source.start();
     this.source = source;
   }
@@ -91,6 +114,7 @@ export class PulseWidthPreview {
   private stopSource(): void {
     if (!this.source) return;
     try {
+      this.source.onended = null;
       this.source.stop();
       this.source.disconnect();
     } catch {
