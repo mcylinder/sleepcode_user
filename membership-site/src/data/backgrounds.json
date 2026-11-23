@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "notes": "Shared loops under s3://slpcd-media/background/{group}/{id}.m4a. Pulse is not stored here — it remains session/{voiceId}/{sessionId}/pulse.m4a with width applied in the engine. Mark ready:true once the file is uploaded.",
+  "pulse": {
+    "id": "pulse",
+    "name": "Pulse",
+    "subhead": "Bilateral audio stimulation",
+    "widths": [
+      { "id": "center", "label": "Center", "subLabel": "mono", "pulseWidth": 0 },
+      { "id": "narrow", "label": "Narrow", "subLabel": null, "pulseWidth": 33 },
+      { "id": "wide", "label": "Wide", "subLabel": null, "pulseWidth": 66 },
+      { "id": "full", "label": "Full", "subLabel": null, "pulseWidth": 100 }
+    ]
+  },
+  "nature": [
+    {
+      "id": "rain",
+      "name": "Rain",
+      "file": "rain.m4a",
+      "path": "background/nature/rain.m4a",
+      "loopSeconds": 30,
+      "ready": true,
+      "notes": "Dev upload — replace when final master is ready."
+    },
+    {
+      "id": "fireplace",
+      "name": "Fireplace",
+      "file": "fireplace.m4a",
+      "path": "background/nature/fireplace.m4a",
+      "loopSeconds": 30,
+      "ready": false
+    },
+    {
+      "id": "wind",
+      "name": "Wind",
+      "file": "wind.m4a",
+      "path": "background/nature/wind.m4a",
+      "loopSeconds": 30,
+      "ready": false
+    },
+    {
+      "id": "ocean",
+      "name": "Ocean",
+      "file": "ocean.m4a",
+      "path": "background/nature/ocean.m4a",
+      "loopSeconds": 30,
+      "ready": false
+    },
+    {
+      "id": "stream",
+      "name": "Stream",
+      "file": "stream.m4a",
+      "path": "background/nature/stream.m4a",
+      "loopSeconds": 30,
+      "ready": false
+    },
+    {
+      "id": "night-crickets",
+      "name": "Night Crickets",
+      "file": "night-crickets.m4a",
+      "path": "background/nature/night-crickets.m4a",
+      "loopSeconds": 30,
+      "ready": false
+    }
+  ],
+  "music": [
+    {
+      "id": "slow-harbor",
+      "name": "Slow Harbor",
+      "file": "slow-harbor.m4a",
+      "path": "background/music/slow-harbor.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": true,
+      "notes": "Dev upload — 90 BPM; loop length should be a multiple of 4s/8s."
+    },
+    {
+      "id": "low-tide",
+      "name": "Low Tide",
+      "file": "low-tide.m4a",
+      "path": "background/music/low-tide.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": false
+    },
+    {
+      "id": "lantern",
+      "name": "Lantern",
+      "file": "lantern.m4a",
+      "path": "background/music/lantern.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": false
+    },
+    {
+      "id": "long-field",
+      "name": "Long Field",
+      "file": "long-field.m4a",
+      "path": "background/music/long-field.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": false
+    },
+    {
+      "id": "soft-static",
+      "name": "Soft Static",
+      "file": "soft-static.m4a",
+      "path": "background/music/soft-static.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": false
+    },
+    {
+      "id": "north-window",
+      "name": "North Window",
+      "file": "north-window.m4a",
+      "path": "background/music/north-window.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": false
+    },
+    {
+      "id": "undertow",
+      "name": "Undertow",
+      "file": "undertow.m4a",
+      "path": "background/music/undertow.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": false
+    },
+    {
+      "id": "ember-hours",
+      "name": "Ember Hours",
+      "file": "ember-hours.m4a",
+      "path": "background/music/ember-hours.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": false
+    },
+    {
+      "id": "still-water",
+      "name": "Still Water",
+      "file": "still-water.m4a",
+      "path": "background/music/still-water.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": false
+    },
+    {
+      "id": "quiet-room",
+      "name": "Quiet Room",
+      "file": "quiet-room.m4a",
+      "path": "background/music/quiet-room.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": false
+    },
+    {
+      "id": "pale-current",
+      "name": "Pale Current",
+      "file": "pale-current.m4a",
+      "path": "background/music/pale-current.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": false
+    },
+    {
+      "id": "late-harbor",
+      "name": "Late Harbor",
+      "file": "late-harbor.m4a",
+      "path": "background/music/late-harbor.m4a",
+      "loopSeconds": 96,
+      "bpm": 90,
+      "ready": false
+    }
+  ]
+}
