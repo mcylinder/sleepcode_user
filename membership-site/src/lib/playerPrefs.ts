@@ -37,7 +37,7 @@ export const DEFAULT_PREFS: PlayerPrefs = {
 };
 
 function roundVoiceMix(value: number): number {
-  return Math.min(100, Math.max(0, Math.round(value / 5) * 5));
+  return Math.min(100, Math.max(0, Math.round(value)));
 }
 
 const PREFS_KEY = 'sleepcode_player_prefs';

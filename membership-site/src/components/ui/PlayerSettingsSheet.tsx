@@ -14,7 +14,7 @@ import { VOICES } from '@/lib/catalog';
 import { fetchBackgroundMedia } from '@/lib/authedFetch';
 import { narratorPreviewUrl } from '@/lib/narratorPreview';
 import { PULSE_WIDTH_OPTIONS, type PulseWidth } from '@/lib/audio/pulseWidth';
-import { REPEAT_OPTIONS, type PlayerPrefs, type RepeatCount } from '@/lib/playerPrefs';
+import { REPEAT_OPTIONS, type PlayerPrefs } from '@/lib/playerPrefs';
 import { MusicNoteIcon, NatureIcon, PlayIcon, PulseIcon } from './icons';
 import Sheet, { SheetHeader } from './Sheet';
 
@@ -135,127 +135,134 @@ export default function PlayerSettingsSheet({
         : 'Music';
 
   return (
-    <Sheet open={open} onClose={onClose} label="Settings" tone="player">
+    <Sheet open={open} onClose={onClose} label="Settings" tone="player" fullHeight>
       {view === 'settings' ? (
-        <>
-          <SheetHeader title="Settings" onCancel={onClose} tone="player" actionLabel="Done" />
-
-          <div>
-            <p className="mb-2.5 text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Narrator</p>
-            <div className="overflow-hidden rounded-[14px] border border-hairline bg-p-panel">
-              {VOICES.map((voice) => {
-                const selected = prefs.voiceId === voice.id || (!prefs.voiceId && voice === VOICES[0]);
-                const previewing = previewingVoice === voice.id;
-                return (
-                  <div
-                    key={voice.id}
-                    className={`flex items-center gap-3 border-t border-hairline px-4 py-3.5 first:border-t-0 ${
-                      selected ? 'bg-[var(--selected-bg)]' : ''
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      aria-label={`Preview ${voice.name}`}
-                      onClick={() => void previewNarrator(voice.id)}
-                      className={`grid h-[34px] w-[34px] flex-none place-items-center rounded-full border ${
-                        previewing
-                          ? 'border-p-accent bg-p-accent text-p-on-accent'
-                          : 'border-hairline-strong text-p-fg'
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex-none">
+            <SheetHeader title="Settings" onCancel={onClose} tone="player" actionLabel="Done" />
+          </div>
+          <div className="mt-2 flex min-h-0 flex-1 flex-col gap-10 overflow-y-auto pb-2">
+            <section className="flex flex-col gap-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Narrator</p>
+              <div className="overflow-hidden rounded-[14px] border border-hairline bg-p-panel">
+                {VOICES.map((voice) => {
+                  const selected = prefs.voiceId === voice.id || (!prefs.voiceId && voice === VOICES[0]);
+                  const previewing = previewingVoice === voice.id;
+                  return (
+                    <div
+                      key={voice.id}
+                      className={`flex items-center gap-3 border-t border-hairline px-4 py-3.5 first:border-t-0 ${
+                        selected ? 'bg-[var(--selected-bg)]' : ''
                       }`}
                     >
-                      <PlayIcon size={11} />
-                    </button>
-                    <button
-                      type="button"
-                      className="flex min-w-0 flex-1 flex-col text-left"
-                      onClick={() => onChange({ voiceId: voice.id })}
-                    >
-                      <span className="text-[15px] font-medium">{voice.name}</span>
-                      <span className="text-[12.5px] text-p-muted">{voice.description}</span>
-                    </button>
-                    {selected ? <Check /> : null}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                      <button
+                        type="button"
+                        aria-label={`Preview ${voice.name}`}
+                        onClick={() => void previewNarrator(voice.id)}
+                        className={`grid h-[34px] w-[34px] flex-none place-items-center rounded-full border ${
+                          previewing
+                            ? 'border-p-accent bg-p-accent text-p-on-accent'
+                            : 'border-hairline-strong text-p-fg'
+                        }`}
+                      >
+                        <PlayIcon size={11} />
+                      </button>
+                      <button
+                        type="button"
+                        className="flex min-w-0 flex-1 flex-col text-left"
+                        onClick={() => onChange({ voiceId: voice.id })}
+                      >
+                        <span className={`text-[15px] font-medium ${previewing ? 'text-p-accent' : ''}`}>
+                          {voice.name}
+                        </span>
+                        <span className="text-[12.5px] text-p-muted">{voice.description}</span>
+                      </button>
+                      {selected ? <Check /> : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
 
-          <div>
-            <p className="mb-2.5 text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Background</p>
-            <button
-              type="button"
-              onClick={() => setView('background')}
-              className="flex w-full items-center gap-3 rounded-[14px] border border-hairline bg-p-panel px-4 py-3.5 text-left"
-            >
-              <span className="text-p-accent">
-                {prefs.background.group === 'nature' ? (
-                  <NatureIcon size={18} />
-                ) : prefs.background.group === 'music' ? (
-                  <MusicNoteIcon size={18} />
-                ) : (
-                  <PulseIcon size={18} />
-                )}
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-[15px] font-medium">{bgLabel.name}</span>
-                <span className="text-[12.5px] text-p-muted">{bgSubtitle}</span>
-              </span>
-              <span className="text-p-muted">›</span>
-            </button>
-          </div>
-
-          <div>
-            <p className="mb-2.5 text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Repeat</p>
-            <div className="flex gap-1 rounded-[12px] border border-hairline bg-p-panel p-[3px]">
-              {REPEAT_OPTIONS.map((count) => {
-                const on = prefs.repeat === count;
-                return (
-                  <button
-                    key={count}
-                    type="button"
-                    onClick={() => onChange({ repeat: count })}
-                    className={`flex-1 rounded-[9px] py-2 text-[13px] ${
-                      on ? 'bg-p-tile-active text-p-fg shadow-[inset_0_0_0_1px_var(--hairline-strong)]' : 'text-p-muted'
-                    }`}
-                  >
-                    {count === 1 ? 'Once' : count === 2 ? 'Twice' : '4×'}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-2 px-0.5 text-[12.5px] leading-snug text-p-muted">
-              How many times each affirmation plays before the next.
-            </p>
-          </div>
-
-          <div>
-            <p className="mb-2.5 text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Spacing</p>
-            <div className="flex items-center gap-3 rounded-[14px] border border-hairline bg-p-panel px-4 py-3.5">
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-[15px] font-medium">Pause between affirmations</span>
-                <span className="text-[12.5px] text-p-muted">A short silence after each line.</span>
-              </span>
+            <section className="flex flex-col gap-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Background</p>
               <button
                 type="button"
-                role="switch"
-                aria-checked={prefs.spacing}
-                onClick={() => onChange({ spacing: !prefs.spacing })}
-                className={`relative h-7 w-[46px] flex-none rounded-full transition-colors ${
-                  prefs.spacing ? 'bg-p-accent' : 'bg-p-track'
-                }`}
+                onClick={() => setView('background')}
+                className="flex w-full items-center gap-3 rounded-[14px] border border-hairline bg-p-panel px-4 py-3.5 text-left"
               >
-                <span
-                  className={`absolute top-[3px] h-[22px] w-[22px] rounded-full transition-all ${
-                    prefs.spacing ? 'right-[3px] bg-p-on-accent' : 'left-[3px] bg-p-muted'
-                  }`}
-                />
+                <span className="text-p-accent">
+                  {prefs.background.group === 'nature' ? (
+                    <NatureIcon size={18} />
+                  ) : prefs.background.group === 'music' ? (
+                    <MusicNoteIcon size={18} />
+                  ) : (
+                    <PulseIcon size={18} />
+                  )}
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="text-[15px] font-medium">{bgLabel.name}</span>
+                  <span className="text-[12.5px] text-p-muted">{bgSubtitle}</span>
+                </span>
+                <span className="text-p-muted">›</span>
               </button>
-            </div>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Repeat</p>
+              <div className="flex gap-1 rounded-[12px] border border-hairline bg-p-panel p-[3px]">
+                {REPEAT_OPTIONS.map((count) => {
+                  const on = prefs.repeat === count;
+                  return (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => onChange({ repeat: count })}
+                      className={`flex-1 rounded-[9px] py-2.5 text-[13px] ${
+                        on
+                          ? 'bg-p-tile-active text-p-fg shadow-[inset_0_0_0_1px_var(--hairline-strong)]'
+                          : 'text-p-muted'
+                      }`}
+                    >
+                      {count === 1 ? 'Once' : count === 2 ? 'Twice' : '4×'}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="px-0.5 text-[12.5px] leading-snug text-p-muted">
+                How many times each affirmation plays before the next.
+              </p>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Spacing</p>
+              <div className="flex items-center gap-3 rounded-[14px] border border-hairline bg-p-panel px-4 py-3.5">
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="text-[15px] font-medium">Pause between affirmations</span>
+                  <span className="text-[12.5px] text-p-muted">A short silence after each line.</span>
+                </span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={prefs.spacing}
+                  onClick={() => onChange({ spacing: !prefs.spacing })}
+                  className={`relative h-7 w-[46px] flex-none rounded-full transition-colors ${
+                    prefs.spacing ? 'bg-p-accent' : 'bg-p-track'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-[3px] h-[22px] w-[22px] rounded-full transition-all ${
+                      prefs.spacing ? 'right-[3px] bg-p-on-accent' : 'left-[3px] bg-p-muted'
+                    }`}
+                  />
+                </button>
+              </div>
+            </section>
           </div>
-        </>
+        </div>
       ) : (
-        <>
-          <div className="flex items-center justify-between gap-3">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex flex-none items-center justify-between gap-3">
             <button type="button" onClick={() => setView('settings')} className="min-h-[44px] text-[15px] text-p-muted">
               ‹ Settings
             </button>
@@ -265,7 +272,7 @@ export default function PlayerSettingsSheet({
             </button>
           </div>
 
-          <div className="flex gap-1 rounded-[12px] border border-hairline bg-p-panel p-[3px]">
+          <div className="mt-4 flex flex-none gap-1 rounded-[12px] border border-hairline bg-p-panel p-[3px]">
             {(
               [
                 { id: 'pulse' as const, label: 'Pulse', icon: <PulseIcon size={16} /> },
@@ -289,70 +296,72 @@ export default function PlayerSettingsSheet({
             ))}
           </div>
 
-          {tab === 'pulse' && (
-            <div>
-              <div className="mb-3.5">
-                <h4 className="text-[17px] font-medium">Pulse</h4>
-                <p className="mt-0.5 text-[13px] text-p-muted">{pulseSubhead()}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                {PULSE_WIDTH_CARDS.map((card) => {
-                  const width = card.pulseWidth as PulseWidth;
-                  const selected =
-                    prefs.background.group === 'pulse' && prefs.background.width === width;
-                  return (
-                    <button
-                      key={card.id}
-                      type="button"
-                      onClick={() => void onSelectBackground({ group: 'pulse', width })}
-                      className={`flex flex-col gap-3 rounded-[14px] border px-3.5 pb-3.5 pt-4 text-left ${
-                        selected
-                          ? 'border-p-accent bg-[var(--selected-bg)]'
-                          : 'border-hairline bg-p-panel'
-                      }`}
-                    >
-                      <PulseWidthViz width={width} />
-                      <span className="flex items-center justify-between text-[14px]">
-                        <span>
-                          {card.label}
-                          {card.subLabel ? (
-                            <span className="ml-1.5 text-[12px] text-p-muted">{card.subLabel}</span>
-                          ) : null}
+          <div className="mt-5 min-h-0 flex-1 overflow-y-auto pb-2">
+            {tab === 'pulse' && (
+              <div>
+                <div className="mb-3.5">
+                  <h4 className="text-[17px] font-medium">Pulse</h4>
+                  <p className="mt-0.5 text-[13px] text-p-muted">{pulseSubhead()}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {PULSE_WIDTH_CARDS.map((card) => {
+                    const width = card.pulseWidth as PulseWidth;
+                    const selected =
+                      prefs.background.group === 'pulse' && prefs.background.width === width;
+                    return (
+                      <button
+                        key={card.id}
+                        type="button"
+                        onClick={() => void onSelectBackground({ group: 'pulse', width })}
+                        className={`flex flex-col gap-3 rounded-[14px] border px-3.5 pb-3.5 pt-4 text-left ${
+                          selected
+                            ? 'border-p-accent bg-[var(--selected-bg)]'
+                            : 'border-hairline bg-p-panel'
+                        }`}
+                      >
+                        <PulseWidthViz width={width} />
+                        <span className="flex items-center justify-between text-[14px]">
+                          <span>
+                            {card.label}
+                            {card.subLabel ? (
+                              <span className="ml-1.5 text-[12px] text-p-muted">{card.subLabel}</span>
+                            ) : null}
+                          </span>
+                          {selected ? <Check /> : null}
                         </span>
-                        {selected ? <Check /> : null}
-                      </span>
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-3.5 text-[12.5px] leading-snug text-p-muted">
+                  The pulse moves between your ears. Wider settings work best with headphones.
+                </p>
               </div>
-              <p className="mt-3.5 text-[12.5px] leading-snug text-p-muted">
-                The pulse moves between your ears. Wider settings work best with headphones.
-              </p>
-            </div>
-          )}
+            )}
 
-          {tab === 'nature' && (
-            <BgList
-              items={listNature()}
-              selectedId={prefs.background.group === 'nature' ? prefs.background.id : null}
-              previewingId={previewingBg}
-              decodingId={decodingId}
-              onPreview={(item) => void previewBackground(item.path, item.id)}
-              onSelect={(item) => void onSelectBackground({ group: 'nature', id: item.id })}
-            />
-          )}
+            {tab === 'nature' && (
+              <BgList
+                items={listNature()}
+                selectedId={prefs.background.group === 'nature' ? prefs.background.id : null}
+                previewingId={previewingBg}
+                decodingId={decodingId}
+                onPreview={(item) => void previewBackground(item.path, item.id)}
+                onSelect={(item) => void onSelectBackground({ group: 'nature', id: item.id })}
+              />
+            )}
 
-          {tab === 'music' && (
-            <BgList
-              items={listMusic()}
-              selectedId={prefs.background.group === 'music' ? prefs.background.id : null}
-              previewingId={previewingBg}
-              decodingId={decodingId}
-              onPreview={(item) => void previewBackground(item.path, item.id)}
-              onSelect={(item) => void onSelectBackground({ group: 'music', id: item.id })}
-            />
-          )}
-        </>
+            {tab === 'music' && (
+              <BgList
+                items={listMusic()}
+                selectedId={prefs.background.group === 'music' ? prefs.background.id : null}
+                previewingId={previewingBg}
+                decodingId={decodingId}
+                onPreview={(item) => void previewBackground(item.path, item.id)}
+                onSelect={(item) => void onSelectBackground({ group: 'music', id: item.id })}
+              />
+            )}
+          </div>
+        </div>
       )}
     </Sheet>
   );
@@ -396,7 +405,7 @@ function BgList({
   onSelect: (item: { id: string; name: string; path: string; ready?: boolean }) => void;
 }) {
   return (
-    <div className="max-h-[52vh] overflow-y-auto overflow-x-hidden rounded-[14px] border border-hairline bg-p-panel">
+    <div className="overflow-x-hidden rounded-[14px] border border-hairline bg-p-panel">
       {items.map((item) => {
         const ready = isReady(item);
         const selected = selectedId === item.id;
@@ -433,12 +442,16 @@ function BgList({
             <button
               type="button"
               disabled={!ready || decoding}
-              className="flex min-w-0 flex-1 flex-col text-left"
+              className="flex min-w-0 flex-1 text-left"
               onClick={() => onSelect(item)}
             >
-              <span className="text-[15px] font-medium">{item.name}</span>
-              {previewing ? <span className="text-[12.5px] text-p-muted">Previewing</span> : null}
-              {decoding ? <span className="text-[12.5px] text-p-muted">Loading…</span> : null}
+              <span
+                className={`text-[15px] font-medium ${
+                  previewing || decoding ? 'text-p-accent' : ''
+                }`}
+              >
+                {decoding ? `${item.name}…` : item.name}
+              </span>
             </button>
             {selected ? <Check /> : null}
           </div>

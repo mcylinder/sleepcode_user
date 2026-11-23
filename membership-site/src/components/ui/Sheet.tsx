@@ -11,12 +11,15 @@ export default function Sheet({
   onClose,
   label,
   tone = 'site',
+  fullHeight = false,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   label: string;
   tone?: 'site' | 'player';
+  /** Fill the viewport (Settings / Background leaf). */
+  fullHeight?: boolean;
   children: React.ReactNode;
 }) {
   const [mounted, setMounted] = useState(open);
@@ -64,9 +67,11 @@ export default function Sheet({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className={`sc-sheet-panel box-border flex w-full max-w-[520px] flex-col gap-5 rounded-t-[22px] px-6 pb-[calc(34px+env(safe-area-inset-bottom,0px))] pt-[22px] ${
-          player ? 'bg-p-sheet text-p-fg' : 'bg-bg text-ink'
-        }`}
+        className={`sc-sheet-panel box-border flex w-full max-w-[520px] flex-col px-6 pb-[calc(34px+env(safe-area-inset-bottom,0px))] pt-[22px] ${
+          fullHeight
+            ? 'h-[100dvh] max-h-[100dvh] gap-0 rounded-none'
+            : 'gap-5 rounded-t-[22px]'
+        } ${player ? 'bg-p-sheet text-p-fg' : 'bg-bg text-ink'}`}
         style={{
           transform: shown ? 'translateY(0)' : 'translateY(40px)',
           transition: `transform ${TRANSITION_MS}ms var(--ease-sheet)`,
