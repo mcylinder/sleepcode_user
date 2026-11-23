@@ -14,7 +14,7 @@ function backgroundSummary(prefs: PlayerPrefs): string {
     return `Pulse (${pulseWidthLabel(prefs.background.width)})`;
   }
   const bg = backgroundMixLabel(prefs.background);
-  return `${bg.name} · ${bg.group === 'nature' ? 'Nature' : 'Music'}`;
+  return `${bg.name} · ${bg.group === 'nature' ? 'Environment' : 'Music'}`;
 }
 
 // A read-only summary. The player remembers your last choices; this shows what they are.

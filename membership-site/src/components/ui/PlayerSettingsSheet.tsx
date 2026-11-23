@@ -1,25 +1,51 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  backgroundMixLabel,
+  findMusic,
+  findNature,
   isReady,
   listMusic,
   listNature,
   PULSE_WIDTH_CARDS,
   pulseSubhead,
+  type BackgroundGroup,
   type BackgroundSelection,
 } from '@/lib/backgrounds';
 import { VOICES } from '@/lib/catalog';
 import { fetchBackgroundMedia } from '@/lib/authedFetch';
 import { narratorPreviewUrl } from '@/lib/narratorPreview';
-import { PULSE_WIDTH_OPTIONS, type PulseWidth } from '@/lib/audio/pulseWidth';
+import { DEFAULT_PULSE_WIDTH, PULSE_WIDTH_OPTIONS, pulseWidthLabel, type PulseWidth } from '@/lib/audio/pulseWidth';
 import { REPEAT_OPTIONS, type PlayerPrefs } from '@/lib/playerPrefs';
 import { MusicNoteIcon, NatureIcon, PlayIcon, PulseIcon } from './icons';
 import Sheet, { SheetHeader } from './Sheet';
 
 type View = 'settings' | 'background';
 type BgTab = 'pulse' | 'nature' | 'music';
+
+const BG_OPTIONS: {
+  tab: BgTab;
+  group: BackgroundGroup;
+  label: string;
+  icon: ReactNode;
+}[] = [
+  { tab: 'pulse', group: 'pulse', label: 'Pulse', icon: <PulseIcon size={18} /> },
+  { tab: 'nature', group: 'nature', label: 'Environment', icon: <NatureIcon size={18} /> },
+  { tab: 'music', group: 'music', label: 'Music', icon: <MusicNoteIcon size={18} /> },
+];
+
+function backgroundDetail(prefs: PlayerPrefs, group: BackgroundGroup): string {
+  if (group === 'pulse') {
+    if (prefs.background.group === 'pulse') return pulseWidthLabel(prefs.background.width);
+    return 'Bilateral audio';
+  }
+  if (group === 'nature') {
+    if (prefs.background.group === 'nature') return findNature(prefs.background.id)?.name ?? 'Choose a sound';
+    return 'Nature sounds';
+  }
+  if (prefs.background.group === 'music') return findMusic(prefs.background.id)?.name ?? 'Choose a piece';
+  return 'Ambient pieces';
+}
 
 function Check() {
   return (
@@ -126,13 +152,14 @@ export default function PlayerSettingsSheet({
     }
   }
 
-  const bgLabel = backgroundMixLabel(prefs.background);
-  const bgSubtitle =
-    prefs.background.group === 'pulse'
-      ? 'Pulse'
-      : prefs.background.group === 'nature'
-        ? 'Nature'
-        : 'Music';
+  function openBackground(tab: BgTab) {
+    setTab(tab);
+    setView('background');
+    // Switching to Pulse applies it immediately (width picker is the adjustment).
+    if (tab === 'pulse' && prefs.background.group !== 'pulse') {
+      void onSelectBackground({ group: 'pulse', width: DEFAULT_PULSE_WIDTH });
+    }
+  }
 
   return (
     <Sheet open={open} onClose={onClose} label="Settings" tone="player" fullHeight>
@@ -186,26 +213,31 @@ export default function PlayerSettingsSheet({
 
             <section className="flex flex-col gap-3">
               <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Background</p>
-              <button
-                type="button"
-                onClick={() => setView('background')}
-                className="flex w-full items-center gap-3 rounded-[14px] border border-hairline bg-p-panel px-4 py-3.5 text-left"
-              >
-                <span className="text-p-accent">
-                  {prefs.background.group === 'nature' ? (
-                    <NatureIcon size={18} />
-                  ) : prefs.background.group === 'music' ? (
-                    <MusicNoteIcon size={18} />
-                  ) : (
-                    <PulseIcon size={18} />
-                  )}
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-[15px] font-medium">{bgLabel.name}</span>
-                  <span className="text-[12.5px] text-p-muted">{bgSubtitle}</span>
-                </span>
-                <span className="text-p-muted">›</span>
-              </button>
+              <div className="overflow-hidden rounded-[14px] border border-hairline bg-p-panel">
+                {BG_OPTIONS.map((option) => {
+                  const selected = prefs.background.group === option.group;
+                  return (
+                    <button
+                      key={option.tab}
+                      type="button"
+                      onClick={() => openBackground(option.tab)}
+                      aria-current={selected ? 'true' : undefined}
+                      className={`flex w-full items-center gap-3 border-t border-hairline px-4 py-3.5 text-left first:border-t-0 ${
+                        selected ? 'bg-[var(--selected-bg)]' : ''
+                      }`}
+                    >
+                      <span className={selected ? 'text-p-accent' : 'text-p-muted'}>{option.icon}</span>
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="text-[15px] font-medium">{option.label}</span>
+                        <span className="text-[12.5px] text-p-muted">
+                          {backgroundDetail(prefs, option.group)}
+                        </span>
+                      </span>
+                      {selected ? <Check /> : <span className="text-p-muted">›</span>}
+                    </button>
+                  );
+                })}
+              </div>
             </section>
 
             <section className="flex flex-col gap-3">
@@ -252,19 +284,13 @@ export default function PlayerSettingsSheet({
           </div>
 
           <div className="mt-4 flex flex-none gap-1 rounded-[12px] border border-hairline bg-p-panel p-[3px]">
-            {(
-              [
-                { id: 'pulse' as const, label: 'Pulse', icon: <PulseIcon size={16} /> },
-                { id: 'nature' as const, label: 'Nature', icon: <NatureIcon size={16} /> },
-                { id: 'music' as const, label: 'Music', icon: <MusicNoteIcon size={16} /> },
-              ] as const
-            ).map((item) => (
+            {BG_OPTIONS.map((item) => (
               <button
-                key={item.id}
+                key={item.tab}
                 type="button"
-                onClick={() => setTab(item.id)}
+                onClick={() => setTab(item.tab)}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-[9px] py-2 text-[13px] ${
-                  tab === item.id
+                  tab === item.tab
                     ? 'bg-p-tile-active text-p-fg shadow-[inset_0_0_0_1px_var(--hairline-strong)]'
                     : 'text-p-muted'
                 }`}
