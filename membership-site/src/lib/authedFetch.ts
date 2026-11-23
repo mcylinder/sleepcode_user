@@ -55,3 +55,16 @@ export async function fetchSessionMedia(
   });
   return readJson(response);
 }
+
+/** Signs background/ for Nature and Music loops (and previews). */
+export async function fetchBackgroundMedia(): Promise<{ baseUrl: string; query: string }> {
+  const user = auth?.currentUser;
+  if (user) return authedFetch('/api/media/background', {});
+
+  const response = await fetch('/api/media/background', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  return readJson(response);
+}
