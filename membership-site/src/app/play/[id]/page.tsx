@@ -34,6 +34,7 @@ import {
   DEFAULT_PREFS,
   LENGTH_HOURS,
   LENGTH_MINUTES,
+  effectiveStatements,
   formatLengthCountdown,
   formatLengthIdle,
   formatPlaybackClock,
@@ -196,6 +197,8 @@ function Player({ session }: { session: Session }) {
   const [introOpen, setIntroOpen] = useState(false);
   const [statementsOpen, setStatementsOpen] = useState(false);
   const [script, setScript] = useState<ScriptConcept[]>([]);
+  /** Loaded affirmation clips (variants), not concept count — drives Statements max. */
+  const [clipCount, setClipCount] = useState(0);
   const [promptPending, setPromptPending] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
@@ -256,7 +259,6 @@ function Player({ session }: { session: Session }) {
     engine.setVoiceMix(saved.voiceMix);
     engine.setVolume(0.8);
     engine.setRepeat(saved.repeat);
-    // Spacing toggle deactivated in Settings; always On (see playerPrefs / SessionEngine notes).
     engine.setSpacing(true);
     engine.setPulseWidth(prefsPulseWidth(saved));
     if (saved.background.group === 'pulse') engine.usePulseBackground();
@@ -298,6 +300,7 @@ function Player({ session }: { session: Session }) {
     if (!engine || !voiceId) return;
     let cancelled = false;
     setLoad({ kind: 'loading', loaded: 0, total: 0 });
+    setClipCount(0);
     const pendingNotice = pendingVoiceNoticeRef.current;
     pendingVoiceNoticeRef.current = null;
     setVoiceNotice(pendingNotice);
@@ -316,6 +319,7 @@ function Player({ session }: { session: Session }) {
       await engine!.load(plan, (loaded, total) => {
         if (!cancelled) setLoad({ kind: 'loading', loaded, total });
       });
+      if (!cancelled) setClipCount(engine!.clipCount);
     }
 
     function friendlyLoadError(error: unknown): string {
@@ -331,7 +335,9 @@ function Player({ session }: { session: Session }) {
         await loadWithVoice(voiceId);
         if (cancelled) return;
         setBeatSec(engine!.pulseBeatSeconds ?? 1);
-        const bg = loadPlayerPrefs().background;
+        const savedPrefs = loadPlayerPrefs();
+        engine!.setStatementLimit(effectiveStatements(savedPrefs, engine!.clipCount));
+        const bg = savedPrefs.background;
         if (bg.group !== 'pulse') {
           // Fire-and-forget restore of Nature/Music after session clips load.
           void (async () => {
@@ -373,12 +379,14 @@ function Player({ session }: { session: Session }) {
             await loadWithVoice(fallback.id);
             if (cancelled) return;
             setBeatSec(engine!.pulseBeatSeconds ?? 1);
+            const next = { ...loadPlayerPrefs(), voiceId: fallback.id };
+            engine!.setStatementLimit(effectiveStatements(next, engine!.clipCount));
             const failedName = findVoice(voiceId)?.name ?? 'that';
             pendingVoiceNoticeRef.current =
               `This session isn\u2019t ready in ${failedName}\u2019s voice yet. Playing ${fallback.name} instead.`;
-            const next = { ...loadPlayerPrefs(), voiceId: fallback.id };
             savePlayerPrefs(next);
             setPrefs(next);
+            setLoad({ kind: 'ready' });
             return;
           } catch (fallbackError) {
             if (cancelled) return;
@@ -617,8 +625,12 @@ function Player({ session }: { session: Session }) {
     setPrefs(next);
     savePlayerPrefs(next);
     if (typeof patch.repeat === 'number') engineRef.current?.setRepeat(patch.repeat);
-    // spacing patches ignored while the Settings toggle is deactivated.
     if (typeof patch.voiceMix === 'number') engineRef.current?.setVoiceMix(patch.voiceMix);
+    if (patch.statements !== undefined) {
+      const engine = engineRef.current;
+      const max = engine?.clipCount || clipCount || 1;
+      engine?.setStatementLimit(effectiveStatements({ ...prefs, ...patch }, max));
+    }
   };
 
   const setVoiceMix = (voiceMix: number) => {
@@ -748,11 +760,33 @@ function Player({ session }: { session: Session }) {
 
   return (
     <main
-      className="flex min-h-screen min-h-[100dvh] flex-col text-p-fg"
+      className="relative flex min-h-screen min-h-[100dvh] flex-col overflow-hidden text-p-fg"
       style={{ background: playing ? 'var(--p-bg-playing)' : 'var(--p-bg)', transition: 'background 2.6s ease' }}
     >
+      {/* Soft ambient blob — exploratory; behind chrome/rings only. */}
       <div
-        className="flex items-center justify-between gap-3 px-[clamp(22px,4vw,48px)] pb-3 pt-[calc(12px+env(safe-area-inset-top,0px))] text-[15px] text-p-muted [@media(min-height:760px)]:pb-2 [@media(min-height:760px)]:pt-[calc(8px+env(safe-area-inset-top,0px))]"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      >
+        <div
+          className="absolute left-1/2 top-[16%] h-[min(72vw,440px)] w-[min(72vw,440px)] -translate-x-1/2 rounded-full opacity-[0.1]"
+          style={{
+            background:
+              'radial-gradient(circle at 42% 38%, color-mix(in srgb, var(--p-accent) 58%, white) 0%, var(--p-accent) 42%, transparent 70%)',
+            filter: 'blur(52px)',
+          }}
+        />
+        <div
+          className="absolute left-[12%] top-[48%] h-[min(44vw,280px)] w-[min(44vw,280px)] rounded-full opacity-[0.1]"
+          style={{
+            background:
+              'radial-gradient(circle, color-mix(in srgb, var(--p-accent) 45%, transparent) 0%, transparent 72%)',
+            filter: 'blur(60px)',
+          }}
+        />
+      </div>
+      <div
+        className="relative z-10 flex items-center justify-between gap-3 px-[clamp(22px,4vw,48px)] pb-3 pt-[calc(12px+env(safe-area-inset-top,0px))] text-[15px] text-p-muted [@media(min-height:760px)]:pb-2 [@media(min-height:760px)]:pt-[calc(8px+env(safe-area-inset-top,0px))]"
         style={chromeStyle}
         aria-hidden={!chromeVisible}
       >
@@ -800,7 +834,7 @@ function Player({ session }: { session: Session }) {
         </div>
       </div>
 
-      <div className="mx-auto box-border flex w-full max-w-[520px] flex-1 flex-col items-center px-[clamp(22px,4vw,48px)] pb-[calc(16px+env(safe-area-inset-bottom,0px))]">
+      <div className="relative z-10 mx-auto box-border flex w-full max-w-[520px] flex-1 flex-col items-center px-[clamp(22px,4vw,48px)] pb-[calc(16px+env(safe-area-inset-bottom,0px))]">
         <div
           className="flex w-full flex-1 flex-col items-center"
           onClick={panel ? () => setPanel(null) : undefined}
@@ -966,6 +1000,7 @@ function Player({ session }: { session: Session }) {
         onSelectBackground={selectBackground}
         onStopPulsePreview={() => pulsePreviewRef.current?.stop()}
         decodingId={decodingId}
+        statementMax={Math.max(1, clipCount)}
       />
 
 

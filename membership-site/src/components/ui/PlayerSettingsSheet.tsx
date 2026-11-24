@@ -16,7 +16,7 @@ import { VOICES } from '@/lib/catalog';
 import { fetchBackgroundMedia } from '@/lib/authedFetch';
 import { narratorPreviewUrl } from '@/lib/narratorPreview';
 import { DEFAULT_PULSE_WIDTH, PULSE_WIDTH_OPTIONS, pulseWidthLabel, type PulseWidth } from '@/lib/audio/pulseWidth';
-import { REPEAT_OPTIONS, type PlayerPrefs } from '@/lib/playerPrefs';
+import { effectiveStatements, REPEAT_OPTIONS, type PlayerPrefs } from '@/lib/playerPrefs';
 import { MusicNoteIcon, NatureIcon, PlayIcon, PulseIcon } from './icons';
 import Sheet, { SheetHeader } from './Sheet';
 
@@ -63,6 +63,7 @@ export default function PlayerSettingsSheet({
   onSelectBackground,
   onStopPulsePreview,
   decodingId,
+  statementMax = 1,
 }: {
   open: boolean;
   onClose: () => void;
@@ -73,6 +74,8 @@ export default function PlayerSettingsSheet({
   /** Stop one-shot pulse width preview owned by the player page. */
   onStopPulsePreview?: () => void;
   decodingId?: string | null;
+  /** Loaded statement clip count — Immersion end of the Statements slider. */
+  statementMax?: number;
 }) {
   const [view, setView] = useState<View>('settings');
   const [tab, setTab] = useState<BgTab>('pulse');
@@ -184,6 +187,11 @@ export default function PlayerSettingsSheet({
     }
   }
 
+  function selectBackgroundAndLeave(selection: BackgroundSelection) {
+    void onSelectBackground(selection);
+    leaveLeaf();
+  }
+
   return (
     <Sheet open={open} onClose={onClose} label="Settings" tone="player" fullHeight>
       {view === 'settings' ? (
@@ -264,6 +272,49 @@ export default function PlayerSettingsSheet({
             </section>
 
             <section className="flex flex-col gap-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Statements</p>
+              {(() => {
+                const max = Math.max(1, statementMax);
+                const value = effectiveStatements(prefs, max);
+                const fillPct = max <= 1 ? 0 : ((value - 1) / (max - 1)) * 100;
+                return (
+                  <>
+                    <div className="flex items-center justify-between gap-3 text-[13px] text-p-muted">
+                      <span className="font-medium text-p-fg">Focus</span>
+                      <span className="font-mono text-[12px] tabular-nums">{value}</span>
+                      <span className="font-medium text-p-fg">Immersion</span>
+                    </div>
+                    <div className="relative h-[22px]">
+                      <div className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-p-track" />
+                      <div
+                        className="absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-p-accent"
+                        style={{ width: `${fillPct}%` }}
+                      />
+                      <input
+                        type="range"
+                        min={1}
+                        max={max}
+                        step={1}
+                        value={value}
+                        disabled={max <= 1}
+                        aria-label="Statements"
+                        aria-valuetext={`${value} of ${max}`}
+                        onChange={(e) => {
+                          const next = Number(e.target.value);
+                          onChange({ statements: next >= max ? null : next });
+                        }}
+                        className="absolute inset-0 z-10 m-0 h-full w-full cursor-pointer appearance-none bg-transparent disabled:cursor-default [&::-webkit-slider-thumb]:h-[22px] [&::-webkit-slider-thumb]:w-[22px] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-p-fg [&::-webkit-slider-thumb]:shadow-[0_2px_8px_rgba(0,0,0,.5)] [&::-moz-range-thumb]:h-[22px] [&::-moz-range-thumb]:w-[22px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-p-fg"
+                      />
+                    </div>
+                    <p className="px-0.5 text-[12.5px] leading-snug text-p-muted">
+                      How many affirmations cycle in this session.
+                    </p>
+                  </>
+                );
+              })()}
+            </section>
+
+            <section className="flex flex-col gap-3">
               <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-p-muted">Repetition</p>
               <div className="flex gap-1 rounded-[12px] border border-hairline bg-p-panel p-[3px]">
                 {REPEAT_OPTIONS.map((count) => {
@@ -289,9 +340,6 @@ export default function PlayerSettingsSheet({
               </p>
             </section>
 
-            {/* Spacing toggle deferred: Off clipped the pulse underlay. Keep pause On until
-                SessionEngine can trim gaps without cutting bilateral pulse. Prefs/engine
-                still support spacing for a future pass. */}
           </div>
         </div>
       ) : (
@@ -322,7 +370,7 @@ export default function PlayerSettingsSheet({
                       <button
                         key={card.id}
                         type="button"
-                        onClick={() => void onSelectBackground({ group: 'pulse', width })}
+                        onClick={() => selectBackgroundAndLeave({ group: 'pulse', width })}
                         className={`flex flex-col gap-3 rounded-[14px] border px-3.5 pb-3.5 pt-4 text-left ${
                           selected
                             ? 'border-p-accent bg-[var(--selected-bg)]'
@@ -356,7 +404,7 @@ export default function PlayerSettingsSheet({
                 previewingId={previewingBg}
                 decodingId={decodingId}
                 onPreview={(item) => void previewBackground(item.path, item.id)}
-                onSelect={(item) => void onSelectBackground({ group: 'nature', id: item.id })}
+                onSelect={(item) => selectBackgroundAndLeave({ group: 'nature', id: item.id })}
               />
             )}
 
@@ -367,7 +415,7 @@ export default function PlayerSettingsSheet({
                 previewingId={previewingBg}
                 decodingId={decodingId}
                 onPreview={(item) => void previewBackground(item.path, item.id)}
-                onSelect={(item) => void onSelectBackground({ group: 'music', id: item.id })}
+                onSelect={(item) => selectBackgroundAndLeave({ group: 'music', id: item.id })}
               />
             )}
           </div>

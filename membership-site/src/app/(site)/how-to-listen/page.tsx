@@ -75,7 +75,7 @@ const GROUPS: { id: string; title: string; items: Item[] }[] = [
         id: 'settings',
         title: 'Settings',
         glyph: <SettingsIcon size={24} />,
-        body: 'Narrator, Background, and Repetition live in Settings. Each affirmation is followed by a short pause before the next line.',
+        body: 'Narrator, Background, Statements, and Repetition live in Settings. Each affirmation is followed by a short pause before the next line.',
       },
       {
         id: 'repeat',

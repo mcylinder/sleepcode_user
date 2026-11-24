@@ -23,11 +23,15 @@ export interface PlayerPrefs {
   voiceId: string | null;
   background: BackgroundSelection;
   /**
-   * true = pause between affirmations (current timing).
-   * UI toggle is disabled for now — always persist/load as On. Off clipped pulse underlay;
-   * re-enable in Settings when SessionEngine can trim gaps without cutting the pulse.
+   * Pause between affirmations. Always On in the product UI for now; field kept for
+   * engine compatibility if the toggle returns.
    */
   spacing: boolean;
+  /**
+   * How many statements to cycle. `null` = all loaded clips (Immersion).
+   * Clamped to 1..clipCount when applied.
+   */
+  statements: number | null;
 }
 
 export const DEFAULT_PREFS: PlayerPrefs = {
@@ -38,6 +42,7 @@ export const DEFAULT_PREFS: PlayerPrefs = {
   voiceId: null,
   background: DEFAULT_BACKGROUND,
   spacing: true,
+  statements: null,
 };
 
 function roundVoiceMix(value: number): number {
@@ -57,6 +62,7 @@ interface StoredPrefs {
   pulseWidth?: unknown;
   background?: unknown;
   spacing?: unknown;
+  statements?: unknown;
 }
 
 function parseBackground(raw: StoredPrefs): BackgroundSelection {
@@ -90,17 +96,27 @@ export function loadPlayerPrefs(): PlayerPrefs {
       : DEFAULT_PREFS.repeat;
     const voiceId = mediaVoiceId(typeof raw.voiceId === 'string' ? raw.voiceId : null);
     const background = parseBackground(raw);
-    // Force On while the Spacing control is deactivated in Settings.
+    // Spacing control hidden — always On.
     const spacing = true;
-    return { version: PREFS_VERSION, voiceMix, volume, repeat, voiceId, background, spacing };
+    const statements =
+      typeof raw.statements === 'number' && Number.isFinite(raw.statements) && raw.statements >= 1
+        ? Math.round(raw.statements)
+        : null;
+    return { version: PREFS_VERSION, voiceMix, volume, repeat, voiceId, background, spacing, statements };
   } catch {
     return DEFAULT_PREFS;
   }
 }
 
+/** Clamp Focus↔Immersion count to the session’s loaded clips. */
+export function effectiveStatements(prefs: PlayerPrefs, clipCount: number): number {
+  const max = Math.max(1, Math.floor(clipCount));
+  if (prefs.statements == null) return max;
+  return Math.min(max, Math.max(1, Math.round(prefs.statements)));
+}
+
 export function savePlayerPrefs(prefs: PlayerPrefs): void {
   try {
-    // Spacing UI deactivated — always persist On.
     localStorage.setItem(
       PREFS_KEY,
       JSON.stringify({ ...prefs, version: PREFS_VERSION, spacing: true }),

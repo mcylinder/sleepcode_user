@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { MixIcon, PlayIcon, RepeatIcon, VoiceIcon } from '@/components/ui/icons';
+import { MixIcon, PlayIcon, RepeatIcon, StatementsIcon, VoiceIcon } from '@/components/ui/icons';
 import { pulseWidthLabel } from '@/lib/audio/pulseWidth';
 import { backgroundMixLabel } from '@/lib/backgrounds';
 import { FEATURED_FREE_SESSION, findVoice, loadLastPlayed, playerHref } from '@/lib/catalog';
@@ -37,6 +37,11 @@ export default function DefaultsSection() {
       label: 'Background',
       icon: <MixIcon size={18} instruction={prefs.voiceMix} />,
       value: backgroundSummary(prefs),
+    },
+    {
+      label: 'Statements',
+      icon: <StatementsIcon size={18} />,
+      value: prefs.statements == null ? 'All' : String(prefs.statements),
     },
     { label: 'Repetition', icon: <RepeatIcon size={18} />, value: REPEAT_LABELS[prefs.repeat] },
   ];

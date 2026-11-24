@@ -44,6 +44,8 @@ export class SessionEngine {
   private pulseWidthNode: PulseWidthNode | null = null;
   private pulseWidth: PulseWidth = DEFAULT_PULSE_WIDTH;
   private clips: AudioBuffer[] = [];
+  /** Cap on how many clips cycle; Infinity = all loaded. */
+  private statementLimit = Number.POSITIVE_INFINITY;
   private pulse: AudioBuffer | null = null;
   /** Voice share 0–100 (default 75). */
   private voiceMix = 75;
@@ -142,12 +144,27 @@ export class SessionEngine {
     if (this.pass >= this.repeat) this.advance();
   }
 
-  /**
-   * Spacing Off is not exposed in the UI yet — Off clipped the pulse underlay.
-   * Prefer leaving this On until gap trimming can keep bilateral pulse intact.
-   */
+  /** How many leading statements to cycle (1..clips.length). */
+  setStatementLimit(count: number): void {
+    const n = Math.max(1, Math.round(count));
+    this.statementLimit = n;
+    const active = this.activeClipCount();
+    if (this.clipIndex >= active) this.clipIndex = 0;
+  }
+
+  get clipCount(): number {
+    return this.clips.length;
+  }
+
+  /** On = one pulse-period pause between lines; Off = trimmed voice + short gap. */
   setSpacing(on: boolean): void {
     this.spacingOn = on;
+  }
+
+  private activeClipCount(): number {
+    if (this.clips.length === 0) return 0;
+    if (!Number.isFinite(this.statementLimit)) return this.clips.length;
+    return Math.min(this.clips.length, Math.max(1, Math.floor(this.statementLimit)));
   }
 
   /** Restore session pulse as the background (stops any Nature/Music loop). */
@@ -411,7 +428,7 @@ export class SessionEngine {
 
   private advance(): void {
     this.pass = 0;
-    this.clipIndex = (this.clipIndex + 1) % Math.max(1, this.clips.length);
+    this.clipIndex = (this.clipIndex + 1) % Math.max(1, this.activeClipCount());
     this.pendingGap = true;
   }
 
@@ -472,8 +489,11 @@ export class SessionEngine {
     while (this.nextWhen < ctx.currentTime + LOOKAHEAD_SEC) {
       if (this.pendingGap) {
         if (this.spacingOn) {
-          // Keep a short fixed gap so repeats aren't stacked (pulse gap file not used).
-          this.nextWhen += SPACING_OFF_GAP_SEC * 2;
+          // Same pause length as Pulse mode (one pulse period). Nature/Music keep
+          // looping through the gap; we just don't schedule a pulse gap clip.
+          const gap =
+            this.pulse && this.pulse.duration > 0 ? this.pulse.duration : SPACING_OFF_GAP_SEC * 2;
+          this.nextWhen += gap;
         } else if (this.loopBpm) {
           this.nextWhen = snapToBeat(this.nextWhen + SPACING_OFF_GAP_SEC, this.beatOrigin, this.loopBpm);
         } else {
